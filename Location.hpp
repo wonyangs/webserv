@@ -5,7 +5,7 @@
 #include <set>
 #include <string>
 
-#include "EMethod.h"
+#include "Enum.hpp"
 
 // config 파일의 Location 블럭
 // - location 블럭의 정보를 저장한다.
@@ -17,7 +17,7 @@ class Location {
 
   int _maxBodySize;
   std::map<int, std::string> _errorPages;
-  std::set<EMethod> _allowMethods;
+  std::set<EHttpMethod> _allowMethods;
   bool _autoIndex;
   std::string _redirectUri;
 
@@ -32,7 +32,7 @@ class Location {
   // setter
   void setMaxBodySize(int size);
   void addErrorPage(int statusNumber, const std::string& path);
-  void addAllowMethod(EMethod method);
+  void addAllowMethod(EHttpMethod method);
   void setAutoIndex(bool setting);
   void setRedirectUri(const std::string& path);
 
@@ -43,7 +43,7 @@ class Location {
   int getMaxBodySize(void) const;
   bool hasErrorPage(int statusCode) const;
   const std::string& getErrorPagePath(int statusCode) const;
-  bool isAllowMethod(EMethod method) const;
+  bool isAllowMethod(EHttpMethod method) const;
   bool isAutoIndex(void) const;
   bool isRedirectBlock(void) const;
   const std::string& getRedirectUri(void) const;

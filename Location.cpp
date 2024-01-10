@@ -60,7 +60,7 @@ void Location::addErrorPage(int statusCode, const std::string& path) {
 // - Location 블럭에 허용할 메서드 추가
 // - 호출하지 않을 시 모든 메서드 허용
 // - 이미 있는 메서드를 다시 추가할 경우 예외 발생
-void Location::addAllowMethod(EMethod method) {
+void Location::addAllowMethod(EHttpMethod method) {
   // 한번이라도 이 메서드가 호출된 경우 차단된 메서드가 있다고 판단
   _hasAllowMethodField = true;
   if (_allowMethods.find(method) != _allowMethods.end()) {
@@ -113,7 +113,7 @@ const std::string& Location::getErrorPagePath(int statusCode) const {
 }
 
 // - 해당 메서드가 허용되는지 여부 반환
-bool Location::isAllowMethod(EMethod method) const {
+bool Location::isAllowMethod(EHttpMethod method) const {
   if (_hasAllowMethodField == false) {
     return true;
   }
