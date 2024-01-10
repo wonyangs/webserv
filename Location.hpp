@@ -5,6 +5,7 @@
 #include <set>
 #include <string>
 
+#include "Config.hpp"
 #include "Enum.hpp"
 
 // config 파일의 Location 블럭
@@ -50,8 +51,6 @@ class Location {
 
  private:
   static const int DEFAULT_MAX_BODY_SIZE = 6000;
-  static const int MIN_LIMIT_BODY_SIZE = 0;
-  static const int MAX_LIMIT_BODY_SIZE = 100000000;
 
   bool _hasAllowMethodField;
   bool _hasRedirectField;

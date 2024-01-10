@@ -41,7 +41,8 @@ Location& Location::operator=(Location const& location) {
 // - 호출하지 않을 시 기본값(DEFAULT_MAX_BODY_SIZE) 적용
 // - size 범위 초과시 예외 발생
 void Location::setMaxBodySize(int size) {
-  if (size < MIN_LIMIT_BODY_SIZE or size > MAX_LIMIT_BODY_SIZE) {
+  if (size < Config::MIN_LIMIT_BODY_SIZE or
+      size > Config::MAX_LIMIT_BODY_SIZE) {
     throw std::runtime_error("Location: setMaxBodySize() - size range error");
   }
   _maxBodySize = size;
