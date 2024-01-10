@@ -53,6 +53,9 @@ void Server::addLocationBlock(const Location& locationBlock) {
 
 // Public Method - method
 
+// - uri와 prefix가 매칭되는 Location 객체를 반환
+// - uri가 /인 Location 객체는 반드시 존재한다고 가정
+// - uri 매칭에 실패하는 경우는 없음
 const Location& Server::getMatchedLocationBlock(const std::string& uri) {
   std::string bestMatch;
   size_t longestMatchLength = 0;
@@ -70,4 +73,13 @@ const Location& Server::getMatchedLocationBlock(const std::string& uri) {
 
   it = _locationBlocks.find(bestMatch);
   return it->second;
+}
+
+// - Server 블록에 uri가 /인 Location 블록이 존재하는지 여부 반환
+// - Server 블록에는 uri가 /인 Location 블록이 반드시 존재해야함
+bool Server::hasDefaultLocationBlock(void) {
+  if (_locationBlocks.find("/") == _locationBlocks.end()) {
+    return false;
+  }
+  return true;
 }

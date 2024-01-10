@@ -1,9 +1,9 @@
 #ifndef __SERVER_HPP__
 #define __SERVER_HPP__
 
+#include <map>
 #include <set>
 #include <string>
-#include <map>
 
 #include "Location.hpp"
 
@@ -30,10 +30,11 @@ class Server {
 
   // method
   const Location& getMatchedLocationBlock(const std::string& uri);
+  bool hasDefaultLocationBlock(void);
 
  private:
   typedef std::map<std::string, Location> LocationMap;
-  
+
   Server(void);
 };
 
