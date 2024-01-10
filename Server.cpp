@@ -60,7 +60,7 @@ const Location& Server::getMatchedLocationBlock(const std::string& uri) {
   LocationMap::const_iterator it = _locationBlocks.begin();
   while (it != _locationBlocks.end()) {
     const std::string& key = it->first;
-    if (uri.compare(0, key.length(), key) == 0 &&
+    if (uri.compare(0, key.length(), key) == 0 and
         key.length() > longestMatchLength) {
       bestMatch = it->first;
       longestMatchLength = key.length();
