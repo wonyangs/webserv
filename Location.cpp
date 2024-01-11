@@ -43,7 +43,7 @@ Location& Location::operator=(Location const& location) {
 void Location::setMaxBodySize(int size) {
   if (size < Config::MIN_LIMIT_BODY_SIZE or
       size > Config::MAX_LIMIT_BODY_SIZE) {
-    throw std::runtime_error("Location: setMaxBodySize() - size range error");
+    throw std::runtime_error("[1100] Location: setMaxBodySize - range error");
   }
   _maxBodySize = size;
 }
@@ -53,7 +53,7 @@ void Location::setMaxBodySize(int size) {
 void Location::addErrorPage(int statusCode, const std::string& path) {
   if (_errorPages.find(statusCode) != _errorPages.end()) {
     throw std::runtime_error(
-        "Location: addErrorPage() - duplicate status number");
+        "[1101] Location: addErrorPage - duplicate status code");
   }
   _errorPages[statusCode] = path;
 }
@@ -65,7 +65,8 @@ void Location::addAllowMethod(EHttpMethod method) {
   // 한번이라도 이 메서드가 호출된 경우 차단된 메서드가 있다고 판단
   _hasAllowMethodField = true;
   if (_allowMethods.find(method) != _allowMethods.end()) {
-    throw std::runtime_error("Location: addAllowMethod() - duplicate method");
+    throw std::runtime_error(
+        "[1102] Location: addAllowMethod - duplicate method");
   }
   _allowMethods.insert(method);
 }
@@ -106,8 +107,7 @@ bool Location::hasErrorPage(int statusCode) const {
 const std::string& Location::getErrorPagePath(int statusCode) const {
   if (_errorPages.find(statusCode) == _errorPages.end()) {
     throw std::runtime_error(
-        "Location: getErrorPagePath() - no path corresponds to the status "
-        "code.");
+        "[1103] Location: getErrorPagePath - no path to status code");
   }
   std::map<int, std::string>::const_iterator it = _errorPages.find(statusCode);
   return it->second;
@@ -134,7 +134,7 @@ bool Location::isRedirectBlock(void) const { return _hasRedirectField; }
 const std::string& Location::getRedirectUri(void) const {
   if (_hasRedirectField == false) {
     throw std::runtime_error(
-        "Location: getRedirectUri() - doesn't have a uri.");
+        "[1104] Location: getRedirectUri - doesn't have a uri");
   }
   return _redirectUri;
 }
