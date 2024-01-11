@@ -33,7 +33,7 @@ Server& Server::operator=(Server const& server) {
 // - 이미 있는 server name이 들어올 경우 예외 발생
 void Server::addServerName(const std::string& serverName) {
   if (_serverNames.find(serverName) != _serverNames.end()) {
-    throw std::runtime_error("Server: addServerName() - duplicate server name");
+    throw std::runtime_error("[1000] Server: addServerName - duplicate server_name");
   }
   _serverNames.insert(serverName);
 }
@@ -45,7 +45,7 @@ void Server::addLocationBlock(const Location& locationBlock) {
 
   if (_locationBlocks.find(uri) != _locationBlocks.end()) {
     throw std::runtime_error(
-        "Server: addLocationBlock() - duplicate location block uri");
+        "[1001] Server: addLocationBlock - duplicate uri");
   }
 
   _locationBlocks.insert(std::make_pair(uri, locationBlock));
