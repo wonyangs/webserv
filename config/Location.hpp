@@ -5,8 +5,8 @@
 #include <set>
 #include <string>
 
-#include "Config.hpp"
-#include "Enum.hpp"
+#include "../util/Config.hpp"
+#include "../util/Enum.hpp"
 
 // config 파일의 Location 블럭
 // - location 블럭의 정보를 저장한다.
