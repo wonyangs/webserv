@@ -5,6 +5,8 @@ CXXFLAGS	= -Wall -Werror -Wextra -std=c++98
 SRCS		= config/Server.cpp \
 					config/Location.cpp \
 					utils/StatusException.cpp \
+					core/Kqueue.cpp \
+					core/Event.cpp \
 					main.cpp
 
 OBJS		= $(SRCS:%.cpp=%.o)
