@@ -5,6 +5,7 @@
 #include <ctime>
 
 // 클라이언트 연결을 관리하는 클래스
+// - 임시 객체 (구현 예정)
 class Connection {
  private:
   int _fd;
@@ -26,7 +27,7 @@ class Connection {
   long getElapsedTime(void) const;
 
  private:
-  static const int BUFFER_SIZE = 1024;
+  static int const BUFFER_SIZE = 1024;
 
   void updateLastCallTime(void);
 

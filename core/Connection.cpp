@@ -60,7 +60,7 @@ void Connection::receive(void) {
 // 응답 보내기
 // - 임시 메서드
 void Connection::send(void) {
-  const char* response =
+  char const* response =
       "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: "
       "text/plain\nConnection: keep-alive\n\nHello, "
       "world!\n\n";
