@@ -18,8 +18,8 @@ int main(void) {
 
   Location location1("/", "/var/www/html", "index.html");
 
-  location1.addAllowMethod(GET);
-  location1.addAllowMethod(POST);
+  location1.addAllowMethod(HTTP_GET);
+  location1.addAllowMethod(HTTP_POST);
   location1.setMaxBodySize(10000000);
   location1.setAutoIndex(false);
   location1.addErrorPage(404, "/404.html");
@@ -36,7 +36,7 @@ int main(void) {
 
   Location location2("/images/", "/var/www/images", "index.html");
 
-  location2.addAllowMethod(GET);
+  location2.addAllowMethod(HTTP_GET);
   location2.setAutoIndex(true);
 
   /**
@@ -54,9 +54,9 @@ int main(void) {
 
   Location location3("/api/", "/var/www/api", "index.php");
 
-  location3.addAllowMethod(GET);
-  location3.addAllowMethod(POST);
-  location3.addAllowMethod(DELETE);
+  location3.addAllowMethod(HTTP_GET);
+  location3.addAllowMethod(HTTP_POST);
+  location3.addAllowMethod(HTTP_DELETE);
   location3.setMaxBodySize(15000000);
   location3.setAutoIndex(false);
   location3.addErrorPage(500, "/500.html");
