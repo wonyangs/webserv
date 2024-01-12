@@ -1,8 +1,8 @@
 #ifndef __CONNECTION_HPP__
 #define __CONNECTION_HPP__
 
-#include <string>
 #include <ctime>
+#include <string>
 
 // 클라이언트 연결을 관리하는 클래스
 // - 임시 객체 (구현 예정)
@@ -24,6 +24,7 @@ class Connection {
 
   void close(void);
 
+  int getFd(void) const;
   long getElapsedTime(void) const;
 
  private:

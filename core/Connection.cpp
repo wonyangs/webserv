@@ -79,6 +79,9 @@ void Connection::send(void) {
 // 커넥션 닫기
 void Connection::close(void) { ::close(_fd); }
 
+// 관리 중인 fd 반환
+int Connection::getFd(void) const { return _fd; }
+
 // 마지막으로 호출된 이후 경과된 시간 반환
 // - 반환된 값은 초 단위
 long Connection::getElapsedTime(void) const {
