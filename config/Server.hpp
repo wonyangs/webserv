@@ -25,11 +25,11 @@ class Server {
   Server& operator=(Server const& server);
 
   // setter
-  void addServerName(const std::string& serverName);
-  void addLocationBlock(const Location& locationBlock);
+  void addServerName(std::string const& serverName);
+  void addLocationBlock(Location const& locationBlock);
 
   // method
-  const Location& getMatchedLocationBlock(const std::string& uri);
+  Location const& getMatchedLocationBlock(std::string const& uri);
   bool hasDefaultLocationBlock(void);
 
  private:

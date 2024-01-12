@@ -5,8 +5,8 @@
 #include <set>
 #include <string>
 
-#include "Config.hpp"
-#include "Enum.hpp"
+#include "../utils/Config.hpp"
+#include "../utils/Enum.hpp"
 
 // config 파일의 Location 블럭
 // - location 블럭의 정보를 저장한다.
@@ -23,8 +23,8 @@ class Location {
   std::string _redirectUri;
 
  public:
-  Location(const std::string& uri, const std::string& rootPath,
-           const std::string& indexFile);
+  Location(std::string const& uri, std::string const& rootPath,
+           std::string const& indexFile);
   Location(Location const& location);
   ~Location(void);
 
@@ -32,25 +32,25 @@ class Location {
 
   // setter
   void setMaxBodySize(int size);
-  void addErrorPage(int statusNumber, const std::string& path);
+  void addErrorPage(int statusNumber, std::string const& path);
   void addAllowMethod(EHttpMethod method);
   void setAutoIndex(bool setting);
-  void setRedirectUri(const std::string& path);
+  void setRedirectUri(std::string const& path);
 
   // getter
-  const std::string& getUri(void) const;
-  const std::string& getRootPath(void) const;
-  const std::string& getIndexFile(void) const;
+  std::string const& getUri(void) const;
+  std::string const& getRootPath(void) const;
+  std::string const& getIndexFile(void) const;
   int getMaxBodySize(void) const;
   bool hasErrorPage(int statusCode) const;
-  const std::string& getErrorPagePath(int statusCode) const;
+  std::string const& getErrorPagePath(int statusCode) const;
   bool isAllowMethod(EHttpMethod method) const;
   bool isAutoIndex(void) const;
   bool isRedirectBlock(void) const;
-  const std::string& getRedirectUri(void) const;
+  std::string const& getRedirectUri(void) const;
 
  private:
-  static const int DEFAULT_MAX_BODY_SIZE = 6000;
+  static int const DEFAULT_MAX_BODY_SIZE = 6000;
 
   bool _hasAllowMethodField;
   bool _hasRedirectField;

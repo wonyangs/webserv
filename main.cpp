@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "Location.hpp"
-#include "Server.hpp"
+#include "config/Location.hpp"
+#include "config/Server.hpp"
 
 int main(void) {
   /**

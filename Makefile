@@ -1,9 +1,9 @@
-NAME		= config_test
+NAME		= webserv
 CXX			= c++
 CXXFLAGS	= -Wall -Werror -Wextra -std=c++98
 
-SRCS		= Server.cpp \
-					Location.cpp \
+SRCS		= config/Server.cpp \
+					config/Location.cpp \
 					main.cpp
 
 OBJS		= $(SRCS:%.cpp=%.o)
