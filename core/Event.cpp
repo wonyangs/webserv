@@ -37,7 +37,7 @@ Event& Event::operator=(Event const& event) {
 
 // Public method
 
-// 이벤트가 감시하는 fd 반환
+// 이벤트가 발생한 fd 반환
 int Event::getFd(void) const { return _fd; }
 
 // 이벤트의 타입을 반환
