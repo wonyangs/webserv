@@ -31,21 +31,21 @@ Server& Server::operator=(Server const& server) {
 
 // - server name을 추가
 // - 이미 있는 server name이 들어올 경우 예외 발생
-void Server::addServerName(const std::string& serverName) {
+void Server::addServerName(std::string const& serverName) {
   if (_serverNames.find(serverName) != _serverNames.end()) {
-    throw std::runtime_error("[1000] Server: addServerName - duplicate server_name");
+    throw std::runtime_error(
+        "[1000] Server: addServerName - duplicate server_name");
   }
   _serverNames.insert(serverName);
 }
 
 // - Server 블럭에 포함된 location 블럭 추가
 // - 같은 uri를 가진 location 블럭이 들어온 경우 예외 발생
-void Server::addLocationBlock(const Location& locationBlock) {
+void Server::addLocationBlock(Location const& locationBlock) {
   std::string uri = locationBlock.getUri();
 
   if (_locationBlocks.find(uri) != _locationBlocks.end()) {
-    throw std::runtime_error(
-        "[1001] Server: addLocationBlock - duplicate uri");
+    throw std::runtime_error("[1001] Server: addLocationBlock - duplicate uri");
   }
 
   _locationBlocks.insert(std::make_pair(uri, locationBlock));
@@ -56,13 +56,13 @@ void Server::addLocationBlock(const Location& locationBlock) {
 // - uri와 prefix가 매칭되는 Location 객체를 반환
 // - uri가 /인 Location 객체는 반드시 존재한다고 가정
 // - uri 매칭에 실패하는 경우는 없음
-const Location& Server::getMatchedLocationBlock(const std::string& uri) {
+Location const& Server::getMatchedLocationBlock(std::string const& uri) {
   std::string bestMatch;
   size_t longestMatchLength = 0;
 
   LocationMap::const_iterator it = _locationBlocks.begin();
   while (it != _locationBlocks.end()) {
-    const std::string& key = it->first;
+    std::string const& key = it->first;
     if (uri.compare(0, key.length(), key) == 0 and
         key.length() > longestMatchLength) {
       bestMatch = it->first;

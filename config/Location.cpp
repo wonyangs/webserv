@@ -4,8 +4,8 @@
 
 // Constructor & Destructor
 
-Location::Location(const std::string& uri, const std::string& rootPath,
-                   const std::string& indexFile)
+Location::Location(std::string const& uri, std::string const& rootPath,
+                   std::string const& indexFile)
     : _uri(uri),
       _rootPath(rootPath),
       _indexFile(indexFile),
@@ -50,7 +50,7 @@ void Location::setMaxBodySize(int size) {
 
 // - Location 블럭에 특정 상태코드에 대한 error page 경로 추가
 // - 이미 있는 상태코드를 다시 추가할 경우 예외 발생
-void Location::addErrorPage(int statusCode, const std::string& path) {
+void Location::addErrorPage(int statusCode, std::string const& path) {
   if (_errorPages.find(statusCode) != _errorPages.end()) {
     throw std::runtime_error(
         "[1101] Location: addErrorPage - duplicate status code");
@@ -78,7 +78,7 @@ void Location::setAutoIndex(bool setting) { _autoIndex = setting; }
 // - Location 블럭에 redirect할 uri 설정
 // - 호출하지 않을 시 redirect 블럭이 아님
 // - redirect uri 설정 시 해당 location 블럭은 무조건 redirect 됨
-void Location::setRedirectUri(const std::string& path) {
+void Location::setRedirectUri(std::string const& path) {
   // 한번이라도 이 메서드가 호출된 경우 redirect 블럭으로 판단
   _hasRedirectField = true;
   _redirectUri = path;
@@ -86,11 +86,11 @@ void Location::setRedirectUri(const std::string& path) {
 
 // Public Method - getter
 
-const std::string& Location::getUri(void) const { return _uri; }
+std::string const& Location::getUri(void) const { return _uri; }
 
-const std::string& Location::getRootPath(void) const { return _rootPath; }
+std::string const& Location::getRootPath(void) const { return _rootPath; }
 
-const std::string& Location::getIndexFile(void) const { return _indexFile; }
+std::string const& Location::getIndexFile(void) const { return _indexFile; }
 
 int Location::getMaxBodySize(void) const { return _maxBodySize; }
 
@@ -104,7 +104,7 @@ bool Location::hasErrorPage(int statusCode) const {
 
 // - 해당 상태코드에 대한 에러 페이지 경로 반환
 // - 에러 페이지 경로가 존재하지 않을 경우 예외 발생
-const std::string& Location::getErrorPagePath(int statusCode) const {
+std::string const& Location::getErrorPagePath(int statusCode) const {
   if (_errorPages.find(statusCode) == _errorPages.end()) {
     throw std::runtime_error(
         "[1103] Location: getErrorPagePath - no path to status code");
@@ -131,7 +131,7 @@ bool Location::isRedirectBlock(void) const { return _hasRedirectField; }
 
 // - 해당 블럭의 redirect uri 반환
 // - 해당 블릭이 redirect 블럭이 아닌 경우 예외 발생
-const std::string& Location::getRedirectUri(void) const {
+std::string const& Location::getRedirectUri(void) const {
   if (_hasRedirectField == false) {
     throw std::runtime_error(
         "[1104] Location: getRedirectUri - doesn't have a uri");
