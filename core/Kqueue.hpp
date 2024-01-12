@@ -20,12 +20,10 @@ class Kqueue {
   static void addWriteEvent(int fd);
   static void removeReadEvent(int fd);
   static void removeWriteEvent(int fd);
-  
+
   static Event getEvent(void);
 
  private:
-  enum EventAction { ADD = EV_ADD, DELETE = EV_DELETE };
-
   Kqueue(void);
   Kqueue(Kqueue const& kqueue);
   ~Kqueue(void);

@@ -32,7 +32,7 @@ void Kqueue::close(void) {
 // - 이벤트 추가에 실패한 경우 예외 발생
 void Kqueue::addReadEvent(int fd) {
   struct kevent event;
-  EV_SET(&event, fd, Event::READ, ADD, 0, 0, NULL);
+  EV_SET(&event, fd, Event::READ, EV_ADD, 0, 0, NULL);
 
   if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("[3001] Kqueue: addReadEvent - event add failed");
@@ -43,7 +43,7 @@ void Kqueue::addReadEvent(int fd) {
 // - 이벤트 추가에 실패한 경우 예외 발생
 void Kqueue::addWriteEvent(int fd) {
   struct kevent event;
-  EV_SET(&event, fd, Event::WRITE, ADD, 0, 0, NULL);
+  EV_SET(&event, fd, Event::WRITE, EV_ADD, 0, 0, NULL);
 
   if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("[3002] Kqueue: addWriteEvent - event add failed");
@@ -54,7 +54,7 @@ void Kqueue::addWriteEvent(int fd) {
 // - 이벤트 제거에 실패한 경우 예외 발생
 void Kqueue::removeReadEvent(int fd) {
   struct kevent event;
-  EV_SET(&event, fd, Event::READ, DELETE, 0, 0, NULL);
+  EV_SET(&event, fd, Event::READ, EV_DELETE, 0, 0, NULL);
 
   if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error(
@@ -66,7 +66,7 @@ void Kqueue::removeReadEvent(int fd) {
 // - 이벤트 제거에 실패한 경우 예외 발생
 void Kqueue::removeWriteEvent(int fd) {
   struct kevent event;
-  EV_SET(&event, fd, Event::WRITE, DELETE, 0, 0, NULL);
+  EV_SET(&event, fd, Event::WRITE, EV_DELETE, 0, 0, NULL);
 
   if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error(
