@@ -25,7 +25,7 @@ class Event {
   int getFd(void) const;
   EventType getType(void) const;
 
-  bool isValid(void) const;
+  bool isInvalid(void) const;
 
  private:
 };

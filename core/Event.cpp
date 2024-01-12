@@ -49,11 +49,8 @@ Event::EventType Event::getType(void) const {
   return _type;
 }
 
-// 올바른 이벤트인지 여부 반환
+// 잘못된 이벤트인지 여부 반환
 // - kevent에서 반환된 이벤트가 없을 경우 올바르지 않은 이벤트가 반환될 수 있음
-bool Event::isValid(void) const {
-  if (_fd < 0) {
-    return false;
-  }
-  return true;
+bool Event::isInvalid(void) const {
+  return (_fd < 0);
 }
