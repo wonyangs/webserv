@@ -7,6 +7,10 @@ SRCS		= config/Server.cpp \
 					utils/StatusException.cpp \
 					core/Kqueue.cpp \
 					core/Event.cpp \
+					core/Socket.cpp \
+					core/Connection.cpp \
+					core/ServerManager.cpp \
+					core/EventLoop.cpp \
 					main.cpp
 
 OBJS		= $(SRCS:%.cpp=%.o)

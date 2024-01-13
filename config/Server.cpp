@@ -27,6 +27,12 @@ Server& Server::operator=(Server const& server) {
   return *this;
 }
 
+// Public method - getter
+
+std::string const& Server::getHostIp(void) const { return _hostIp; }
+
+int Server::getPort(void) const { return _port; }
+
 // Public Method - setter
 
 // - server name을 추가
