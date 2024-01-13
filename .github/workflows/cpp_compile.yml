@@ -1,0 +1,22 @@
+name: C++ Compile Test
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+
+    - name: Set up C++ Environment
+      uses: actions/setup-cpp@v1
+      with:
+        cpp-version: '98'  # Specify C++ version
+
+    - name: Compile Code
+      run: |
+        make
