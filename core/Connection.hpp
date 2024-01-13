@@ -10,7 +10,7 @@ class Connection {
  private:
   int _fd;
   std::time_t _lastCallTime;
-  std::string _request;
+  std::string _requestString;
 
  public:
   Connection(int fd);

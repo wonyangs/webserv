@@ -5,7 +5,7 @@
 #include <cstring>
 #include <iostream>
 
-// Construcor & Destructor
+// Constructor & Destructor
 
 Connection::Connection(int fd) : _fd(fd), _lastCallTime(std::time(0)) {}
 
@@ -18,6 +18,7 @@ Connection::~Connection(void) {}
 Connection& Connection::operator=(Connection const& connection) {
   if (this != &connection) {
     _fd = connection._fd;
+    _lastCallTime = connection._lastCallTime;
   }
   return *this;
 }
@@ -43,16 +44,16 @@ void Connection::receive(void) {
     return;
   } else {
     buffer[bytesRead] = '\0';
-    _request.append(buffer);
+    _requestString.append(buffer);
   }
 
   // 요청의 끝 확인 (\r\n\r\n)
-  if (_request.find("\r\n\r\n") != std::string::npos) {
+  if (_requestString.find("\r\n\r\n") != std::string::npos) {
     std::cout << "[ Server: received request ]\n"
               << "-------------\n"
-              << _request << "\n-------------" << std::endl;
+              << _requestString << "\n-------------" << std::endl;
     send();
-    _request.clear();
+    _requestString.clear();
   }
   updateLastCallTime();
 }
