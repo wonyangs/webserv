@@ -5,10 +5,12 @@
 
 #include "../config/Server.hpp"
 #include "Connection.hpp"
+#include "Event.hpp"
 
 // 가상 서버 클래스
 class ServerManager {
  private:
+  int _fd;
   Server _config;
   std::map<int, Connection> _connections;
 
@@ -19,8 +21,14 @@ class ServerManager {
 
   ServerManager& operator=(ServerManager const& manager);
 
+  void runServer(void);
+
+  int getServerFd(void) const;
+
   void addConnection(int fd);
   void removeConnection(int fd);
+  void handleConnection(Event event);
+
   bool hasFd(int fd) const;
   void timeout(void);
 

@@ -24,6 +24,10 @@ class Server {
 
   Server& operator=(Server const& server);
 
+  // getter
+  std::string const& getHostIp(void) const;
+  int getPort(void) const;
+
   // setter
   void addServerName(std::string const& serverName);
   void addLocationBlock(Location const& locationBlock);

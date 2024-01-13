@@ -10,6 +10,7 @@ SRCS		= config/Server.cpp \
 					core/Socket.cpp \
 					core/Connection.cpp \
 					core/ServerManager.cpp \
+					core/EventLoop.cpp \
 					main.cpp
 
 OBJS		= $(SRCS:%.cpp=%.o)
