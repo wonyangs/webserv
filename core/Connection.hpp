@@ -4,6 +4,9 @@
 #include <ctime>
 #include <string>
 
+#include "http/Request.hpp"
+#include "http/RequestParser.hpp"
+
 // 클라이언트 연결을 관리하는 클래스
 // - 임시 객체 (구현 예정)
 class Connection {
@@ -11,6 +14,9 @@ class Connection {
   int _fd;
   std::time_t _lastCallTime;
   std::string _requestString;
+
+  Request _request;
+  RequestParser _requestParser;
 
  public:
   Connection(int fd);
