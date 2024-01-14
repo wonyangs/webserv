@@ -60,7 +60,7 @@ std::vector<std::string> const& Request::getHeaderFieldValues(
 
 // Public Method
 
-// - Request Line에 해당하는 method, path, http version 저장
+// Request Line에 해당하는 method, path, http version 저장
 // - result 배열에는 method, path, httpVersion이 순서대로 저장되어 있다고 가정
 void Request::storeRequestLine(std::vector<std::string> const& result) {
   int const methodIndex = 0, pathIndex = 1, httpVersionIndex = 2;
@@ -70,7 +70,7 @@ void Request::storeRequestLine(std::vector<std::string> const& result) {
   _httpVersion = result[httpVersionIndex];
 }
 
-// - header field 저장
+// Header field 저장
 // - result 배열에는 fieldName과 fieldValue가 순서대로 저장되어 있다고 가정
 void Request::storeHeaderField(std::vector<std::string> const& result) {
   int const fieldNameIndex = 0, fieldValueIndex = 1;
@@ -83,7 +83,7 @@ void Request::storeHeaderField(std::vector<std::string> const& result) {
       std::pair<std::string, std::vector<std::string> >(fieldName, fieldValue));
 }
 
-// - body 저장
+// body 저장
 void Request::storeBody(std::string const& result) { _body = result; }
 
 // 해당 헤더 field-name의 존재를 확인하는 함수
@@ -92,7 +92,7 @@ bool Request::isHeaderFieldNameExists(std::string const& fieldName) {
 }
 
 // 해당 헤더 field-value의 존재를 확인하는 함수
-// 해당 헤더 field-name이 없다면 false 반환
+// - 해당 헤더 field-name이 없다면 false 반환
 bool Request::isHeaderFieldValueExists(std::string const& fieldName,
                                        std::string const& fieldValue) {
   if (isHeaderFieldNameExists(fieldName) == false) return false;
@@ -104,7 +104,6 @@ bool Request::isHeaderFieldValueExists(std::string const& fieldName,
 }
 
 // 멤버 변수를 비어있는 상태로 초기화
-// 단, _buffer는 제외
 void Request::clear() {
   _method = HTTP_NONE;
   _path.clear();
@@ -116,7 +115,7 @@ void Request::clear() {
 // Private Method
 
 // method가 매칭되는 enum EHttpMethod를 반환
-// 매칭되는 EHttpMethod가 없는 경우 예외 발생
+// - 매칭되는 EHttpMethod가 없는 경우 예외 발생
 EHttpMethod Request::matchEHttpMethod(std::string method) {
   if (method == "GET") return HTTP_GET;
   if (method == "POST") return HTTP_POST;
