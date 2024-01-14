@@ -12,10 +12,11 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v2
 
-    - name: Set up C++ Environment
-      uses: actions/setup-cpp@v1
-      with:
-        cpp-version: '98'  # Specify C++ version
+    - name: Install C++ Compiler
+      run: |
+        sudo apt-get update
+        sudo apt-get install g++-4.8 -y
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-4.8 90
 
     - name: Compile Code
       run: |
