@@ -17,8 +17,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install g++ -y
 
-    - name: Compile Files Without sys/event.h to Object Files
+    - name: Compile Files Excluding Specific Headers
       run: |
-        find . -name '*.cpp' ! -exec grep -q '<sys/event.h>' {} \; -print | while read file; do
+        find . -name '*.cpp' ! -exec grep -q '<sys/event.h>' {} \; ! -exec grep -q '"./core/Kqueue.hpp"' {} \; -print | while read file; do
           g++ -Wall -Werror -Wextra -std=c++98 -c "$file" -o "${file%.cpp}.o"
         done
