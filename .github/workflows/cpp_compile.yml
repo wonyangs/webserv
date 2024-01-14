@@ -17,6 +17,8 @@ jobs:
         sudo apt-get update
         sudo apt-get install g++ -y
 
-    - name: Compile Code
+    - name: Compile Files Without sys/event.h to Object Files
       run: |
-        make
+        find . -name '*.cpp' ! -exec grep -q '<sys/event.h>' {} \; -print | while read file; do
+          g++ -Wall -Werror -Wextra -std=c++98 -c "$file" -o "${file%.cpp}.o"
+        done
