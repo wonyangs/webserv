@@ -20,7 +20,11 @@ enum EParsingStatus {
   READY,
   REQUEST_LINE,
   HEADER_FIELD,
-  BODY,
+  HEADER_FIELD_END,
+  BODY_CONTENT_LENGTH,
+  BODY_CHUNKED,
+  BODY_CHUNK_SIZE,
+  BODY_CHUNK_DATA,
   DONE,
 };
 
@@ -28,12 +32,6 @@ enum EParsingStatus {
 // - HTTP Request를 파싱해서 Request 객체에 저장
 class RequestParser {
  private:
-  enum EBodyType {
-    BODY_NONE,
-    BODY_CHUNKED,
-    BODY_CONTENT_LENGTH,
-  };
-
   enum EParsingStatus _status;
   std::vector<u_int8_t> _requestLine;
   std::vector<u_int8_t> _header;
@@ -43,8 +41,10 @@ class RequestParser {
 
   Request _request;
 
-  enum EBodyType _bodyType;
   size_t _bodyLength;
+
+  std::vector<u_int8_t> _chunkSizeBuffer;
+  size_t _chunkSize;
 
  public:
   RequestParser(void);
@@ -64,7 +64,9 @@ class RequestParser {
 
   void parseRequestLine(u_int8_t const& ch);
   void parseHeaderField(u_int8_t const& ch);
-  void parseBody(u_int8_t const& ch);
+  void parseBodyContentLength(u_int8_t const& ch);
+
+  void setupBodyParse(void);
 
   std::vector<std::string> processRequestLine(void);
   std::vector<std::string> processHeaderField(void);
@@ -73,7 +75,7 @@ class RequestParser {
   void splitRequestLine(std::vector<std::string>& result);
   void splitHeaderField(std::vector<std::string>& result);
 
-  enum EBodyType checkBodyType(void);
+  EParsingStatus checkBodyParsingStatus(void);
   bool isInvalidFormatSize(std::vector<std::string> const& result, size_t size);
   bool isEndWithCRLF(std::vector<u_int8_t> const& vec);
   void removeCRLF(std::vector<u_int8_t>& vec);
