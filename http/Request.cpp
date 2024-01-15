@@ -21,12 +21,27 @@ Request& Request::operator=(Request const& request) {
   return *this;
 }
 
+// Public Method - getter
+
+enum EHttpMethod const& Request::getMethod(void) const { return _method; }
+
+std::string const& Request::getPath(void) const { return _path; }
+
+std::string const& Request::getHttpVersion(void) const { return _httpVersion; }
+
+std::map<std::string, std::vector<std::string> > const& Request::getHeader(
+    void) const {
+  return _header;
+}
+
+std::string const& Request::getBody(void) const { return _body; }
+
 // debug
 
 #include <iostream>
 
 // 디버깅용 Request 정보 출력 함수
-void Request::print() {
+void Request::print() const {
   std::cout << "Method: " << _method << std::endl;
   std::cout << "Path: " << _path << std::endl;
   std::cout << "HTTP Version: " << _httpVersion << std::endl;

@@ -15,7 +15,6 @@ class Connection {
   std::time_t _lastCallTime;
   std::string _requestString;
 
-  Request _request;
   RequestParser _requestParser;
 
  public:

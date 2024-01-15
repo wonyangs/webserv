@@ -24,7 +24,13 @@ class Request {
 
   Request& operator=(Request const& request);
 
-  void print(void);  // debug
+  enum EHttpMethod const& getMethod(void) const;
+  std::string const& getPath(void) const;
+  std::string const& getHttpVersion(void) const;
+  std::map<std::string, std::vector<std::string> > const& getHeader(void) const;
+  std::string const& getBody(void) const;
+
+  void print(void) const;  // debug
 
   std::vector<std::string> const& getHeaderFieldValues(
       std::string const& fieldName);
