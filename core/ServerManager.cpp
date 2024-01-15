@@ -2,6 +2,8 @@
 
 #include <unistd.h>
 
+#include <exception>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -88,10 +90,19 @@ void ServerManager::handleConnection(Event event) {
 
   ConnectionMap::iterator it = _connections.find(event.getFd());
 
-  if (event.getType() == Event::READ) {
-    it->second.receive();
-  } else if (event.getType() == Event::WRITE) {
-    return;  // WRITE 이벤트 부분 구현
+  try {
+    if (event.getType() == Event::READ) {
+      it->second.receive();
+    } else if (event.getType() == Event::WRITE) {
+      return;  // WRITE 이벤트 부분 구현
+    }
+  } catch (StatusException const& e) {
+    std::cout << "Exception thrown: " << e.what() << std::endl;
+    int code = e.getStatusCode();
+    it->second.sendErrorPage(code);
+  } catch (std::exception const& e) {
+    std::cout << "Exception thrown: " << e.what() << std::endl;
+    it->second.sendErrorPage(500);
   }
 }
 

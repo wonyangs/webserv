@@ -26,6 +26,7 @@ class Connection {
 
   void receive(void);
   void send(void);
+  void sendErrorPage(int code);
 
   void close(void);
 
