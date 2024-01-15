@@ -100,9 +100,13 @@ void ServerManager::handleConnection(Event event) {
     std::cout << "Exception thrown: " << e.what() << std::endl;
     int code = e.getStatusCode();
     it->second.sendErrorPage(code);
+    it->second.close();
+    _connections.erase(it->second.getFd());
   } catch (std::exception const& e) {
     std::cout << "Exception thrown: " << e.what() << std::endl;
     it->second.sendErrorPage(500);
+    it->second.close();
+    _connections.erase(it->second.getFd());
   }
 }
 
