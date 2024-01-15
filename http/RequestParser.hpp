@@ -55,7 +55,7 @@ class RequestParser {
 
   enum EParsingStatus getParsingStatus();
 
-  void parse(u_int8_t* buffer, ssize_t bytesRead);
+  void parse(u_int8_t const* buffer, ssize_t bytesRead);
   void clear();
 
  private:

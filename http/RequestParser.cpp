@@ -38,7 +38,7 @@ enum EParsingStatus RequestParser::getParsingStatus() { return _status; }
 
 // buffer 값 파싱
 // TODO: chunked 입력 파싱 처리
-void RequestParser::parse(u_int8_t* buffer, ssize_t bytesRead) {
+void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
   std::cout << ">> [Request: parse()]" << std::endl;  // debug 출력
   std::cout << _status << std::endl;                  // debug 출력
 
