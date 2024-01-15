@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "utils/Enum.hpp"
-#include "utils/StatusException.hpp"
+#include "../utils/Enum.hpp"
+#include "../utils/StatusException.hpp"
 
 // HTTP Request 클래스
 class Request {

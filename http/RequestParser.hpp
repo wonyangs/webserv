@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "Request.hpp"
-#include "utils/StatusException.hpp"
+#include "../utils/StatusException.hpp"
 
 #define HTAB 9
 #define SP 32
