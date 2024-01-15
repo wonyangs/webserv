@@ -1,7 +1,7 @@
 #ifndef __ENUM_HPP__
 #define __ENUM_HPP__
 
-enum EHttpMethod { HTTP_GET, HTTP_POST, HTTP_DELETE };
+enum EHttpMethod { HTTP_NONE, HTTP_GET, HTTP_POST, HTTP_DELETE };
 
 enum EStatusCode {
   HTTP_OK = 200,

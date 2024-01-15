@@ -7,9 +7,13 @@
 
 // Constructor & Destructor
 
-Connection::Connection(int fd) : _fd(fd), _lastCallTime(std::time(0)) {}
+Connection::Connection(int fd)
+    : _fd(fd), _lastCallTime(std::time(0)), _requestParser(_request) {}
 
-Connection::Connection(Connection const& connection) { *this = connection; }
+Connection::Connection(Connection const& connection)
+    : _requestParser(_request) {
+  *this = connection;
+}
 
 Connection::~Connection(void) {}
 
@@ -19,6 +23,8 @@ Connection& Connection::operator=(Connection const& connection) {
   if (this != &connection) {
     _fd = connection._fd;
     _lastCallTime = connection._lastCallTime;
+    _requestParser = connection._requestParser;
+    _request = connection._request;
   }
   return *this;
 }
@@ -28,7 +34,7 @@ Connection& Connection::operator=(Connection const& connection) {
 // 요청 읽기
 // - 임시 메서드
 void Connection::receive(void) {
-  char buffer[BUFFER_SIZE];
+  u_int8_t buffer[BUFFER_SIZE];
 
   memset(buffer, 0, BUFFER_SIZE);
   ssize_t bytesRead = ::read(_fd, buffer, sizeof(buffer) - 1);
@@ -43,17 +49,30 @@ void Connection::receive(void) {
     std::cout << "Client: connection closed" << std::endl;
     return;
   } else {
-    buffer[bytesRead] = '\0';
-    _requestString.append(buffer);
+    try {
+      _requestParser.parse(buffer, bytesRead);
+    } catch (std::exception& e) {
+      // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
+      std::cerr << "Exception thrown: " << e.what() << std::endl;
+      _requestString.clear();
+      _requestParser.clear();
+      _request.clear();
+    }
+    std::string str(reinterpret_cast<char*>(buffer), bytesRead);
+    _requestString.append(str);
   }
 
-  // 요청의 끝 확인 (\r\n\r\n)
-  if (_requestString.find("\r\n\r\n") != std::string::npos) {
+  std::cout << "   Buffer: " << buffer << std::endl;
+  this->_request.print();
+
+  if (_requestParser.getParsingStatus() == DONE) {
     std::cout << "[ Server: received request ]\n"
               << "-------------\n"
               << _requestString << "\n-------------" << std::endl;
     send();
     _requestString.clear();
+    _requestParser.clear();
+    _request.clear();
   }
   updateLastCallTime();
 }

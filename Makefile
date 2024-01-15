@@ -3,15 +3,17 @@ CXX			= c++
 CXXFLAGS	= -Wall -Werror -Wextra -std=c++98
 
 SRCS		= config/Server.cpp \
-					config/Location.cpp \
-					utils/StatusException.cpp \
-					core/Kqueue.cpp \
-					core/Event.cpp \
-					core/Socket.cpp \
-					core/Connection.cpp \
-					core/ServerManager.cpp \
-					core/EventLoop.cpp \
-					main.cpp
+			  config/Location.cpp \
+			  utils/StatusException.cpp \
+			  core/Kqueue.cpp \
+			  core/Event.cpp \
+			  core/Socket.cpp \
+			  core/Connection.cpp \
+			  core/ServerManager.cpp \
+			  core/EventLoop.cpp \
+			  http/Request.cpp \
+			  http/RequestParser.cpp \
+			  main.cpp
 
 OBJS		= $(SRCS:%.cpp=%.o)
 
