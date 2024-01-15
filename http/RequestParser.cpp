@@ -2,8 +2,8 @@
 
 // Constructor & Destructor
 
-RequestParser::RequestParser(Request& request)
-    : _status(READY), _request(request), _bodyType(BODY_NONE), _bodyLength(0) {}
+RequestParser::RequestParser(void)
+    : _status(READY), _bodyType(BODY_NONE), _bodyLength(0) {}
 
 RequestParser::RequestParser(RequestParser const& requestParser)
     : _request(requestParser._request) {
@@ -30,7 +30,9 @@ RequestParser& RequestParser::operator=(RequestParser const& requestParser) {
 
 // Public Method - getter
 
-enum EParsingStatus RequestParser::getParsingStatus() { return _status; }
+enum EParsingStatus RequestParser::getParsingStatus() const { return _status; }
+
+Request const& RequestParser::getRequest() const { return _request; }
 
 // Public Method
 
@@ -79,6 +81,7 @@ void RequestParser::clear() {
   _requestLine.clear();
   _header.clear();
   _body.clear();
+  _request.clear();
 }
 
 // Private Method - setter

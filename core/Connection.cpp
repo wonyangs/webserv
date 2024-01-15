@@ -8,12 +8,9 @@
 // Constructor & Destructor
 
 Connection::Connection(int fd)
-    : _fd(fd), _lastCallTime(std::time(0)), _requestParser(_request) {}
+    : _fd(fd), _lastCallTime(std::time(0)), _requestParser() {}
 
-Connection::Connection(Connection const& connection)
-    : _requestParser(_request) {
-  *this = connection;
-}
+Connection::Connection(Connection const& connection) { *this = connection; }
 
 Connection::~Connection(void) {}
 
@@ -24,7 +21,6 @@ Connection& Connection::operator=(Connection const& connection) {
     _fd = connection._fd;
     _lastCallTime = connection._lastCallTime;
     _requestParser = connection._requestParser;
-    _request = connection._request;
   }
   return *this;
 }
@@ -56,23 +52,21 @@ void Connection::receive(void) {
       std::cerr << "Exception thrown: " << e.what() << std::endl;
       _requestString.clear();
       _requestParser.clear();
-      _request.clear();
     }
     std::string str(reinterpret_cast<char*>(buffer), bytesRead);
     _requestString.append(str);
   }
 
-  std::cout << "   Buffer: " << buffer << std::endl;
-  this->_request.print();
-
   if (_requestParser.getParsingStatus() == DONE) {
+    Request const& request = _requestParser.getRequest();
+    request.print();
+
     std::cout << "[ Server: received request ]\n"
               << "-------------\n"
               << _requestString << "\n-------------" << std::endl;
     send();
     _requestString.clear();
     _requestParser.clear();
-    _request.clear();
   }
   updateLastCallTime();
 }

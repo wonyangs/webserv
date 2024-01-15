@@ -8,8 +8,8 @@
 #include <string>
 #include <vector>
 
-#include "Request.hpp"
 #include "../utils/StatusException.hpp"
+#include "Request.hpp"
 
 #define HTAB 9
 #define SP 32
@@ -41,26 +41,25 @@ class RequestParser {
 
   std::vector<u_int8_t> _buffer;
 
-  Request& _request;
+  Request _request;
 
   enum EBodyType _bodyType;
   size_t _bodyLength;
 
  public:
-  RequestParser(Request& request);
-  RequestParser(RequestParser const& request);
+  RequestParser(void);
+  RequestParser(RequestParser const& requestParser);
   ~RequestParser(void);
 
-  RequestParser& operator=(RequestParser const& request);
+  RequestParser& operator=(RequestParser const& requestParser);
 
-  enum EParsingStatus getParsingStatus();
+  enum EParsingStatus getParsingStatus(void) const;
+  Request const& getRequest(void) const;
 
   void parse(u_int8_t const* buffer, ssize_t bytesRead);
   void clear();
 
  private:
-  RequestParser(void);
-
   void setBodyLength(std::string const& bodyLengthString);
 
   void parseRequestLine(u_int8_t const& ch);
