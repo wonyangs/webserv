@@ -35,6 +35,7 @@ class Server {
   // method
   Location const& getMatchedLocationBlock(std::string const& uri);
   bool hasDefaultLocationBlock(void);
+  bool hasServerName(std::string const& host);
 
  private:
   typedef std::map<std::string, Location> LocationMap;

@@ -10,10 +10,12 @@
 
 // Constructor & Destructor
 
-ServerManager::ServerManager(Server config) : _config(config) {}
+ServerManager::ServerManager(std::string hostIp, int port,
+                             std::vector<Server> configs)
+    : _hostIp(hostIp), _port(port), _configs(configs) {}
 
 ServerManager::ServerManager(ServerManager const& manager)
-    : _config(manager._config), _connections(manager._connections) {}
+    : _configs(manager._configs), _connections(manager._connections) {}
 
 ServerManager::~ServerManager(void) {}
 
@@ -21,7 +23,7 @@ ServerManager::~ServerManager(void) {}
 
 ServerManager& ServerManager::operator=(ServerManager const& manager) {
   if (this != &manager) {
-    _config = manager._config;
+    _configs = manager._configs;
     _connections = manager._connections;
   }
   return *this;
@@ -32,14 +34,11 @@ ServerManager& ServerManager::operator=(ServerManager const& manager) {
 // 서버를 시작
 // - 서버 시작 실패 시 예외 발생
 void ServerManager::runServer(void) {
-  std::string hostIp = _config.getHostIp();
-  int port = _config.getPort();
-
   try {
     _fd = Socket::socket();
     Socket::setsockopt(_fd);
     Socket::setNonBlocking(_fd);
-    Socket::bind(_fd, hostIp, port);
+    Socket::bind(_fd, _hostIp, _port);
     Socket::listen(_fd, 3);
   } catch (const std::exception& e) {
     if (_fd != -1) {
