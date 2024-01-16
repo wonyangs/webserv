@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "../utils/Config.hpp"
+
 // Constructor & Destructor
 
 Connection::Connection(int fd)
@@ -93,20 +95,13 @@ void Connection::send(void) {
 // 에러 응답 보내기
 // - 임시 메서드
 void Connection::sendErrorPage(int code) {
-  // 상태 코드와 상태 메시지를 매핑
-  std::map<int, std::string> statusMessages;
-  statusMessages[200] = "OK";
-  statusMessages[400] = "Bad Request";
-  statusMessages[404] = "Not Found";
-  statusMessages[405] = "Http Not Allowed";
-  statusMessages[500] = "Internal Server Error";
-
   // 상태 코드에 해당하는 메시지 찾기
-  std::map<int, std::string>::iterator it = statusMessages.find(code);
-  if (it == statusMessages.end()) {
+  std::map<int, std::string>::const_iterator it =
+      Config::statusMessages.find(code);
+  if (it == Config::statusMessages.end()) {
     // 정의되지 않은 코드일 경우 기본 메시지 설정
     code = 500;
-    it = statusMessages.find(500);
+    it = Config::statusMessages.find(500);
   }
 
   // HTTP 응답 생성
