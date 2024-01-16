@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "../utils/Config.hpp"
+
 // Constructor & Destructor
 
 Connection::Connection(int fd)
@@ -49,9 +51,9 @@ void Connection::receive(void) {
       _requestParser.parse(buffer, bytesRead);
     } catch (std::exception& e) {
       // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
-      std::cerr << "Exception thrown: " << e.what() << std::endl;
       _requestString.clear();
       _requestParser.clear();
+      throw;
     }
     std::string str(reinterpret_cast<char*>(buffer), bytesRead);
     _requestString.append(str);
@@ -87,6 +89,38 @@ void Connection::send(void) {
   std::cout << "[ Server: response sent ]\n"
             << "-------------\n"
             << response << "\n-------------" << std::endl;
+  updateLastCallTime();
+}
+
+// 에러 응답 보내기
+// - 임시 메서드
+void Connection::sendErrorPage(int code) {
+  // 상태 코드에 해당하는 메시지 찾기
+  std::map<int, std::string>::const_iterator it =
+      Config::statusMessages.find(code);
+  if (it == Config::statusMessages.end()) {
+    // 정의되지 않은 코드일 경우 기본 메시지 설정
+    code = 500;
+    it = Config::statusMessages.find(500);
+  }
+
+  // HTTP 응답 생성
+  std::string response =
+      "HTTP/1.1 " + std::to_string(code) + " " + it->second + "\n" +
+      "Content-Length: 13\n"  // 내용 길이는 실제 내용에 맞게 조정 필요
+      + "Content-Type: text/plain\n" + "Connection: keep-alive\n\n" +
+      "Hello, world!\n\n";
+
+  ssize_t bytesSent = write(_fd, response.c_str(), response.length());
+
+  if (bytesSent < 0) {
+    throw std::runtime_error("Failed to write to socket");
+  }
+
+  std::cout << "[ Server: response sent ]\n"
+            << "-------------\n"
+            << response << "\n-------------" << std::endl;
+
   updateLastCallTime();
 }
 
