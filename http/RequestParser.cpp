@@ -47,6 +47,8 @@ Request const& RequestParser::getRequest() const { return _request; }
 void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
   if (_status == HEADER_FIELD_END) {
     setupBodyParse();
+
+    if (_status == DONE) return;
   }
 
   for (size_t i = 0; i < _storageBuffer.size(); i++) {
@@ -108,11 +110,17 @@ void RequestParser::setBodyLength(std::string const& bodyLengthString) {
 // - 남아있는 값에서 startIdx 이전 값들 삭제 후 buffer 값 추가
 void RequestParser::setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
                                      ssize_t bytesRead) {
-  _storageBuffer.erase(_storageBuffer.begin(),
-                       _storageBuffer.begin() + startIdx);
-  for (ssize_t i = 0; i < bytesRead; i++) {
-    _storageBuffer.push_back(buffer[i]);
+  std::vector<u_int8_t> tmp;
+
+  for (size_t i = startIdx; i < _storageBuffer.size(); i++) {
+    tmp.push_back(_storageBuffer[i]);
   }
+  for (ssize_t i = 0; i < bytesRead; i++) {
+    tmp.push_back(buffer[i]);
+  }
+
+  _storageBuffer.clear();
+  _storageBuffer = tmp;
 }
 
 // Private Method
