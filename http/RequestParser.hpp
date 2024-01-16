@@ -37,7 +37,7 @@ class RequestParser {
   std::vector<u_int8_t> _header;
   std::vector<u_int8_t> _body;
 
-  std::vector<u_int8_t> _buffer;
+  std::vector<u_int8_t> _storageBuffer;
 
   Request _request;
 

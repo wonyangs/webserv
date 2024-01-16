@@ -20,7 +20,7 @@ RequestParser& RequestParser::operator=(RequestParser const& requestParser) {
     _requestLine = requestParser._requestLine;
     _header = requestParser._header;
     _body = requestParser._body;
-    _buffer = requestParser._buffer;
+    _storageBuffer = requestParser._storageBuffer;
     _request = requestParser._request;
     _bodyLength = requestParser._bodyLength;
     _chunkSizeBuffer = requestParser._chunkSizeBuffer;
@@ -56,8 +56,8 @@ void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
     ch = buffer[i];
     switch (_status) {
       case READY:
-        _requestLine = _buffer;
-        _buffer.clear();
+        _requestLine = _storageBuffer;
+        _storageBuffer.clear();
         _status = REQUEST_LINE;
         // fallthrough
       case REQUEST_LINE:
@@ -70,7 +70,7 @@ void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
         parseBodyContentLength(ch);
         break;
       case DONE:
-        _buffer.push_back(ch);
+        _storageBuffer.push_back(ch);
       default:
         break;  // TODO: chunk status 추가 후 default는 예외로 처리
     }
@@ -81,7 +81,7 @@ void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
 }
 
 // 멤버 변수를 비어있는 상태로 초기화
-// - _buffer 변수는 제외
+// - _storageBuffer 변수는 제외
 void RequestParser::clear() {
   _status = READY;
   _requestLine.clear();
