@@ -40,40 +40,11 @@ Request const& RequestParser::getRequest() const { return _request; }
 #include <iostream>
 
 // buffer 값 파싱
-// TODO: chunked 입력 파싱 처리
 void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
   std::cout << ">> [Request: parse()]" << std::endl;  // debug 출력
-  std::cout << _status << std::endl;                  // debug 출력
-
-  for (size_t i = 0; i < _requestLine.size(); i++) {  // debug 출력
-    std::cout << _requestLine[i];
-  }
-  std::cout << std::endl;
-
-  u_int8_t ch;
-
   for (ssize_t i = 0; i < bytesRead; i++) {
-    ch = buffer[i];
-    switch (_status) {
-      case READY:
-        _requestLine = _storageBuffer;
-        _storageBuffer.clear();
-        _status = REQUEST_LINE;
-        // fallthrough
-      case REQUEST_LINE:
-        parseRequestLine(ch);
-        break;
-      case HEADER_FIELD:
-        parseHeaderField(ch);
-        break;
-      case BODY_CONTENT_LENGTH:
-        parseBodyContentLength(ch);
-        break;
-      case DONE:
-        _storageBuffer.push_back(ch);
-      default:
-        break;  // TODO: chunk status 추가 후 default는 예외로 처리
-    }
+    parseOctet(buffer[i]);
+
     if (_status == HEADER_FIELD_END) {
       setupBodyParse();
     }
@@ -116,12 +87,45 @@ void RequestParser::setBodyLength(std::string const& bodyLengthString) {
 
 // Private Method
 
+// octet 파싱
+// TODO: chunked 입력 파싱 처리
+void RequestParser::parseOctet(u_int8_t const& octet) {
+  std::cout << ">> [Request: parseOctet()]" << std::endl;  // debug 출력
+  std::cout << _status << std::endl;                       // debug 출력
+
+  for (size_t i = 0; i < _requestLine.size(); i++) {  // debug 출력
+    std::cout << _requestLine[i];
+  }
+  std::cout << std::endl;
+
+  switch (_status) {
+    case READY:
+      _requestLine = _storageBuffer;
+      _storageBuffer.clear();
+      _status = REQUEST_LINE;
+      // fallthrough
+    case REQUEST_LINE:
+      parseRequestLine(octet);
+      break;
+    case HEADER_FIELD:
+      parseHeaderField(octet);
+      break;
+    case BODY_CONTENT_LENGTH:
+      parseBodyContentLength(octet);
+      break;
+    case DONE:
+      _storageBuffer.push_back(octet);
+    default:
+      break;  // TODO: chunk status 추가 후 default는 예외로 처리
+  }
+}
+
 // RequestLine 파싱
 // - CRLF가 입력되었을 경우 입력이 끝났다고 정의
-void RequestParser::parseRequestLine(u_int8_t const& ch) {
-  _requestLine.push_back(ch);
+void RequestParser::parseRequestLine(u_int8_t const& octet) {
+  _requestLine.push_back(octet);
 
-  if (ch == '\n' and isEndWithCRLF(_requestLine)) {
+  if (octet == '\n' and isEndWithCRLF(_requestLine)) {
     if (_requestLine.size() == 2) {
       RequestParser::clear();
       return;
@@ -136,10 +140,10 @@ void RequestParser::parseRequestLine(u_int8_t const& ch) {
 // HeaderField 파싱
 // - CRLF가 입력되었을 경우 header field 한 줄의 입력이 끝났다고 정의
 // - 단, CRLF만 입력되었을 경우는 header field의 입력 종료로 처리
-void RequestParser::parseHeaderField(u_int8_t const& ch) {
-  _header.push_back(ch);
+void RequestParser::parseHeaderField(u_int8_t const& octet) {
+  _header.push_back(octet);
 
-  if (ch == '\n' and isEndWithCRLF(_header)) {
+  if (octet == '\n' and isEndWithCRLF(_header)) {
     if (_header.size() == 2) {
       _status = HEADER_FIELD_END;
       return;
@@ -154,8 +158,8 @@ void RequestParser::parseHeaderField(u_int8_t const& ch) {
 
 // body 파싱
 // - bodyLength 만큼 저장되었을 경우 status를 DONE으로 변경
-void RequestParser::parseBodyContentLength(u_int8_t const& ch) {
-  if (_body.size() < _bodyLength) _body.push_back(ch);
+void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
+  if (_body.size() < _bodyLength) _body.push_back(octet);
 
   if (_body.size() == _bodyLength) {
     std::string processResult = processBody();

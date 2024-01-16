@@ -62,9 +62,10 @@ class RequestParser {
  private:
   void setBodyLength(std::string const& bodyLengthString);
 
-  void parseRequestLine(u_int8_t const& ch);
-  void parseHeaderField(u_int8_t const& ch);
-  void parseBodyContentLength(u_int8_t const& ch);
+  void parseOctet(u_int8_t const& octet);
+  void parseRequestLine(u_int8_t const& octet);
+  void parseHeaderField(u_int8_t const& octet);
+  void parseBodyContentLength(u_int8_t const& octet);
 
   void setupBodyParse(void);
 
