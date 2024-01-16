@@ -92,8 +92,17 @@ void ServerManager::handleConnection(Event event) {
 
   try {
     if (event.getType() == Event::READ) {
-      it->second.receive();
+      it->second.readSocket();
     } else if (event.getType() == Event::WRITE) {
+      // 응답 보내기
+      it->second.send();
+      Kqueue::removeWriteEvent(event.getFd());
+
+      if (it->second.isReadStorageRequired()) {
+        it->second.readStorage();
+        return;
+      }
+      Kqueue::addReadEvent(event.getFd());
       return;  // WRITE 이벤트 부분 구현
     }
   } catch (StatusException const& e) {

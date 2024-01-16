@@ -5,6 +5,8 @@
 #include <cstring>
 #include <iostream>
 
+#include "../config/Location.hpp"
+#include "../core/Kqueue.hpp"
 #include "../utils/Config.hpp"
 
 // Constructor & Destructor
@@ -31,7 +33,7 @@ Connection& Connection::operator=(Connection const& connection) {
 
 // 요청 읽기
 // - 임시 메서드
-void Connection::receive(void) {
+void Connection::readSocket(void) {
   u_int8_t buffer[BUFFER_SIZE];
 
   memset(buffer, 0, BUFFER_SIZE);
@@ -49,28 +51,81 @@ void Connection::receive(void) {
   } else {
     try {
       _requestParser.parse(buffer, bytesRead);
+
+      if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
+        // Location 블록 찾아오기
+        // Request const& request = _requestParser.getRequest();
+        // std::string path = request.getPath();
+        // std::string host = request.getHeaderFieldValues("Host").front();
+        // Location location("/", "/var/www", "index.html");  // 찾았어
+        // 다시 파싱
+        // _requestParser.setLocation(location);
+        _requestParser.parse(buffer, 0);
+      }
+
+      if (_requestParser.getParsingStatus() == DONE) {
+        Request const& request = _requestParser.getRequest();
+        request.print();
+
+        // 응답 만들기
+        // WRITE 등록
+        Kqueue::removeReadEvent(_fd);
+        Kqueue::addWriteEvent(_fd);
+
+        _requestParser.clear();
+      }
+
     } catch (std::exception& e) {
       // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
-      _requestString.clear();
+
       _requestParser.clear();
       throw;
     }
-    std::string str(reinterpret_cast<char*>(buffer), bytesRead);
-    _requestString.append(str);
   }
 
-  if (_requestParser.getParsingStatus() == DONE) {
-    Request const& request = _requestParser.getRequest();
-    request.print();
-
-    std::cout << "[ Server: received request ]\n"
-              << "-------------\n"
-              << _requestString << "\n-------------" << std::endl;
-    send();
-    _requestString.clear();
-    _requestParser.clear();
-  }
   updateLastCallTime();
+}
+
+void Connection::readStorage(void) {
+  try {
+    u_int8_t tmp[1];
+    _requestParser.parse(tmp, 0);
+
+    if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
+      // Location 블록 찾아오기
+      // Request const& request = _requestParser.getRequest();
+      // std::string path = request.getPath();
+      // std::string host = request.getHeaderFieldValues("Host").front();
+      // Location location("/", "/var/www", "index.html");  // 찾았어
+      // 다시 파싱
+      // _requestParser.setLocation(location);
+      _requestParser.parse(tmp, 0);
+    }
+
+    if (_requestParser.getParsingStatus() == DONE) {
+      Request const& request = _requestParser.getRequest();
+      request.print();
+
+      // 응답 만들기
+      // WRITE 등록
+      Kqueue::addWriteEvent(_fd);
+
+      _requestParser.clear();
+    } else {
+      Kqueue::addReadEvent(_fd);
+    }
+  } catch (std::exception& e) {
+    // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
+
+    _requestParser.clear();
+    throw;
+  }
+
+  updateLastCallTime();
+}
+
+bool Connection::isReadStorageRequired() {
+  return _requestParser.isStorageBufferNotEmpty();
 }
 
 // 응답 보내기

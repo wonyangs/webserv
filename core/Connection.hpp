@@ -13,7 +13,6 @@ class Connection {
  private:
   int _fd;
   std::time_t _lastCallTime;
-  std::string _requestString;
 
   RequestParser _requestParser;
 
@@ -24,7 +23,10 @@ class Connection {
 
   Connection& operator=(Connection const& connection);
 
-  void receive(void);
+  void readSocket(void);
+  void readStorage(void);
+  bool isReadStorageRequired(void);
+
   void send(void);
   void sendErrorPage(int code);
 
