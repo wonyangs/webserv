@@ -33,13 +33,13 @@ class Request {
   void print(void) const;  // debug
 
   std::vector<std::string> const& getHeaderFieldValues(
-      std::string const& fieldName);
+      std::string const& fieldName) const;
 
   void storeRequestLine(std::vector<std::string> const& result);
   void storeHeaderField(std::vector<std::string> const& result);
   void storeBody(std::string const& result);
 
-  bool isHeaderFieldNameExists(std::string const& fieldName);
+  bool isHeaderFieldNameExists(std::string const& fieldName) const;
   bool isHeaderFieldValueExists(std::string const& fieldName,
                                 std::string const& fieldValue);
 

@@ -64,13 +64,15 @@ void Request::print() const {
 // Public method - getter
 
 std::vector<std::string> const& Request::getHeaderFieldValues(
-    std::string const& fieldName) {
+    std::string const& fieldName) const {
   if (isHeaderFieldNameExists(fieldName) == false) {
     throw std::runtime_error(
         "[2203] Request: getHeaderFieldValues -  field-name does not exist");
   }
 
-  return _header[fieldName];
+  std::map<std::string, std::vector<std::string> >::const_iterator it =
+      _header.find(fieldName);
+  return it->second;
 }
 
 // Public Method
@@ -102,7 +104,7 @@ void Request::storeHeaderField(std::vector<std::string> const& result) {
 void Request::storeBody(std::string const& result) { _body = result; }
 
 // 해당 헤더 field-name의 존재를 확인하는 함수
-bool Request::isHeaderFieldNameExists(std::string const& fieldName) {
+bool Request::isHeaderFieldNameExists(std::string const& fieldName) const {
   return (_header.find(fieldName) != _header.end());
 }
 
