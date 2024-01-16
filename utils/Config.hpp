@@ -1,6 +1,9 @@
 #ifndef __CONFIG_HPP__
 #define __CONFIG_HPP__
 
+#include <map>
+#include <string>
+
 // 서버가 사용하는 설정들을 정의해 둔 static 클래스
 class Config {
  public:
@@ -9,7 +12,12 @@ class Config {
   // 서버가 처리할 수 있는 최대 body 크기
   static const int MAX_LIMIT_BODY_SIZE = 100000000;
 
+  // 상태코드 메시지
+  static const std::map<int, std::string> statusMessages;
+
  private:
+  static std::map<int, std::string> initializeStatusMessages(void);
+
   Config(void);
   Config(Config const& config);
   ~Config(void);

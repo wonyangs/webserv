@@ -2,6 +2,8 @@
 #define __SERVERMANAGER_HPP__
 
 #include <map>
+#include <string>
+#include <vector>
 
 #include "../config/Server.hpp"
 #include "Connection.hpp"
@@ -11,11 +13,13 @@
 class ServerManager {
  private:
   int _fd;
-  Server _config;
+  std::string _hostIp;
+  int _port;
+  std::vector<Server> _configs;
   std::map<int, Connection> _connections;
 
  public:
-  ServerManager(Server config);
+  ServerManager(std::string hostIp, int port, std::vector<Server> configs);
   ServerManager(ServerManager const& manager);
   ~ServerManager(void);
 
@@ -30,7 +34,7 @@ class ServerManager {
   void handleConnection(Event event);
 
   bool hasFd(int fd) const;
-  void timeout(void);
+  void manageTimeoutConnections(void);
 
  private:
   static long const CONNECTION_LIMIT_TIME = 30;

@@ -2,6 +2,8 @@
 
 #include <unistd.h>
 
+#include <exception>
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -10,10 +12,12 @@
 
 // Constructor & Destructor
 
-ServerManager::ServerManager(Server config) : _config(config) {}
+ServerManager::ServerManager(std::string hostIp, int port,
+                             std::vector<Server> configs)
+    : _hostIp(hostIp), _port(port), _configs(configs) {}
 
 ServerManager::ServerManager(ServerManager const& manager)
-    : _config(manager._config), _connections(manager._connections) {}
+    : _configs(manager._configs), _connections(manager._connections) {}
 
 ServerManager::~ServerManager(void) {}
 
@@ -21,7 +25,7 @@ ServerManager::~ServerManager(void) {}
 
 ServerManager& ServerManager::operator=(ServerManager const& manager) {
   if (this != &manager) {
-    _config = manager._config;
+    _configs = manager._configs;
     _connections = manager._connections;
   }
   return *this;
@@ -32,14 +36,11 @@ ServerManager& ServerManager::operator=(ServerManager const& manager) {
 // 서버를 시작
 // - 서버 시작 실패 시 예외 발생
 void ServerManager::runServer(void) {
-  std::string hostIp = _config.getHostIp();
-  int port = _config.getPort();
-
   try {
     _fd = Socket::socket();
     Socket::setsockopt(_fd);
     Socket::setNonBlocking(_fd);
-    Socket::bind(_fd, hostIp, port);
+    Socket::bind(_fd, _hostIp, _port);
     Socket::listen(_fd, 3);
   } catch (const std::exception& e) {
     if (_fd != -1) {
@@ -89,10 +90,23 @@ void ServerManager::handleConnection(Event event) {
 
   ConnectionMap::iterator it = _connections.find(event.getFd());
 
-  if (event.getType() == Event::READ) {
-    it->second.receive();
-  } else if (event.getType() == Event::WRITE) {
-    return;  // WRITE 이벤트 부분 구현
+  try {
+    if (event.getType() == Event::READ) {
+      it->second.receive();
+    } else if (event.getType() == Event::WRITE) {
+      return;  // WRITE 이벤트 부분 구현
+    }
+  } catch (StatusException const& e) {
+    std::cout << "Exception thrown: " << e.what() << std::endl;
+    int code = e.getStatusCode();
+    it->second.sendErrorPage(code);
+    it->second.close();
+    _connections.erase(it->second.getFd());
+  } catch (std::exception const& e) {
+    std::cout << "Exception thrown: " << e.what() << std::endl;
+    it->second.sendErrorPage(500);
+    it->second.close();
+    _connections.erase(it->second.getFd());
   }
 }
 
@@ -103,7 +117,7 @@ bool ServerManager::hasFd(int fd) const {
 
 // timeout된 커넥션을 관리 목록에서 제거
 // - 호출 경과 시간이 CONNECTION_LIMIT_TIME 이상인 경우 제거 대상
-void ServerManager::timeout(void) {
+void ServerManager::manageTimeoutConnections(void) {
   std::vector<int> removeFdVec;
 
   // timeout 커넥션 탐색

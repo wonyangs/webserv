@@ -89,3 +89,8 @@ bool Server::hasDefaultLocationBlock(void) {
   }
   return true;
 }
+
+// host명이 Server 블록의 ServerName에 존재하는지 여부 반환
+bool Server::hasServerName(std::string const& host) {
+  return (_serverNames.find(host) != _serverNames.end());
+}
