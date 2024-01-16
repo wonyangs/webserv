@@ -34,7 +34,7 @@ class ServerManager {
   void handleConnection(Event event);
 
   bool hasFd(int fd) const;
-  void timeout(void);
+  void manageTimeoutConnections(void);
 
  private:
   static long const CONNECTION_LIMIT_TIME = 30;

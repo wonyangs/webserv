@@ -117,7 +117,7 @@ bool ServerManager::hasFd(int fd) const {
 
 // timeout된 커넥션을 관리 목록에서 제거
 // - 호출 경과 시간이 CONNECTION_LIMIT_TIME 이상인 경우 제거 대상
-void ServerManager::timeout(void) {
+void ServerManager::manageTimeoutConnections(void) {
   std::vector<int> removeFdVec;
 
   // timeout 커넥션 탐색

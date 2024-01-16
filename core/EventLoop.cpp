@@ -43,7 +43,7 @@ EventLoop::~EventLoop(void) {}
 
 void EventLoop::run(void) {
   while (true) {
-    executeTimeout();
+    closeTimeoutConnections();
 
     Event event = Kqueue::getEvent();
     if (event.isInvalid()) {
@@ -87,10 +87,10 @@ bool EventLoop::isServerFd(int fd) {
 }
 
 // 서버 전체 timeout 실행
-void EventLoop::executeTimeout(void) {
+void EventLoop::closeTimeoutConnections(void) {
   for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
        ++it) {
-    (it->second).timeout();
+    (it->second).manageTimeoutConnections();
   }
 }
 

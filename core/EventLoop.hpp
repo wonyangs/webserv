@@ -28,7 +28,7 @@ class EventLoop {
 
   void printServerMap(const ServerMap& serverMap);  // debug
   bool isServerFd(int fd);
-  void executeTimeout(void);
+  void closeTimeoutConnections(void);
 
   EventLoop(void);
   EventLoop& operator=(EventLoop const& eventloop);
