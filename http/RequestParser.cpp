@@ -40,14 +40,28 @@ Request const& RequestParser::getRequest() const { return _request; }
 #include <iostream>
 
 // buffer 값 파싱
+// - 만약 _storageBuffer가 비어있지 않으면 해당 값 먼저 파싱 진행
+// - 이후 buffer 값 파싱
+// - 파싱 도중 HEADER_FIELD_END 또는 DONE이 되었을 경우, 남은 octets은
+// _storageBuffer에 저장
 void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
-  std::cout << ">> [Request: parse()]" << std::endl;  // debug 출력
+  if (_status == HEADER_FIELD_END) {
+    setupBodyParse();
+  }
+
+  for (size_t i = 0; i < _storageBuffer.size(); i++) {
+    parseOctet(_storageBuffer[i]);
+
+    if ((_status == HEADER_FIELD_END or _status == DONE) and
+        i + 1 != _storageBuffer.size()) {
+      setStorageBuffer(i + 1, buffer, bytesRead);
+      return;
+    }
+  }
+
+  _storageBuffer.clear();
   for (ssize_t i = 0; i < bytesRead; i++) {
     parseOctet(buffer[i]);
-
-    if (_status == HEADER_FIELD_END) {
-      setupBodyParse();
-    }
   }
 }
 
@@ -59,6 +73,11 @@ void RequestParser::clear() {
   _header.clear();
   _body.clear();
   _request.clear();
+}
+
+// _storageBuffer 변수가 비어있지 않은지 여부 확인
+bool RequestParser::isStorageBufferNotEmpty() {
+  return (_storageBuffer.size() != 0);
 }
 
 // Private Method - setter
@@ -85,23 +104,24 @@ void RequestParser::setBodyLength(std::string const& bodyLengthString) {
   }
 }
 
+// storageBuffer 저장
+// - 남아있는 값에서 startIdx 이전 값들 삭제 후 buffer 값 추가
+void RequestParser::setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
+                                     ssize_t bytesRead) {
+  _storageBuffer.erase(_storageBuffer.begin(),
+                       _storageBuffer.begin() + startIdx);
+  for (ssize_t i = 0; i < bytesRead; i++) {
+    _storageBuffer.push_back(buffer[i]);
+  }
+}
+
 // Private Method
 
 // octet 파싱
 // TODO: chunked 입력 파싱 처리
 void RequestParser::parseOctet(u_int8_t const& octet) {
-  std::cout << ">> [Request: parseOctet()]" << std::endl;  // debug 출력
-  std::cout << _status << std::endl;                       // debug 출력
-
-  for (size_t i = 0; i < _requestLine.size(); i++) {  // debug 출력
-    std::cout << _requestLine[i];
-  }
-  std::cout << std::endl;
-
   switch (_status) {
     case READY:
-      _requestLine = _storageBuffer;
-      _storageBuffer.clear();
       _status = REQUEST_LINE;
       // fallthrough
     case REQUEST_LINE:
@@ -113,6 +133,7 @@ void RequestParser::parseOctet(u_int8_t const& octet) {
     case BODY_CONTENT_LENGTH:
       parseBodyContentLength(octet);
       break;
+    case HEADER_FIELD_END:
     case DONE:
       _storageBuffer.push_back(octet);
     default:

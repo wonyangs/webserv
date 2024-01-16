@@ -59,8 +59,12 @@ class RequestParser {
   void parse(u_int8_t const* buffer, ssize_t bytesRead);
   void clear();
 
+  bool isStorageBufferNotEmpty(void);
+
  private:
   void setBodyLength(std::string const& bodyLengthString);
+  void setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
+                        ssize_t bytesRead);
 
   void parseOctet(u_int8_t const& octet);
   void parseRequestLine(u_int8_t const& octet);
