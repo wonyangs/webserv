@@ -11,7 +11,7 @@
 // - 임시 객체 (구현 예정)
 class Connection {
  public:
-  enum EStatus {ON_WAIT, ON_RECV, TO_SEND, ON_SEND, CLOSE};
+  enum EStatus { ON_WAIT, ON_RECV, TO_SEND, ON_SEND, CLOSE };
 
  private:
   int _fd;
@@ -43,7 +43,10 @@ class Connection {
  private:
   static int const BUFFER_SIZE = 1024;
 
+  void parseRequest(u_int8_t* buffer, ssize_t bytesRead);
+
   void updateLastCallTime(void);
+  void changeStatus(EStatus status);
 
   Connection(void);
 };

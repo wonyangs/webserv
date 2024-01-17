@@ -36,56 +36,22 @@ Connection& Connection::operator=(Connection const& connection) {
 // Public method
 
 // 요청 읽기
-// - 임시 메서드
 void Connection::readSocket(void) {
-  _status = ON_RECV;
-  u_int8_t buffer[BUFFER_SIZE];
+  changeStatus(ON_RECV);
 
+  u_int8_t buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
-  ssize_t bytesRead = ::read(_fd, buffer, sizeof(buffer) - 1);
+  ssize_t bytesRead = read(_fd, buffer, sizeof(buffer) - 1);
 
   if (bytesRead < 0) {
     throw std::runtime_error("read error");
-  } else if (bytesRead == 0) {
-    // 클라이언트가 연결을 종료했음
-    _status = CLOSE;
+  } else if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
+    changeStatus(CLOSE);
     std::cout << "Client: connection closed" << std::endl;
+    updateLastCallTime();
     return;
   } else {
-    try {
-      _requestParser.parse(buffer, bytesRead);
-
-      if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
-        // Location 블록 찾아오기
-        // Request const& request = _requestParser.getRequest();
-        // std::string path = request.getPath();
-        // std::string host = request.getHeaderFieldValues("Host").front();
-        // Location location("/", "/var/www", "index.html");  // 찾았어
-        // 다시 파싱
-        // _requestParser.setLocation(location);
-        _requestParser.parse(buffer, 0);
-      }
-
-      if (_requestParser.getParsingStatus() == DONE) {
-        Request const& request = _requestParser.getRequest();
-        request.print();
-
-        // 응답 만들기
-        // WRITE 등록
-        _status = TO_SEND;
-
-        Kqueue::removeReadEvent(_fd);
-        Kqueue::addWriteEvent(_fd);
-
-        _requestParser.clear();
-      }
-
-    } catch (std::exception& e) {
-      // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
-
-      _requestParser.clear();
-      throw;
-    }
+    parseRequest(buffer, bytesRead);
   }
 
   updateLastCallTime();
@@ -93,7 +59,7 @@ void Connection::readSocket(void) {
 
 void Connection::readStorage(void) {
   try {
-    _status = ON_RECV;
+    changeStatus(ON_RECV);
 
     u_int8_t tmp[1];
     _requestParser.parse(tmp, 0);
@@ -115,12 +81,9 @@ void Connection::readStorage(void) {
 
       // 응답 만들기
       // WRITE 등록
-      _status = TO_SEND;
-      Kqueue::addWriteEvent(_fd);
+      changeStatus(TO_SEND);
 
       _requestParser.clear();
-    } else {
-      Kqueue::addReadEvent(_fd);
     }
   } catch (std::exception& e) {
     // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
@@ -132,6 +95,42 @@ void Connection::readStorage(void) {
   updateLastCallTime();
 }
 
+// 요청 읽기
+void Connection::parseRequest(u_int8_t* buffer, ssize_t bytesRead) {
+  try {
+    _requestParser.parse(buffer, bytesRead);
+
+    // 헤더 읽기 완료
+    if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
+      // Location 블록 찾아오기
+      // Request const& request = _requestParser.getRequest();
+      // std::string path = request.getPath();
+      // std::string host = request.getHeaderFieldValues("Host").front();
+      // Location location("/", "/var/www", "index.html");  // 찾았어
+      // 다시 파싱
+      // _requestParser.setLocation(location);
+      _requestParser.parse(buffer, 0);
+    }
+
+    // 전체 요청 읽기 완료
+    if (_requestParser.getParsingStatus() == DONE) {
+      changeStatus(TO_SEND);
+
+      Request const& request = _requestParser.getRequest();
+      request.print();
+
+      // 응답 만들기
+      // WRITE 등록
+      _requestParser.clear();
+    }
+
+  } catch (std::exception& e) {
+    // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
+    _requestParser.clear();
+    throw;
+  }
+}
+
 bool Connection::isReadStorageRequired() {
   return _requestParser.isStorageBufferNotEmpty();
 }
@@ -139,7 +138,7 @@ bool Connection::isReadStorageRequired() {
 // 응답 보내기
 // - 임시 메서드
 void Connection::send(void) {
-  _status = ON_SEND;
+  changeStatus(ON_SEND);
 
   char const* response =
       "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: "
@@ -156,7 +155,7 @@ void Connection::send(void) {
             << response << "\n-------------" << std::endl;
   updateLastCallTime();
 
-  _status = ON_WAIT;
+  changeStatus(ON_WAIT);
 }
 
 // 에러 응답 보내기
@@ -213,3 +212,6 @@ long Connection::getElapsedTime(void) const {
 // 마지막으로 호출된 시간 업데이트
 // - timeout 관리를 위해 커넥션이 호출되면 반드시 사용
 void Connection::updateLastCallTime(void) { _lastCallTime = std::time(0); }
+
+// Connection의 현재 상태 변경
+void Connection::changeStatus(EStatus status) { _status = status; }

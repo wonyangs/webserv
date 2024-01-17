@@ -96,6 +96,9 @@ void ServerManager::handleConnection(Event event) {
       if (it->second.getConnectionStatus() == Connection::CLOSE) {
         Kqueue::removeReadEvent(event.getFd());
         removeConnection(event.getFd());
+      } else if (it->second.getConnectionStatus() == Connection::TO_SEND) {
+        Kqueue::removeReadEvent(event.getFd());
+        Kqueue::addWriteEvent(event.getFd());
       }
     } else if (event.getType() == Event::WRITE) {
       // 응답 보내기
@@ -104,11 +107,17 @@ void ServerManager::handleConnection(Event event) {
 
       if (it->second.isReadStorageRequired()) {
         it->second.readStorage();
+        if (it->second.getConnectionStatus() == Connection::TO_SEND) {
+          Kqueue::addWriteEvent(event.getFd());
+        } else {
+          Kqueue::addReadEvent(event.getFd());
+        }
         return;
       }
       Kqueue::addReadEvent(event.getFd());
       return;  // WRITE 이벤트 부분 구현
     }
+
   } catch (StatusException const& e) {
     std::cout << "Exception thrown: " << e.what() << std::endl;
     int code = e.getStatusCode();
