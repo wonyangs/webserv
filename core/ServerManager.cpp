@@ -93,6 +93,10 @@ void ServerManager::handleConnection(Event event) {
   try {
     if (event.getType() == Event::READ) {
       it->second.readSocket();
+      if (it->second.getConnectionStatus() == Connection::CLOSE) {
+        Kqueue::removeReadEvent(event.getFd());
+        removeConnection(event.getFd());
+      }
     } else if (event.getType() == Event::WRITE) {
       // 응답 보내기
       it->second.send();
