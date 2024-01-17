@@ -172,8 +172,8 @@ void RequestParser::parseOctet(u_int8_t const& octet) {
     case BODY_CHUNK_DATA:
       parseBodyChunkData(octet);
       break;
-    case BODY_CHUNK_END:
-      _status = DONE;
+    case BODY_CHUNK_TRAILER:
+      parseBodyChunkTrailer(octet);
       break;
     case HEADER_FIELD_END:
     case DONE:
@@ -238,10 +238,10 @@ void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
 
   if (octet == '\n' and isEndWithCRLF(_chunkSizeBuffer)) {
     processBodyChunkSize();
-    _status = _chunkSize == 0 ? BODY_CHUNK_END : BODY_CHUNK_DATA;
+    _status = _chunkSize == 0 ? BODY_CHUNK_TRAILER : BODY_CHUNK_DATA;
     _chunkSizeBuffer.clear();
 
-    if (_status == BODY_CHUNK_END) {
+    if (_status == BODY_CHUNK_TRAILER) {
       std::string processResult = processBody();
       _request.storeBody(processResult);
     }
@@ -264,6 +264,19 @@ void RequestParser::parseBodyChunkData(u_int8_t const& octet) {
   if (_body.size() == _bodyLength + crlfLength) {
     removeCRLF(_body);
     _status = BODY_CHUNK_SIZE;
+  }
+}
+
+void RequestParser::parseBodyChunkTrailer(u_int8_t const& octet) {
+  _header.push_back(octet);
+
+  if (octet == '\n' and isEndWithCRLF(_header)) {
+    if (_header.size() == 2) {
+      _status = DONE;
+      return;
+    }
+
+    _header.clear();
   }
 }
 

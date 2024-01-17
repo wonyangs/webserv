@@ -25,7 +25,7 @@ enum EParsingStatus {
   BODY_CHUNKED,
   BODY_CHUNK_SIZE,
   BODY_CHUNK_DATA,
-  BODY_CHUNK_END,
+  BODY_CHUNK_TRAILER,
   DONE,
 };
 
@@ -73,6 +73,7 @@ class RequestParser {
   void parseBodyContentLength(u_int8_t const& octet);
   void parseBodyChunkSize(u_int8_t const& octet);
   void parseBodyChunkData(u_int8_t const& octet);
+  void parseBodyChunkTrailer(u_int8_t const& octet);
 
   void setupBodyParse(void);
 
