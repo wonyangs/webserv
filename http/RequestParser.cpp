@@ -16,15 +16,15 @@ RequestParser::~RequestParser(void) {}
 
 RequestParser& RequestParser::operator=(RequestParser const& requestParser) {
   if (this != &requestParser) {
+    _request = requestParser._request;
     _status = requestParser._status;
     _requestLine = requestParser._requestLine;
     _header = requestParser._header;
     _body = requestParser._body;
     _storageBuffer = requestParser._storageBuffer;
-    _request = requestParser._request;
-    _bodyLength = requestParser._bodyLength;
     _chunkSizeBuffer = requestParser._chunkSizeBuffer;
     _chunkSize = requestParser._chunkSize;
+    _bodyLength = requestParser._bodyLength;
   }
   return *this;
 }
@@ -75,6 +75,9 @@ void RequestParser::clear() {
   _header.clear();
   _body.clear();
   _request.clear();
+  _chunkSizeBuffer.clear();
+  _chunkSize = 0;
+  _bodyLength = 0;
 }
 
 // _storageBuffer 변수가 비어있지 않은지 여부 확인
