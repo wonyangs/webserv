@@ -33,19 +33,18 @@ enum EParsingStatus {
 // - HTTP Request를 파싱해서 Request 객체에 저장
 class RequestParser {
  private:
+  Request _request;
+
   enum EParsingStatus _status;
   std::vector<u_int8_t> _requestLine;
   std::vector<u_int8_t> _header;
   std::vector<u_int8_t> _body;
 
   std::vector<u_int8_t> _storageBuffer;
-
-  Request _request;
-
-  size_t _bodyLength;
-
   std::vector<u_int8_t> _chunkSizeBuffer;
+
   size_t _chunkSize;
+  size_t _bodyLength;
 
  public:
   RequestParser(void);
