@@ -23,6 +23,7 @@ Connection::Connection(Connection const& connection) { *this = connection; }
 
 Connection::~Connection(void) {}
 
+
 /**
  * Operator Overloading
  */
@@ -36,6 +37,7 @@ Connection& Connection::operator=(Connection const& connection) {
   }
   return *this;
 }
+
 
 /**
  * Public method - request
@@ -114,9 +116,10 @@ void Connection::parseRequest(u_int8_t* buffer, ssize_t bytesRead) {
 
 // RequestParser의 storage가 남아있는지 여부 반환
 // - storage가 남아있는 경우 readStorage 메서드를 호출해야 함
-bool Connection::isReadStorageRequired() const {
+bool Connection::isReadStorageRequired() {
   return _requestParser.isStorageBufferNotEmpty();
 }
+
 
 /**
  * Public method - response
@@ -178,6 +181,7 @@ void Connection::sendErrorPage(int code) {
   updateLastCallTime();
 }
 
+
 /**
  * Public method - etc
  */
@@ -198,6 +202,7 @@ Connection::EStatus Connection::getConnectionStatus(void) const {
 long Connection::getElapsedTime(void) const {
   return std::time(0) - _lastCallTime;
 }
+
 
 /**
  * Private method
