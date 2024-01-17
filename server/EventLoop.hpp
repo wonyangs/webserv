@@ -25,10 +25,8 @@ class EventLoop {
   typedef std::map<ServerKey, ServerList> ServerMap;
   typedef std::map<int, ServerManager> ManagerMap;
 
-
-  void printServerMap(const ServerMap& serverMap);  // debug
-  bool isServerFd(int fd);
   void closeTimeoutConnections(void);
+  void printServerMap(const ServerMap& serverMap);  // debug
 
   EventLoop(void);
   EventLoop& operator=(EventLoop const& eventloop);

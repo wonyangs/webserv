@@ -50,41 +50,23 @@ void EventLoop::run(void) {
       continue;
     }
 
-    int eventFd = event.getFd();
+    ManagerMap::iterator it = _managers.begin();
+    while (it != _managers.end()) {
+      ServerManager& manager = it->second;
 
-    // todo: 이후에 manager에게 책임 넘기기
-    if (isServerFd(eventFd)) {
-      int clientFd = Socket::accept(eventFd);
-      std::cout << clientFd << std::endl;
-
-      ManagerMap::iterator it = _managers.find(eventFd);
-
-      (it->second).addConnection(clientFd);
-      Kqueue::addReadEvent(clientFd);
-
-      std::cout << "connection success" << std::endl;
-    } else {
-      for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
-           ++it) {
-        ServerManager& manager = it->second;
-
-        if (manager.hasFd(eventFd)) {
-          manager.handleConnection(event);
-          break;
-        }
+      if (manager.canHandleEvent(event)) {
+        manager.handleEvent(event);
+        break;
       }
-
-      std::cout << "event received" << std::endl;
+      ++it;
+    }
+    if (it == _managers.end()) {
+      throw std::runtime_error("EventLoop: run - unexpected event fd");
     }
   }
 }
 
 // Private Method
-
-// 해당하는 fd가 서버의 fd인지 여부 반환
-bool EventLoop::isServerFd(int fd) {
-  return (_managers.find(fd) != _managers.end());
-}
 
 // 서버 전체 timeout 실행
 void EventLoop::closeTimeoutConnections(void) {
