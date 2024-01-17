@@ -27,6 +27,7 @@ Connection& Connection::operator=(Connection const& connection) {
   if (this != &connection) {
     _fd = connection._fd;
     _lastCallTime = connection._lastCallTime;
+    _status = connection._status;
     _requestParser = connection._requestParser;
   }
   return *this;
@@ -37,16 +38,14 @@ Connection& Connection::operator=(Connection const& connection) {
 // 요청 읽기
 // - 임시 메서드
 void Connection::readSocket(void) {
+  _status = ON_RECV;
   u_int8_t buffer[BUFFER_SIZE];
 
   memset(buffer, 0, BUFFER_SIZE);
   ssize_t bytesRead = ::read(_fd, buffer, sizeof(buffer) - 1);
-  _status = ON_RECV;
 
   if (bytesRead < 0) {
-    perror("read");
-    ::close(_fd);
-    return;
+    throw std::runtime_error("read error");
   } else if (bytesRead == 0) {
     // 클라이언트가 연결을 종료했음
     _status = CLOSE;
