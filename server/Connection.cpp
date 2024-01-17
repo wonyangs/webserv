@@ -9,7 +9,9 @@
 #include "../core/Kqueue.hpp"
 #include "../utils/Config.hpp"
 
-// Constructor & Destructor
+/**
+ * Constructor & Destructor
+ */
 
 Connection::Connection(int fd)
     : _fd(fd),
@@ -21,7 +23,9 @@ Connection::Connection(Connection const& connection) { *this = connection; }
 
 Connection::~Connection(void) {}
 
-// Operator Overloading
+/**
+ * Operator Overloading
+ */
 
 Connection& Connection::operator=(Connection const& connection) {
   if (this != &connection) {
@@ -33,9 +37,13 @@ Connection& Connection::operator=(Connection const& connection) {
   return *this;
 }
 
-// Public method
+/**
+ * Public method - request
+ */
 
 // 요청 읽기
+// - 읽기에 실패한 경우 예외 발생
+// - 클라이언트 연결 종료가 감지된 경우 status를 CLOSE로 바꿈
 void Connection::readSocket(void) {
   changeStatus(ON_RECV);
 
@@ -44,7 +52,7 @@ void Connection::readSocket(void) {
   ssize_t bytesRead = read(_fd, buffer, sizeof(buffer) - 1);
 
   if (bytesRead < 0) {
-    throw std::runtime_error("read error");
+    throw std::runtime_error("[4000] Connection: readSocket - read fail");
   } else if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
     changeStatus(CLOSE);
     std::cout << "Client: connection closed" << std::endl;  // debug
@@ -57,6 +65,7 @@ void Connection::readSocket(void) {
 }
 
 // storage에 있는 요청 읽기
+// - 읽기에 실패한 경우 예외 발생
 void Connection::readStorage(void) {
   changeStatus(ON_RECV);
 
@@ -66,7 +75,8 @@ void Connection::readStorage(void) {
   updateLastCallTime();
 }
 
-// 요청 읽기
+// RequestParser에서 요청 읽기
+// - bytesRead를 0으로 하면 storage에 남아있는 내용을 파싱
 void Connection::parseRequest(u_int8_t* buffer, ssize_t bytesRead) {
   try {
     _requestParser.parse(buffer, bytesRead);
@@ -102,9 +112,15 @@ void Connection::parseRequest(u_int8_t* buffer, ssize_t bytesRead) {
   }
 }
 
-bool Connection::isReadStorageRequired() {
+// RequestParser의 storage가 남아있는지 여부 반환
+// - storage가 남아있는 경우 readStorage 메서드를 호출해야 함
+bool Connection::isReadStorageRequired() const {
   return _requestParser.isStorageBufferNotEmpty();
 }
+
+/**
+ * Public method - response
+ */
 
 // 응답 보내기
 // - 임시 메서드
@@ -118,7 +134,7 @@ void Connection::send(void) {
   ssize_t bytesSent = write(_fd, response, strlen(response));
 
   if (bytesSent < 0) {
-    throw std::runtime_error("Failed to write to socket");
+    throw std::runtime_error("[4001] Connection: send - fail to write socket");
   }
 
   std::cout << "[ Server: response sent ]\n"
@@ -151,7 +167,8 @@ void Connection::sendErrorPage(int code) {
   ssize_t bytesSent = write(_fd, response.c_str(), response.length());
 
   if (bytesSent < 0) {
-    throw std::runtime_error("Failed to write to socket");
+    throw std::runtime_error(
+        "[4002] Connection: sendErrorPage - fail to write socket");
   }
 
   std::cout << "[ Server: response sent ]\n"
@@ -160,6 +177,10 @@ void Connection::sendErrorPage(int code) {
 
   updateLastCallTime();
 }
+
+/**
+ * Public method - etc
+ */
 
 // 커넥션 닫기
 void Connection::close(void) { ::close(_fd); }
@@ -178,7 +199,9 @@ long Connection::getElapsedTime(void) const {
   return std::time(0) - _lastCallTime;
 }
 
-// Private method
+/**
+ * Private method
+ */
 
 // 마지막으로 호출된 시간 업데이트
 // - timeout 관리를 위해 커넥션이 호출되면 반드시 사용

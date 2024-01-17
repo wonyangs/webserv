@@ -29,7 +29,7 @@ class Connection {
 
   void readSocket(void);
   void readStorage(void);
-  bool isReadStorageRequired(void);
+  bool isReadStorageRequired(void) const;
 
   void send(void);
   void sendErrorPage(int code);
