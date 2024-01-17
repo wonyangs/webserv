@@ -43,25 +43,29 @@ EventLoop::~EventLoop(void) {}
 
 void EventLoop::run(void) {
   while (true) {
-    closeTimeoutConnections();
+    try {
+      closeTimeoutConnections();
 
-    Event event = Kqueue::getEvent();
-    if (event.isInvalid()) {
-      continue;
-    }
-
-    ManagerMap::iterator it = _managers.begin();
-    while (it != _managers.end()) {
-      ServerManager& manager = it->second;
-
-      if (manager.canHandleEvent(event)) {
-        manager.handleEvent(event);
-        break;
+      Event event = Kqueue::getEvent();
+      if (event.isInvalid()) {
+        continue;
       }
-      ++it;
-    }
-    if (it == _managers.end()) {
-      throw std::runtime_error("EventLoop: run - unexpected event fd");
+
+      ManagerMap::iterator it = _managers.begin();
+      while (it != _managers.end()) {
+        ServerManager& manager = it->second;
+
+        if (manager.canHandleEvent(event)) {
+          manager.handleEvent(event);
+          break;
+        }
+        ++it;
+      }
+      if (it == _managers.end()) {
+        throw std::runtime_error("EventLoop: run - unexpected event fd");
+      }
+    } catch (std::exception const& e) {
+      std::cout << e.what() << std::endl;
     }
   }
 }

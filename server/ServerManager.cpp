@@ -75,15 +75,13 @@ void ServerManager::runServer(void) {
 // - 서버 fd인 경우 커넥션 추가
 // - 클라이언트 fd인 경우 이벤트 type에 따라 처리
 // - 예상치 못한 이벤트 타입이 온 경우 예외 발생
+// - 내부에서 예외가 발생한 경우 자원 정리 후 예외 전달
 void ServerManager::handleEvent(Event event) {
   int eventFd = event.getFd();
 
   // 서버 fd인 경우 커넥션 추가
   if (eventFd == _serverFd) {
-    int clientFd = Socket::accept(eventFd);
-
-    addConnection(clientFd);
-    Kqueue::addReadEvent(clientFd);
+    handleServerEvent();
     return;
   }
 
@@ -100,6 +98,26 @@ void ServerManager::handleEvent(Event event) {
     default:
       throw std::runtime_error(
           "[] ServerManager: handleEvent - unknown event type");
+  }
+}
+
+// 커넥션 추가 이벤트 처리
+// - 예외 발생 시 자원 정리 후 예외 전달
+void ServerManager::handleServerEvent(void) {
+  int clientFd = -1;
+
+  try {
+    clientFd = Socket::accept(eventFd);
+
+    addConnection(clientFd);
+    Kqueue::addReadEvent(clientFd);
+  } catch (std::exception const& e) {
+    if (hasConnectionFd(clientFd)) {
+      removeConnection(clientFd);
+    } else if (clientFd != -1) {
+      close(clientFd);
+    }
+    throw;
   }
 }
 

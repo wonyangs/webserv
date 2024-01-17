@@ -41,6 +41,7 @@ class ServerManager {
   void removeConnection(int fd);
   bool hasConnectionFd(int fd) const;
 
+  void handleServerEvent(void);
   void handleReadEvent(int eventFd);
   void handleWriteEvent(int eventFd);
 
