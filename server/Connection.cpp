@@ -151,6 +151,8 @@ void Connection::send(void) {
 // 에러 응답 보내기
 // - 임시 메서드
 void Connection::sendErrorPage(int code) {
+  changeStatus(ON_SEND);
+
   // 상태 코드에 해당하는 메시지 찾기
   std::map<int, std::string>::const_iterator it =
       Config::statusMessages.find(code);
@@ -179,6 +181,8 @@ void Connection::sendErrorPage(int code) {
             << response << "\n-------------" << std::endl;
 
   updateLastCallTime();
+
+  changeStatus(ON_WAIT);
 }
 
 
