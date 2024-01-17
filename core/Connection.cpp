@@ -12,7 +12,10 @@
 // Constructor & Destructor
 
 Connection::Connection(int fd)
-    : _fd(fd), _lastCallTime(std::time(0)), _requestParser() {}
+    : _fd(fd),
+      _lastCallTime(std::time(0)),
+      _status(ON_WAIT),
+      _requestParser() {}
 
 Connection::Connection(Connection const& connection) { *this = connection; }
 
@@ -38,6 +41,7 @@ void Connection::readSocket(void) {
 
   memset(buffer, 0, BUFFER_SIZE);
   ssize_t bytesRead = ::read(_fd, buffer, sizeof(buffer) - 1);
+  _status = ON_RECV;
 
   if (bytesRead < 0) {
     perror("read");
@@ -45,7 +49,7 @@ void Connection::readSocket(void) {
     return;
   } else if (bytesRead == 0) {
     // 클라이언트가 연결을 종료했음
-    ::close(_fd);
+    _status = CLOSE;
     std::cout << "Client: connection closed" << std::endl;
     return;
   } else {
@@ -69,6 +73,8 @@ void Connection::readSocket(void) {
 
         // 응답 만들기
         // WRITE 등록
+        _status = TO_SEND;
+
         Kqueue::removeReadEvent(_fd);
         Kqueue::addWriteEvent(_fd);
 
@@ -88,6 +94,8 @@ void Connection::readSocket(void) {
 
 void Connection::readStorage(void) {
   try {
+    _status = ON_RECV;
+
     u_int8_t tmp[1];
     _requestParser.parse(tmp, 0);
 
@@ -108,6 +116,7 @@ void Connection::readStorage(void) {
 
       // 응답 만들기
       // WRITE 등록
+      _status = TO_SEND;
       Kqueue::addWriteEvent(_fd);
 
       _requestParser.clear();
@@ -131,6 +140,8 @@ bool Connection::isReadStorageRequired() {
 // 응답 보내기
 // - 임시 메서드
 void Connection::send(void) {
+  _status = ON_SEND;
+
   char const* response =
       "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: "
       "text/plain\nConnection: keep-alive\n\nHello, "
@@ -145,6 +156,8 @@ void Connection::send(void) {
             << "-------------\n"
             << response << "\n-------------" << std::endl;
   updateLastCallTime();
+
+  _status = ON_WAIT;
 }
 
 // 에러 응답 보내기
@@ -184,6 +197,11 @@ void Connection::close(void) { ::close(_fd); }
 
 // 관리 중인 fd 반환
 int Connection::getFd(void) const { return _fd; }
+
+// 현재 커넥션의 상태 반환
+Connection::EStatus Connection::getConnectionStatus(void) const {
+  return _status;
+}
 
 // 마지막으로 호출된 이후 경과된 시간 반환
 // - 반환된 값은 초 단위
