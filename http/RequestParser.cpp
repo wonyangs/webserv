@@ -3,7 +3,7 @@
 // Constructor & Destructor
 
 RequestParser::RequestParser(void)
-    : _status(READY), _bodyLength(0), _chunkSize(0) {}
+    : _status(READY), _chunkSize(0), _bodyLength(0) {}
 
 RequestParser::RequestParser(RequestParser const& requestParser)
     : _request(requestParser._request) {
@@ -148,7 +148,7 @@ void RequestParser::setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
 // Private Method
 
 // octet 파싱
-// TODO: chunked 입력 파싱 처리
+// TODO: chunked Trailer 파싱 처리
 void RequestParser::parseOctet(u_int8_t const& octet) {
   switch (_status) {
     case READY:
@@ -168,9 +168,17 @@ void RequestParser::parseOctet(u_int8_t const& octet) {
       // fallthrough
     case BODY_CHUNK_SIZE:
       parseBodyChunkSize(octet);
+      break;
+    case BODY_CHUNK_DATA:
+      parseBodyChunkData(octet);
+      break;
+    case BODY_CHUNK_END:
+      _status = DONE;
+      break;
     case HEADER_FIELD_END:
     case DONE:
       _storageBuffer.push_back(octet);
+      break;
     default:
       break;  // TODO: chunk status 추가 후 default는 예외로 처리
   }
@@ -215,7 +223,7 @@ void RequestParser::parseHeaderField(u_int8_t const& octet) {
 // body 파싱
 // - bodyLength 만큼 저장되었을 경우 status를 DONE으로 변경
 void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
-  if (_body.size() < _bodyLength) _body.push_back(octet);
+  _body.push_back(octet);
 
   if (_body.size() == _bodyLength) {
     std::string processResult = processBody();
@@ -232,6 +240,30 @@ void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
     processBodyChunkSize();
     _status = _chunkSize == 0 ? BODY_CHUNK_END : BODY_CHUNK_DATA;
     _chunkSizeBuffer.clear();
+
+    if (_status == BODY_CHUNK_END) {
+      std::string processResult = processBody();
+      _request.storeBody(processResult);
+    }
+  }
+}
+
+void RequestParser::parseBodyChunkData(u_int8_t const& octet) {
+  const size_t crlfLength = 2;
+
+  const size_t bodySize = _body.size();
+  if ((bodySize == _bodyLength and octet != '\r') or
+      (bodySize == _bodyLength + 1 and octet != '\n')) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2301] RequestParser: parseBodyChunkData - invalid format");
+  }
+
+  _body.push_back(octet);
+
+  if (_body.size() == _bodyLength + crlfLength) {
+    removeCRLF(_body);
+    _status = BODY_CHUNK_SIZE;
   }
 }
 
@@ -307,8 +339,9 @@ void RequestParser::processBodyChunkSize() {
   splitBodyChunkSize(result);
 
   std::string const& chunkSizeString = result[0];
-  std::cout << chunkSizeString << std::endl;  // debug
   setChunkSize(chunkSizeString);
+
+  _bodyLength += _chunkSize;
 }
 
 // body 후처리

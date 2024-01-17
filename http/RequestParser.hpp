@@ -72,6 +72,7 @@ class RequestParser {
   void parseHeaderField(u_int8_t const& octet);
   void parseBodyContentLength(u_int8_t const& octet);
   void parseBodyChunkSize(u_int8_t const& octet);
+  void parseBodyChunkData(u_int8_t const& octet);
 
   void setupBodyParse(void);
 
