@@ -10,9 +10,13 @@
 // 클라이언트 연결을 관리하는 클래스
 // - 임시 객체 (구현 예정)
 class Connection {
+ public:
+  enum EStatus {ON_WAIT, ON_RECV, TO_SEND, ON_SEND, CLOSE};
+
  private:
   int _fd;
   std::time_t _lastCallTime;
+  enum EStatus _status;
 
   RequestParser _requestParser;
 
@@ -33,6 +37,7 @@ class Connection {
   void close(void);
 
   int getFd(void) const;
+  EStatus getConnectionStatus(void) const;
   long getElapsedTime(void) const;
 
  private:
