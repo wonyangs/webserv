@@ -7,8 +7,8 @@
 #include <string>
 #include <vector>
 
-#include "Kqueue.hpp"
-#include "Socket.hpp"
+#include "../core/Kqueue.hpp"
+#include "../core/Socket.hpp"
 
 // Constructor & Destructor
 

@@ -4,8 +4,8 @@
 #include <ctime>
 #include <string>
 
-#include "http/Request.hpp"
-#include "http/RequestParser.hpp"
+#include "../http/Request.hpp"
+#include "../http/RequestParser.hpp"
 
 // 클라이언트 연결을 관리하는 클래스
 // - 임시 객체 (구현 예정)

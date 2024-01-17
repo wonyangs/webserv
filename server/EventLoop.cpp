@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "Kqueue.hpp"
-#include "Socket.hpp"
+#include "../core/Kqueue.hpp"
+#include "../core/Socket.hpp"
 
 // Constructor & Destructor
 

@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "core/EventLoop.hpp"
+#include "server/EventLoop.hpp"
+#include "config/Server.hpp"
 
 std::vector<Server> exampleParseConfig(void) {
   // Server 1의 Location 블록 설정

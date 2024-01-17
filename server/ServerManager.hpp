@@ -6,8 +6,8 @@
 #include <vector>
 
 #include "../config/Server.hpp"
+#include "../core/Event.hpp"
 #include "Connection.hpp"
-#include "Event.hpp"
 
 // 가상 서버 클래스
 class ServerManager {
