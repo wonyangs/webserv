@@ -325,6 +325,12 @@ void RequestParser::splitRequestLine(std::vector<std::string>& result) {
   while (std::getline(ss, token, ' ')) {
     result.push_back(token);
   }
+
+  if (result.size() == 0) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2102] RequestParser: splitRequestLine - requestLine is empty");
+  }
 }
 
 // header를 가장 처음 나온 COLON(:)을 기준으로 split
@@ -337,6 +343,12 @@ void RequestParser::splitHeaderField(std::vector<std::string>& result) {
     result.push_back(headerField.substr(0, pos));
     result.push_back(headerField.substr(pos + 1));
   }
+
+  if (result.size() == 0) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2204] RequestParser: splitHeaderField - headerField is empty");
+  }
 }
 
 // chunkSizeBuffer SEMICOLON(;)을 기준으로 split
@@ -348,6 +360,12 @@ void RequestParser::splitBodyChunkSize(std::vector<std::string>& result) {
 
   while (std::getline(ss, token, ';')) {
     result.push_back(token);
+  }
+
+  if (result.size() == 0) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2300] RequestParser: splitBodyChunkSize - chunkSizeBuffer is empty");
   }
 }
 
