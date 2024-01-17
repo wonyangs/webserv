@@ -88,14 +88,13 @@ bool RequestParser::isStorageBufferNotEmpty() {
 // - 만약 bodyLengthString 을 size_t로 변환 실패할 경우 예외 발생
 // - TODO: config에 있는 client_max_body_size 예외 처리 필요
 void RequestParser::setBodyLength(std::string const& bodyLengthString) {
-  std::stringstream ss;
-
   if (bodyLengthString.size() < 1 or bodyLengthString[0] == '-') {
     throw std::invalid_argument(
         "[2001] RequestParser: setBodyLength - invalid type: " +
         bodyLengthString);
   }
 
+  std::stringstream ss;
   ss << bodyLengthString;
   ss >> _bodyLength;
 
@@ -104,6 +103,26 @@ void RequestParser::setBodyLength(std::string const& bodyLengthString) {
         "[2002] RequestParser: setBodyLength - invalid type: " +
         bodyLengthString);
   }
+}
+
+void RequestParser::setChunkSize(std::string const& chunkSizeString) {
+  if (chunkSizeString.size() < 1 or chunkSizeString[0] == '-') {
+    throw std::invalid_argument(
+        "[2003] RequestParser: setChunkSize - invalid type: " +
+        chunkSizeString);
+  }
+
+  std::stringstream ss;
+  ss << chunkSizeString;
+  ss >> std::hex >> _chunkSize;
+
+  if (ss.fail() or !ss.eof()) {
+    throw std::invalid_argument(
+        "[2004] RequestParser: setChunkSize - invalid type: " +
+        chunkSizeString);
+  }
+
+  std::cout << "setChunkSize: " << _chunkSize << std::endl;  // debug
 }
 
 // storageBuffer 저장
@@ -141,6 +160,11 @@ void RequestParser::parseOctet(u_int8_t const& octet) {
     case BODY_CONTENT_LENGTH:
       parseBodyContentLength(octet);
       break;
+    case BODY_CHUNKED:
+      _status = BODY_CHUNK_SIZE;
+      // fallthrough
+    case BODY_CHUNK_SIZE:
+      parseBodyChunkSize(octet);
     case HEADER_FIELD_END:
     case DONE:
       _storageBuffer.push_back(octet);
@@ -194,6 +218,17 @@ void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
     std::string processResult = processBody();
     _request.storeBody(processResult);
     _status = DONE;
+  }
+}
+
+void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
+  _chunkSizeBuffer.push_back(octet);
+  std::cout << (int)octet << " " << octet << std::endl;  // debug
+
+  if (octet == '\n' and isEndWithCRLF(_chunkSizeBuffer)) {
+    processBodyChunkSize();
+    _status = _chunkSize == 0 ? BODY_CHUNK_END : BODY_CHUNK_DATA;
+    _chunkSizeBuffer.clear();
   }
 }
 
@@ -262,6 +297,17 @@ std::vector<std::string> RequestParser::processHeaderField() {
   return result;
 }
 
+void RequestParser::processBodyChunkSize() {
+  removeCRLF(_chunkSizeBuffer);
+
+  std::vector<std::string> result;
+  splitBodyChunkSize(result);
+
+  std::string const& chunkSizeString = result[0];
+  std::cout << chunkSizeString << std::endl;  // debug
+  setChunkSize(chunkSizeString);
+}
+
 // body 후처리
 // - vector 형식을 std::string으로 변환
 std::string RequestParser::processBody() {
@@ -290,6 +336,18 @@ void RequestParser::splitHeaderField(std::vector<std::string>& result) {
   if (pos != std::string::npos) {
     result.push_back(headerField.substr(0, pos));
     result.push_back(headerField.substr(pos + 1));
+  }
+}
+
+// chunkSizeBuffer SEMICOLON(;)을 기준으로 split
+// - split한 결과는 매개변수 result에 저장
+void RequestParser::splitBodyChunkSize(std::vector<std::string>& result) {
+  std::string chunkSizeBuffer(_chunkSizeBuffer.begin(), _chunkSizeBuffer.end());
+  std::stringstream ss(chunkSizeBuffer);
+  std::string token;
+
+  while (std::getline(ss, token, ';')) {
+    result.push_back(token);
   }
 }
 

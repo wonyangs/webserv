@@ -15,7 +15,7 @@
 #define SP 32
 #define COLON 58
 
-// TODO: chunk 처리
+// TODO: chunk trailer 처리
 enum EParsingStatus {
   READY,
   REQUEST_LINE,
@@ -25,6 +25,7 @@ enum EParsingStatus {
   BODY_CHUNKED,
   BODY_CHUNK_SIZE,
   BODY_CHUNK_DATA,
+  BODY_CHUNK_END,
   DONE,
 };
 
@@ -63,6 +64,7 @@ class RequestParser {
 
  private:
   void setBodyLength(std::string const& bodyLengthString);
+  void setChunkSize(std::string const& chunkSizeString);
   void setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
                         ssize_t bytesRead);
 
@@ -70,15 +72,18 @@ class RequestParser {
   void parseRequestLine(u_int8_t const& octet);
   void parseHeaderField(u_int8_t const& octet);
   void parseBodyContentLength(u_int8_t const& octet);
+  void parseBodyChunkSize(u_int8_t const& octet);
 
   void setupBodyParse(void);
 
   std::vector<std::string> processRequestLine(void);
   std::vector<std::string> processHeaderField(void);
   std::string processBody(void);
+  void processBodyChunkSize(void);
 
   void splitRequestLine(std::vector<std::string>& result);
   void splitHeaderField(std::vector<std::string>& result);
+  void splitBodyChunkSize(std::vector<std::string>& result);
 
   EParsingStatus checkBodyParsingStatus(void);
   bool isInvalidFormatSize(std::vector<std::string> const& result, size_t size);
