@@ -47,51 +47,22 @@ void Connection::readSocket(void) {
     throw std::runtime_error("read error");
   } else if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
     changeStatus(CLOSE);
-    std::cout << "Client: connection closed" << std::endl;
+    std::cout << "Client: connection closed" << std::endl;  // debug
     updateLastCallTime();
     return;
-  } else {
-    parseRequest(buffer, bytesRead);
   }
 
+  parseRequest(buffer, bytesRead);
   updateLastCallTime();
 }
 
+// storage에 있는 요청 읽기
 void Connection::readStorage(void) {
-  try {
-    changeStatus(ON_RECV);
+  changeStatus(ON_RECV);
 
-    u_int8_t tmp[1];
-    _requestParser.parse(tmp, 0);
+  u_int8_t tmp[1];
 
-    if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
-      // Location 블록 찾아오기
-      // Request const& request = _requestParser.getRequest();
-      // std::string path = request.getPath();
-      // std::string host = request.getHeaderFieldValues("Host").front();
-      // Location location("/", "/var/www", "index.html");  // 찾았어
-      // 다시 파싱
-      // _requestParser.setLocation(location);
-      _requestParser.parse(tmp, 0);
-    }
-
-    if (_requestParser.getParsingStatus() == DONE) {
-      Request const& request = _requestParser.getRequest();
-      request.print();
-
-      // 응답 만들기
-      // WRITE 등록
-      changeStatus(TO_SEND);
-
-      _requestParser.clear();
-    }
-  } catch (std::exception& e) {
-    // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
-
-    _requestParser.clear();
-    throw;
-  }
-
+  parseRequest(tmp, 0);
   updateLastCallTime();
 }
 
