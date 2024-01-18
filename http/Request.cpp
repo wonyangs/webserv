@@ -16,6 +16,7 @@ Request& Request::operator=(Request const& request) {
   if (this != &request) {
     _method = request._method;
     _path = request._path;
+    _query = request._query;
     _httpVersion = request._httpVersion;
     _header = request._header;
     _body = request._body;
@@ -29,6 +30,8 @@ enum EHttpMethod const& Request::getMethod(void) const { return _method; }
 
 std::string const& Request::getPath(void) const { return _path; }
 
+std::string const& Request::getQuery(void) const { return _query; }
+
 std::string const& Request::getHttpVersion(void) const { return _httpVersion; }
 
 std::map<std::string, std::vector<std::string> > const& Request::getHeader(
@@ -37,33 +40,6 @@ std::map<std::string, std::vector<std::string> > const& Request::getHeader(
 }
 
 std::string const& Request::getBody(void) const { return _body; }
-
-// debug
-
-#include <iostream>
-
-// 디버깅용 Request 정보 출력 함수
-void Request::print() const {
-  std::cout << "Method: " << _method << std::endl;
-  std::cout << "Path: " << _path << std::endl;
-  std::cout << "HTTP Version: " << _httpVersion << std::endl;
-
-  std::cout << "Headers:" << std::endl;
-  for (std::map<std::string, std::vector<std::string> >::const_iterator it =
-           _header.begin();
-       it != _header.end(); ++it) {
-    std::cout << "header-field: [" << it->first << "] ";
-    for (std::vector<std::string>::const_iterator vit = it->second.begin();
-         vit != it->second.end(); ++vit) {
-      std::cout << "[" << *vit << "]" << std::endl;
-    }
-    std::cout << "---------" << std::endl;
-  }
-
-  std::cout << "Body: " << _body << std::endl;
-}
-
-// Public method - getter
 
 std::vector<std::string> const& Request::getHeaderFieldValues(
     std::string const& fieldName) const {
@@ -75,6 +51,31 @@ std::vector<std::string> const& Request::getHeaderFieldValues(
   std::map<std::string, std::vector<std::string> >::const_iterator it =
       _header.find(fieldName);
   return it->second;
+}
+
+// debug
+
+#include <iostream>
+
+// 디버깅용 Request 정보 출력 함수
+void Request::print() const {
+  std::cout << "Method: " << _method << std::endl;
+  std::cout << "Path: " << _path << std::endl;
+  std::cout << "Query: " << _query << std::endl;
+  std::cout << "HTTP Version: " << _httpVersion << std::endl;
+
+  std::cout << "Headers:" << std::endl;
+  for (std::map<std::string, std::vector<std::string> >::const_iterator it =
+           _header.begin();
+       it != _header.end(); ++it) {
+    std::cout << "header-field: [" << it->first << "] ";
+    for (std::vector<std::string>::const_iterator vit = it->second.begin();
+         vit != it->second.end(); ++vit) {
+      std::cout << "[" << *vit << "]" << std::endl;
+    }
+  }
+
+  std::cout << "Body: " << _body << std::endl;
 }
 
 // Public Method
@@ -131,6 +132,7 @@ bool Request::isHeaderFieldValueExists(std::string const& fieldName,
 void Request::clear() {
   _method = HTTP_NONE;
   _path.clear();
+  _query.clear();
   _httpVersion.clear();
   _header.clear();
   _body.clear();
