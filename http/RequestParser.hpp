@@ -15,7 +15,6 @@
 #define SP 32
 #define COLON 58
 
-// TODO: chunk trailer 처리
 enum EParsingStatus {
   READY = 0,
   REQUEST_LINE = 1,
