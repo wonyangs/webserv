@@ -16,7 +16,7 @@
 
 ServerManager::ServerManager(std::string hostIp, int port,
                              std::vector<Server> configs)
-    : _hostIp(hostIp), _port(port), _configs(configs) {}
+    : _serverFd(-1), _hostIp(hostIp), _port(port), _configs(configs) {}
 
 ServerManager::ServerManager(ServerManager const& manager)
     : _serverFd(manager._serverFd),
