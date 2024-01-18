@@ -124,8 +124,6 @@ void RequestParser::setChunkSize(std::string const& chunkSizeString) {
         "[2004] RequestParser: setChunkSize - invalid type: " +
         chunkSizeString);
   }
-
-  std::cout << "setChunkSize: " << _chunkSize << std::endl;  // debug
 }
 
 // storageBuffer 저장
@@ -149,7 +147,7 @@ void RequestParser::setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
 
 // octet 파싱
 void RequestParser::parseOctet(u_int8_t const& octet) {
-  switch (_status) {
+  switch (_status % 10) {
     case READY:
       _status = REQUEST_LINE;
       // fallthrough
@@ -163,23 +161,16 @@ void RequestParser::parseOctet(u_int8_t const& octet) {
       parseBodyContentLength(octet);
       break;
     case BODY_CHUNKED:
-      _status = BODY_CHUNK_SIZE;
-      // fallthrough
-    case BODY_CHUNK_SIZE:
-      parseBodyChunkSize(octet);
-      break;
-    case BODY_CHUNK_DATA:
-      parseBodyChunkData(octet);
-      break;
-    case BODY_CHUNK_TRAILER:
-      parseBodyChunkTrailer(octet);
+      parseBodyChunked(octet);
       break;
     case HEADER_FIELD_END:
     case DONE:
       _storageBuffer.push_back(octet);
       break;
     default:
-      break;  // TODO: chunk status 추가 후 default는 예외로 처리
+      throw std::runtime_error(
+          "[2005] RequestParser: parseOctet - "
+          "no switch case exists for the _state");
   }
 }
 
@@ -209,6 +200,7 @@ void RequestParser::parseHeaderField(u_int8_t const& octet) {
   if (octet == '\n' and isEndWithCRLF(_header)) {
     if (_header.size() == 2) {
       _status = HEADER_FIELD_END;
+      _header.clear();
       return;
     }
 
@@ -231,6 +223,27 @@ void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
   }
 }
 
+// chunk body 파싱
+void RequestParser::parseBodyChunked(u_int8_t const& octet) {
+  switch (_status) {
+    case BODY_CHUNKED:
+      _status = BODY_CHUNK_SIZE;
+      // fallthrough
+    case BODY_CHUNK_SIZE:
+      parseBodyChunkSize(octet);
+      break;
+    case BODY_CHUNK_DATA:
+      parseBodyChunkData(octet);
+      break;
+    case BODY_CHUNK_TRAILER:
+      parseBodyChunkTrailer(octet);
+      break;
+    default:
+      throw std::runtime_error(
+          "[2302] RequestParser: parseBodyChunked - invalid status");
+  }
+}
+
 // chunk body에 대한 chunk-size 파싱
 // - CRLF가 입력되었을 경우 입력 종료 후 chunk-size 저장
 // - chunk-size가 0인 경우 last-chunk로 처리 후
@@ -238,7 +251,6 @@ void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
 // - chunk-size가 1 이상인 경우 chunk-data를 읽도록 상태 변경
 void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
   _chunkSizeBuffer.push_back(octet);
-  std::cout << (int)octet << " " << octet << std::endl;  // debug
 
   if (octet == '\n' and isEndWithCRLF(_chunkSizeBuffer)) {
     processBodyChunkSize();
@@ -282,6 +294,7 @@ void RequestParser::parseBodyChunkTrailer(u_int8_t const& octet) {
   if (octet == '\n' and isEndWithCRLF(_header)) {
     if (_header.size() == 2) {
       _status = DONE;
+      _header.clear();
       return;
     }
 

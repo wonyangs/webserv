@@ -17,16 +17,16 @@
 
 // TODO: chunk trailer 처리
 enum EParsingStatus {
-  READY,
-  REQUEST_LINE,
-  HEADER_FIELD,
-  HEADER_FIELD_END,
-  BODY_CONTENT_LENGTH,
-  BODY_CHUNKED,
-  BODY_CHUNK_SIZE,
-  BODY_CHUNK_DATA,
-  BODY_CHUNK_TRAILER,
-  DONE,
+  READY = 0,
+  REQUEST_LINE = 1,
+  HEADER_FIELD = 2,
+  HEADER_FIELD_END = 3,
+  BODY_CONTENT_LENGTH = 4,
+  BODY_CHUNKED = 5,
+  BODY_CHUNK_SIZE = 15,
+  BODY_CHUNK_DATA = 25,
+  BODY_CHUNK_TRAILER = 35,
+  DONE = 6,
 };
 
 // RequestParser 클래스
@@ -71,6 +71,7 @@ class RequestParser {
   void parseRequestLine(u_int8_t const& octet);
   void parseHeaderField(u_int8_t const& octet);
   void parseBodyContentLength(u_int8_t const& octet);
+  void parseBodyChunked(u_int8_t const& octet);
   void parseBodyChunkSize(u_int8_t const& octet);
   void parseBodyChunkData(u_int8_t const& octet);
   void parseBodyChunkTrailer(u_int8_t const& octet);
