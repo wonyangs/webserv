@@ -6,9 +6,11 @@
 
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
+#include "ServerManager.hpp"
+
+class ServerManager;
 
 // 클라이언트 연결을 관리하는 클래스
-// - 임시 객체 (구현 예정)
 class Connection {
  public:
   enum EStatus { ON_WAIT, ON_RECV, TO_SEND, ON_SEND, CLOSE };
@@ -19,9 +21,10 @@ class Connection {
   enum EStatus _status;
 
   RequestParser _requestParser;
+  Location _location;
 
  public:
-  Connection(int fd);
+  Connection(int fd, ServerManager& manager);
   Connection(Connection const& connection);
   ~Connection(void);
 
@@ -42,8 +45,10 @@ class Connection {
 
  private:
   static int const BUFFER_SIZE = 1024;
+  ServerManager& _manager;
 
   void parseRequest(u_int8_t const* buffer, ssize_t bytesRead);
+  void setLocation(Request const& request);
 
   void updateLastCallTime(void);
   void setStatus(EStatus status);

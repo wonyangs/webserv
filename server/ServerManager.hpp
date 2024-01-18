@@ -9,6 +9,8 @@
 #include "../core/Event.hpp"
 #include "Connection.hpp"
 
+class Connection;
+
 // 가상 서버 클래스
 class ServerManager {
  private:
@@ -32,6 +34,9 @@ class ServerManager {
 
   bool canHandleEvent(Event event) const;
   int getServerFd(void) const;
+
+  Location const& getDefaultLocation(void);
+  Location const& getLocation(std::string const& path, std::string const& host);
 
  private:
   static long const CONNECTION_LIMIT_TIME = 30;
