@@ -1,7 +1,5 @@
 #include "Request.hpp"
 
-#include "Config.hpp"
-
 // Constructor & Destructor
 
 Request::Request(void) : _method(HTTP_NONE) {}
@@ -22,35 +20,6 @@ Request& Request::operator=(Request const& request) {
     _body = request._body;
   }
   return *this;
-}
-
-// Public Method - getter
-
-enum EHttpMethod const& Request::getMethod(void) const { return _method; }
-
-std::string const& Request::getPath(void) const { return _path; }
-
-std::string const& Request::getQuery(void) const { return _query; }
-
-std::string const& Request::getHttpVersion(void) const { return _httpVersion; }
-
-std::map<std::string, std::vector<std::string> > const& Request::getHeader(
-    void) const {
-  return _header;
-}
-
-std::string const& Request::getBody(void) const { return _body; }
-
-std::vector<std::string> const& Request::getHeaderFieldValues(
-    std::string const& fieldName) const {
-  if (isHeaderFieldNameExists(fieldName) == false) {
-    throw std::runtime_error(
-        "[2203] Request: getHeaderFieldValues -  field-name does not exist");
-  }
-
-  std::map<std::string, std::vector<std::string> >::const_iterator it =
-      _header.find(fieldName);
-  return it->second;
 }
 
 // debug
@@ -78,21 +47,71 @@ void Request::print() const {
   std::cout << "Body: " << _body << std::endl;
 }
 
+// Public Method - getter
+
+enum EHttpMethod const& Request::getMethod(void) const { return _method; }
+
+std::string const& Request::getPath(void) const { return _path; }
+
+std::string const& Request::getQuery(void) const { return _query; }
+
+std::string const& Request::getHttpVersion(void) const { return _httpVersion; }
+
+std::map<std::string, std::vector<std::string> > const& Request::getHeader(
+    void) const {
+  return _header;
+}
+
+std::string const& Request::getBody(void) const { return _body; }
+
+std::vector<std::string> const& Request::getHeaderFieldValues(
+    std::string const& fieldName) const {
+  if (isHeaderFieldNameExists(fieldName) == false) {
+    throw std::runtime_error(
+        "[2203] Request: getHeaderFieldValues - field-name does not exist");
+  }
+
+  std::map<std::string, std::vector<std::string> >::const_iterator it =
+      _header.find(fieldName);
+  return it->second;
+}
+
+// Public Method - setter
+
+void Request::setMethod(std::string const& method) {
+  _method = matchEHttpMethod(method);
+}
+
+void Request::setPath(std::string const& path) { _path = path; }
+
+void Request::setQuery(std::string const& query) { _query = query; }
+
+void Request::setHttpVersion(std::string const& httpVersion) {
+  _httpVersion = httpVersion;
+}
+
 // Public Method
 
-// Request Line에 해당하는 method, path, http version 저장
-// - result 배열에는 method, path, httpVersion이 순서대로 저장되어 있다고 가정
+// Request Line에 해당하는 method, request-target, http version 저장
+// - result 배열에는 method, request-target, httpVersion이 순서대로 저장되어
+// 있다고 가정
+// request-target의 size가 MAX_URI_SIZE를 초과할 경우 예외 발생
 void Request::storeRequestLine(std::vector<std::string> const& result) {
-  int const methodIndex = 0, pathIndex = 1, httpVersionIndex = 2;
+  int const methodIndex = 0, requestTargetIndex = 1, httpVersionIndex = 2;
 
-  _method = matchEHttpMethod(result[methodIndex]);
-  if (Config::MAX_URI_SIZE < result[pathIndex].size()) {
+  if (Config::MAX_URI_SIZE < result[requestTargetIndex].size()) {
     throw StatusException(
         HTTP_REQUEST_URI_TOO_LARGE,
         "[2103] Request: storeRequestLine - path is too long");
   }
-  _path = result[pathIndex];
-  _httpVersion = result[httpVersionIndex];
+
+  std::string path, query;
+  splitRequestTarget(path, query, result[requestTargetIndex]);
+
+  setMethod(result[methodIndex]);
+  setPath(path);
+  setQuery(query);
+  setHttpVersion(result[httpVersionIndex]);
 }
 
 // Header field 저장
@@ -148,4 +167,20 @@ EHttpMethod Request::matchEHttpMethod(std::string method) {
   if (method == "DELETE") return HTTP_DELETE;
   throw StatusException(HTTP_NOT_ALLOWED,
                         "[2101] Request: matchEHttpMethod - invalid method");
+}
+
+// request-target을 ?을 기준으로 split
+// - 가장 처음 나오는 ? 을 기준으로 앞을 path, 뒤를 query에 저장
+void Request::splitRequestTarget(std::string& path, std::string& query,
+                                 const std::string& requestTarget) {
+  size_t found = requestTarget.find('?');
+
+  if (found != std::string::npos) {
+    path = requestTarget.substr(0, found);
+    query = requestTarget.substr(found + 1);
+    return;
+  }
+
+  path = requestTarget;
+  query = "";
 }
