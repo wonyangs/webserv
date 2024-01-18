@@ -62,7 +62,7 @@ void EventLoop::run(void) {
         ++it;
       }
       if (it == _managers.end()) {
-        throw std::runtime_error("EventLoop: run - unexpected event fd");
+        throw std::runtime_error("[4200] EventLoop: run - unexpected event fd");
       }
     } catch (std::exception const& e) {
       std::cout << e.what() << std::endl;

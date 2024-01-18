@@ -60,7 +60,7 @@ void ServerManager::runServer(void) {
     Kqueue::addReadEvent(_serverFd);
   } catch (const std::exception& e) {
     if (_serverFd != -1) {
-      close(_serverFd);  // Todo: 서버 닫기 메서드 구현
+      close(_serverFd);
     }
     throw;
   }
@@ -71,13 +71,18 @@ void ServerManager::runServer(void) {
  */
 
 // 이벤트 처리
-// - 처리 가능한 fd만 들어온다고 가정
 // - 서버 fd인 경우 커넥션 추가
 // - 클라이언트 fd인 경우 이벤트 type에 따라 처리
-// - 예상치 못한 이벤트 타입이 온 경우 예외 발생
+// - 처리 불가능한 fd가 들어온 경우 예외발생 (canHandleEvent로 확인 후 전달)
+// - 예상치 못한 이벤트 type이 온 경우 예외 발생
 // - 내부에서 예외가 발생한 경우 자원 정리 후 예외 전달
 void ServerManager::handleEvent(Event event) {
   int eventFd = event.getFd();
+
+  if (canHandleEvent(eventFd) == false) {
+    throw std::runtime_error(
+        "[4102] ServerManager: handleEvent - unknown event fd");
+  }
 
   // 서버 fd인 경우 커넥션 추가
   if (eventFd == _serverFd) {
@@ -97,7 +102,7 @@ void ServerManager::handleEvent(Event event) {
 
     default:
       throw std::runtime_error(
-          "[] ServerManager: handleEvent - unknown event type");
+          "[4103] ServerManager: handleEvent - unknown event type");
   }
 }
 
@@ -224,7 +229,7 @@ void ServerManager::manageTimeoutConnections(void) {
 void ServerManager::addConnection(int fd) {
   if (_connections.find(fd) != _connections.end()) {
     throw std::runtime_error(
-        "[3300] ServerManager: addConnection - duplicate connection fd");
+        "[4100] ServerManager: addConnection - duplicate connection fd");
   }
   _connections.insert(std::make_pair(fd, Connection(fd)));
 }
@@ -236,7 +241,7 @@ void ServerManager::removeConnection(int fd) {
 
   if (it == _connections.end()) {
     throw std::runtime_error(
-        "[3301] ServerManager: removeConnection - no such connection fd");
+        "[4101] ServerManager: removeConnection - no such connection fd");
   }
 
   Connection& connection = it->second;
