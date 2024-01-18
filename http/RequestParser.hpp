@@ -15,36 +15,35 @@
 #define SP 32
 #define COLON 58
 
-// TODO: chunk 처리
 enum EParsingStatus {
-  READY,
-  REQUEST_LINE,
-  HEADER_FIELD,
-  HEADER_FIELD_END,
-  BODY_CONTENT_LENGTH,
-  BODY_CHUNKED,
-  BODY_CHUNK_SIZE,
-  BODY_CHUNK_DATA,
-  DONE,
+  READY = 0,
+  REQUEST_LINE = 1,
+  HEADER_FIELD = 2,
+  HEADER_FIELD_END = 3,
+  BODY_CONTENT_LENGTH = 4,
+  BODY_CHUNKED = 5,
+  BODY_CHUNK_SIZE = 15,
+  BODY_CHUNK_DATA = 25,
+  BODY_CHUNK_TRAILER = 35,
+  DONE = 6,
 };
 
 // RequestParser 클래스
 // - HTTP Request를 파싱해서 Request 객체에 저장
 class RequestParser {
  private:
+  Request _request;
+
   enum EParsingStatus _status;
   std::vector<u_int8_t> _requestLine;
   std::vector<u_int8_t> _header;
   std::vector<u_int8_t> _body;
 
   std::vector<u_int8_t> _storageBuffer;
-
-  Request _request;
-
-  size_t _bodyLength;
-
   std::vector<u_int8_t> _chunkSizeBuffer;
+
   size_t _chunkSize;
+  size_t _bodyLength;
 
  public:
   RequestParser(void);
@@ -63,6 +62,7 @@ class RequestParser {
 
  private:
   void setBodyLength(std::string const& bodyLengthString);
+  void setChunkSize(std::string const& chunkSizeString);
   void setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
                         ssize_t bytesRead);
 
@@ -70,15 +70,21 @@ class RequestParser {
   void parseRequestLine(u_int8_t const& octet);
   void parseHeaderField(u_int8_t const& octet);
   void parseBodyContentLength(u_int8_t const& octet);
+  void parseBodyChunked(u_int8_t const& octet);
+  void parseBodyChunkSize(u_int8_t const& octet);
+  void parseBodyChunkData(u_int8_t const& octet);
+  void parseBodyChunkTrailer(u_int8_t const& octet);
 
   void setupBodyParse(void);
 
   std::vector<std::string> processRequestLine(void);
   std::vector<std::string> processHeaderField(void);
   std::string processBody(void);
+  void processBodyChunkSize(void);
 
   void splitRequestLine(std::vector<std::string>& result);
   void splitHeaderField(std::vector<std::string>& result);
+  void splitBodyChunkSize(std::vector<std::string>& result);
 
   EParsingStatus checkBodyParsingStatus(void);
   bool isInvalidFormatSize(std::vector<std::string> const& result, size_t size);
