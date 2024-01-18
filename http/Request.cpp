@@ -1,5 +1,7 @@
 #include "Request.hpp"
 
+#include "Config.hpp"
+
 // Constructor & Destructor
 
 Request::Request(void) : _method(HTTP_NONE) {}
@@ -83,6 +85,11 @@ void Request::storeRequestLine(std::vector<std::string> const& result) {
   int const methodIndex = 0, pathIndex = 1, httpVersionIndex = 2;
 
   _method = matchEHttpMethod(result[methodIndex]);
+  if (Config::MAX_URI_SIZE < result[pathIndex].size()) {
+    throw StatusException(
+        HTTP_REQUEST_URI_TOO_LARGE,
+        "[2103] Request: storeRequestLine - path is too long");
+  }
   _path = result[pathIndex];
   _httpVersion = result[httpVersionIndex];
 }
