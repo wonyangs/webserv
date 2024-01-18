@@ -42,8 +42,8 @@ Request const& RequestParser::getRequest() const { return _request; }
 // buffer 값 파싱
 // - 만약 _storageBuffer가 비어있지 않으면 해당 값 먼저 파싱 진행
 // - 이후 buffer 값 파싱
-// - 파싱 도중 HEADER_FIELD_END 또는 DONE이 되었을 경우, 남은 octets은
-// _storageBuffer에 저장
+// - 파싱 도중 HEADER_FIELD_END 또는 DONE이 되었을 경우,
+//   남은 octets은 _storageBuffer에 저장
 void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
   if (_status == HEADER_FIELD_END) {
     setupBodyParse();
@@ -148,7 +148,6 @@ void RequestParser::setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
 // Private Method
 
 // octet 파싱
-// TODO: chunked Trailer 파싱 처리
 void RequestParser::parseOctet(u_int8_t const& octet) {
   switch (_status) {
     case READY:
@@ -232,6 +231,11 @@ void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
   }
 }
 
+// chunk body에 대한 chunk-size 파싱
+// - CRLF가 입력되었을 경우 입력 종료 후 chunk-size 저장
+// - chunk-size가 0인 경우 last-chunk로 처리 후
+//   입력받은 body를 request 객체에 저장
+// - chunk-size가 1 이상인 경우 chunk-data를 읽도록 상태 변경
 void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
   _chunkSizeBuffer.push_back(octet);
   std::cout << (int)octet << " " << octet << std::endl;  // debug
@@ -248,6 +252,8 @@ void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
   }
 }
 
+// chunk body에 대한 chunk-data 파싱
+// - chunk-size 만큼 chunk-data를 읽은 후 CRLF가 입력되지 않았을 경우 예외 발생
 void RequestParser::parseBodyChunkData(u_int8_t const& octet) {
   const size_t crlfLength = 2;
 
@@ -267,6 +273,9 @@ void RequestParser::parseBodyChunkData(u_int8_t const& octet) {
   }
 }
 
+// chunk body에 대한 Trailer 파싱
+// - Trailer는 무시
+// - 형식 검사를 하지 않고 CRLF만 들어올 경우 종료
 void RequestParser::parseBodyChunkTrailer(u_int8_t const& octet) {
   _header.push_back(octet);
 
@@ -345,6 +354,8 @@ std::vector<std::string> RequestParser::processHeaderField() {
   return result;
 }
 
+// chunkSize 후처리
+// - _chunkSizeBuffer에 저장된 값을 _chunkSize에 저장 후 _bodyLength에 추가
 void RequestParser::processBodyChunkSize() {
   removeCRLF(_chunkSizeBuffer);
 
