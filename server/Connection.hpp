@@ -4,14 +4,14 @@
 #include <ctime>
 #include <string>
 
-#include "http/Request.hpp"
-#include "http/RequestParser.hpp"
+#include "../http/Request.hpp"
+#include "../http/RequestParser.hpp"
 
 // 클라이언트 연결을 관리하는 클래스
 // - 임시 객체 (구현 예정)
 class Connection {
  public:
-  enum EStatus {ON_WAIT, ON_RECV, TO_SEND, ON_SEND, CLOSE};
+  enum EStatus { ON_WAIT, ON_RECV, TO_SEND, ON_SEND, CLOSE };
 
  private:
   int _fd;
@@ -43,7 +43,10 @@ class Connection {
  private:
   static int const BUFFER_SIZE = 1024;
 
+  void parseRequest(u_int8_t const* buffer, ssize_t bytesRead);
+
   void updateLastCallTime(void);
+  void setStatus(EStatus status);
 
   Connection(void);
 };

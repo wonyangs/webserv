@@ -2,8 +2,8 @@
 
 #include <iostream>
 
-#include "Kqueue.hpp"
-#include "Socket.hpp"
+#include "../core/Kqueue.hpp"
+#include "../core/Socket.hpp"
 
 // Constructor & Destructor
 
@@ -43,48 +43,34 @@ EventLoop::~EventLoop(void) {}
 
 void EventLoop::run(void) {
   while (true) {
-    closeTimeoutConnections();
+    try {
+      closeTimeoutConnections();
 
-    Event event = Kqueue::getEvent();
-    if (event.isInvalid()) {
-      continue;
-    }
-
-    int eventFd = event.getFd();
-
-    // todo: 이후에 manager에게 책임 넘기기
-    if (isServerFd(eventFd)) {
-      int clientFd = Socket::accept(eventFd);
-      std::cout << clientFd << std::endl;
-
-      ManagerMap::iterator it = _managers.find(eventFd);
-
-      (it->second).addConnection(clientFd);
-      Kqueue::addReadEvent(clientFd);
-
-      std::cout << "connection success" << std::endl;
-    } else {
-      for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
-           ++it) {
-        ServerManager& manager = it->second;
-
-        if (manager.hasFd(eventFd)) {
-          manager.handleConnection(event);
-          break;
-        }
+      Event event = Kqueue::getEvent();
+      if (event.isInvalid()) {
+        continue;
       }
 
-      std::cout << "event received" << std::endl;
+      ManagerMap::iterator it = _managers.begin();
+      while (it != _managers.end()) {
+        ServerManager& manager = it->second;
+
+        if (manager.canHandleEvent(event)) {
+          manager.handleEvent(event);
+          break;
+        }
+        ++it;
+      }
+      if (it == _managers.end()) {
+        throw std::runtime_error("[4200] EventLoop: run - unexpected event fd");
+      }
+    } catch (std::exception const& e) {
+      std::cout << e.what() << std::endl;
     }
   }
 }
 
 // Private Method
-
-// 해당하는 fd가 서버의 fd인지 여부 반환
-bool EventLoop::isServerFd(int fd) {
-  return (_managers.find(fd) != _managers.end());
-}
 
 // 서버 전체 timeout 실행
 void EventLoop::closeTimeoutConnections(void) {

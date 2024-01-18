@@ -4,7 +4,7 @@
 #include <map>
 #include <vector>
 
-#include "Kqueue.hpp"
+#include "../core/Kqueue.hpp"
 #include "ServerManager.hpp"
 
 // 전체 흐름 제어 클래스
@@ -25,10 +25,8 @@ class EventLoop {
   typedef std::map<ServerKey, ServerList> ServerMap;
   typedef std::map<int, ServerManager> ManagerMap;
 
-
-  void printServerMap(const ServerMap& serverMap);  // debug
-  bool isServerFd(int fd);
   void closeTimeoutConnections(void);
+  void printServerMap(const ServerMap& serverMap);  // debug
 
   EventLoop(void);
   EventLoop& operator=(EventLoop const& eventloop);

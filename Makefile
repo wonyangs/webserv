@@ -9,9 +9,9 @@ SRCS		= config/Server.cpp \
 			  core/Kqueue.cpp \
 			  core/Event.cpp \
 			  core/Socket.cpp \
-			  core/Connection.cpp \
-			  core/ServerManager.cpp \
-			  core/EventLoop.cpp \
+			  server/Connection.cpp \
+			  server/ServerManager.cpp \
+			  server/EventLoop.cpp \
 			  http/Request.cpp \
 			  http/RequestParser.cpp \
 			  main.cpp

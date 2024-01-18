@@ -6,13 +6,13 @@
 #include <vector>
 
 #include "../config/Server.hpp"
+#include "../core/Event.hpp"
 #include "Connection.hpp"
-#include "Event.hpp"
 
 // 가상 서버 클래스
 class ServerManager {
  private:
-  int _fd;
+  int _serverFd;
   std::string _hostIp;
   int _port;
   std::vector<Server> _configs;
@@ -27,18 +27,23 @@ class ServerManager {
 
   void runServer(void);
 
-  int getServerFd(void) const;
-
-  void addConnection(int fd);
-  void removeConnection(int fd);
-  void handleConnection(Event event);
-
-  bool hasFd(int fd) const;
+  void handleEvent(Event event);
   void manageTimeoutConnections(void);
+
+  bool canHandleEvent(Event event) const;
+  int getServerFd(void) const;
 
  private:
   static long const CONNECTION_LIMIT_TIME = 30;
   typedef std::map<int, Connection> ConnectionMap;
+
+  void addConnection(int fd);
+  void removeConnection(int fd);
+  bool hasConnectionFd(int fd) const;
+
+  void handleServerEvent(void);
+  void handleReadEvent(int eventFd);
+  void handleWriteEvent(int eventFd);
 
   ServerManager(void);
 };

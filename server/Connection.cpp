@@ -9,7 +9,9 @@
 #include "../core/Kqueue.hpp"
 #include "../utils/Config.hpp"
 
-// Constructor & Destructor
+/**
+ * Constructor & Destructor
+ */
 
 Connection::Connection(int fd)
     : _fd(fd),
@@ -21,7 +23,9 @@ Connection::Connection(Connection const& connection) { *this = connection; }
 
 Connection::~Connection(void) {}
 
-// Operator Overloading
+/**
+ * Operator Overloading
+ */
 
 Connection& Connection::operator=(Connection const& connection) {
   if (this != &connection) {
@@ -33,71 +37,51 @@ Connection& Connection::operator=(Connection const& connection) {
   return *this;
 }
 
-// Public method
+/**
+ * Public method - request
+ */
 
 // 요청 읽기
-// - 임시 메서드
+// - 읽기에 실패한 경우 예외 발생
+// - 클라이언트 연결 종료가 감지된 경우 status를 CLOSE로 바꿈
 void Connection::readSocket(void) {
-  _status = ON_RECV;
-  u_int8_t buffer[BUFFER_SIZE];
+  setStatus(ON_RECV);
 
+  u_int8_t buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
-  ssize_t bytesRead = ::read(_fd, buffer, sizeof(buffer) - 1);
+  ssize_t bytesRead = read(_fd, buffer, sizeof(buffer) - 1);
 
   if (bytesRead < 0) {
-    throw std::runtime_error("read error");
-  } else if (bytesRead == 0) {
-    // 클라이언트가 연결을 종료했음
-    _status = CLOSE;
-    std::cout << "Client: connection closed" << std::endl;
+    throw std::runtime_error("[4000] Connection: readSocket - read fail");
+  } else if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
+    setStatus(CLOSE);
+    std::cout << "Client: connection closed" << std::endl;  // debug
+    updateLastCallTime();
     return;
-  } else {
-    try {
-      _requestParser.parse(buffer, bytesRead);
-
-      if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
-        // Location 블록 찾아오기
-        // Request const& request = _requestParser.getRequest();
-        // std::string path = request.getPath();
-        // std::string host = request.getHeaderFieldValues("Host").front();
-        // Location location("/", "/var/www", "index.html");  // 찾았어
-        // 다시 파싱
-        // _requestParser.setLocation(location);
-        _requestParser.parse(buffer, 0);
-      }
-
-      if (_requestParser.getParsingStatus() == DONE) {
-        Request const& request = _requestParser.getRequest();
-        request.print();
-
-        // 응답 만들기
-        // WRITE 등록
-        _status = TO_SEND;
-
-        Kqueue::removeReadEvent(_fd);
-        Kqueue::addWriteEvent(_fd);
-
-        _requestParser.clear();
-      }
-
-    } catch (std::exception& e) {
-      // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
-
-      _requestParser.clear();
-      throw;
-    }
   }
 
+  parseRequest(buffer, bytesRead);
   updateLastCallTime();
 }
 
+// storage에 있는 요청 읽기
+// - 읽기에 실패한 경우 예외 발생
 void Connection::readStorage(void) {
+  setStatus(ON_RECV);
+
+  u_int8_t tmp[1];
+
+  parseRequest(tmp, 0);
+  updateLastCallTime();
+}
+
+// RequestParser에서 요청 읽기
+// - bytesRead를 0으로 하면 storage에 남아있는 내용을 파싱
+void Connection::parseRequest(u_int8_t const* buffer, ssize_t bytesRead) {
   try {
-    _status = ON_RECV;
+    _requestParser.parse(buffer, bytesRead);
 
-    u_int8_t tmp[1];
-    _requestParser.parse(tmp, 0);
-
+    // 헤더 읽기 완료
     if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
       // Location 블록 찾아오기
       // Request const& request = _requestParser.getRequest();
@@ -106,40 +90,42 @@ void Connection::readStorage(void) {
       // Location location("/", "/var/www", "index.html");  // 찾았어
       // 다시 파싱
       // _requestParser.setLocation(location);
-      _requestParser.parse(tmp, 0);
+      _requestParser.parse(buffer, 0);
     }
 
+    // 전체 요청 읽기 완료
     if (_requestParser.getParsingStatus() == DONE) {
+      setStatus(TO_SEND);
+
       Request const& request = _requestParser.getRequest();
       request.print();
 
       // 응답 만들기
       // WRITE 등록
-      _status = TO_SEND;
-      Kqueue::addWriteEvent(_fd);
-
       _requestParser.clear();
-    } else {
-      Kqueue::addReadEvent(_fd);
     }
+
   } catch (std::exception& e) {
     // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
-
     _requestParser.clear();
     throw;
   }
-
-  updateLastCallTime();
 }
 
+// RequestParser의 storage가 남아있는지 여부 반환
+// - storage가 남아있는 경우 readStorage 메서드를 호출해야 함
 bool Connection::isReadStorageRequired() {
   return _requestParser.isStorageBufferNotEmpty();
 }
 
+/**
+ * Public method - response
+ */
+
 // 응답 보내기
 // - 임시 메서드
 void Connection::send(void) {
-  _status = ON_SEND;
+  setStatus(ON_SEND);
 
   char const* response =
       "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: "
@@ -148,7 +134,7 @@ void Connection::send(void) {
   ssize_t bytesSent = write(_fd, response, strlen(response));
 
   if (bytesSent < 0) {
-    throw std::runtime_error("Failed to write to socket");
+    throw std::runtime_error("[4001] Connection: send - fail to write socket");
   }
 
   std::cout << "[ Server: response sent ]\n"
@@ -156,12 +142,14 @@ void Connection::send(void) {
             << response << "\n-------------" << std::endl;
   updateLastCallTime();
 
-  _status = ON_WAIT;
+  setStatus(ON_WAIT);
 }
 
 // 에러 응답 보내기
 // - 임시 메서드
 void Connection::sendErrorPage(int code) {
+  setStatus(ON_SEND);
+
   // 상태 코드에 해당하는 메시지 찾기
   std::map<int, std::string>::const_iterator it =
       Config::statusMessages.find(code);
@@ -181,7 +169,8 @@ void Connection::sendErrorPage(int code) {
   ssize_t bytesSent = write(_fd, response.c_str(), response.length());
 
   if (bytesSent < 0) {
-    throw std::runtime_error("Failed to write to socket");
+    throw std::runtime_error(
+        "[4002] Connection: sendErrorPage - fail to write socket");
   }
 
   std::cout << "[ Server: response sent ]\n"
@@ -189,7 +178,13 @@ void Connection::sendErrorPage(int code) {
             << response << "\n-------------" << std::endl;
 
   updateLastCallTime();
+
+  setStatus(ON_WAIT);
 }
+
+/**
+ * Public method - etc
+ */
 
 // 커넥션 닫기
 void Connection::close(void) { ::close(_fd); }
@@ -208,8 +203,13 @@ long Connection::getElapsedTime(void) const {
   return std::time(0) - _lastCallTime;
 }
 
-// Private method
+/**
+ * Private method
+ */
 
 // 마지막으로 호출된 시간 업데이트
 // - timeout 관리를 위해 커넥션이 호출되면 반드시 사용
 void Connection::updateLastCallTime(void) { _lastCallTime = std::time(0); }
+
+// Connection의 현재 상태 변경
+void Connection::setStatus(EStatus status) { _status = status; }
