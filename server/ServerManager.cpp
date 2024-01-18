@@ -146,6 +146,7 @@ void ServerManager::handleReadEvent(int eventFd) {
     connection.sendErrorPage(code);  // 얘도 kqueue로 관리
     removeConnection(connection.getFd());
   } catch (std::exception const& e) {
+    std::cout << e.what() << std::endl;
     connection.sendErrorPage(500);
     removeConnection(connection.getFd());
   }
@@ -220,6 +221,32 @@ void ServerManager::manageTimeoutConnections(void) {
   }
 }
 
+// 첫번째 서버의 기본 location 블록을 리턴
+Location const& ServerManager::getDefaultLocation(void) {
+  std::vector<Server>::iterator it = _configs.begin();
+  return (*it).getMatchedLocationBlock("/");
+}
+
+// path와 host와 매칭되는 location 블록을 찾아 리턴
+// - host가 매칭되는 server 블록이 없다면 첫번째 서버를 선택
+Location const& ServerManager::getLocation(std::string const& path,
+                                           std::string const& host) {
+  // host가 매칭되는 Server 블록 찾기
+  std::vector<Server>::iterator it = _configs.begin();
+  while (it != _configs.end()) {
+    if ((*it).hasServerName(host)) {
+      break;
+    }
+    ++it;
+  }
+  // 매칭되는 host가 없다면 첫번째 서버 선택
+  if (it == _configs.end()) {
+    it = _configs.begin();
+  }
+
+  return (*it).getMatchedLocationBlock(path);
+}
+
 /**
  * Private method
  */
@@ -231,7 +258,7 @@ void ServerManager::addConnection(int fd) {
     throw std::runtime_error(
         "[4100] ServerManager: addConnection - duplicate connection fd");
   }
-  _connections.insert(std::make_pair(fd, Connection(fd)));
+  _connections.insert(std::make_pair(fd, Connection(fd, *this)));
 }
 
 // fd를 관리 목록에서 제거
