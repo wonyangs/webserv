@@ -38,11 +38,6 @@ class Request {
 
   void print(void) const;  // debug
 
-  void setMethod(std::string const& method);
-  void setPath(std::string const& path);
-  void setQuery(std::string const& query);
-  void setHttpVersion(std::string const& httpVersion);
-
   void storeRequestLine(std::vector<std::string> const& result);
   void storeHeaderField(std::vector<std::string> const& result);
   void storeBody(std::string const& result);
@@ -54,6 +49,11 @@ class Request {
   void clear(void);
 
  private:
+  void setMethod(std::string const& method);
+  void setPath(std::string const& path);
+  void setQuery(std::string const& query);
+  void setHttpVersion(std::string const& httpVersion);
+
   EHttpMethod matchEHttpMethod(std::string method);
   void splitRequestTarget(std::string& path, std::string& query,
                           const std::string& requestTarget);

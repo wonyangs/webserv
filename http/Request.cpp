@@ -76,20 +76,6 @@ std::vector<std::string> const& Request::getHeaderFieldValues(
   return it->second;
 }
 
-// Public Method - setter
-
-void Request::setMethod(std::string const& method) {
-  _method = matchEHttpMethod(method);
-}
-
-void Request::setPath(std::string const& path) { _path = path; }
-
-void Request::setQuery(std::string const& query) { _query = query; }
-
-void Request::setHttpVersion(std::string const& httpVersion) {
-  _httpVersion = httpVersion;
-}
-
 // Public Method
 
 // Request Line에 해당하는 method, request-target, http version 저장
@@ -155,6 +141,20 @@ void Request::clear() {
   _httpVersion.clear();
   _header.clear();
   _body.clear();
+}
+
+// Private Method - setter
+
+void Request::setMethod(std::string const& method) {
+  _method = matchEHttpMethod(method);
+}
+
+void Request::setPath(std::string const& path) { _path = path; }
+
+void Request::setQuery(std::string const& query) { _query = query; }
+
+void Request::setHttpVersion(std::string const& httpVersion) {
+  _httpVersion = httpVersion;
 }
 
 // Private Method
