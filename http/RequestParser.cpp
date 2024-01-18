@@ -267,9 +267,9 @@ void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
 // chunk body에 대한 chunk-data 파싱
 // - chunk-size 만큼 chunk-data를 읽은 후 CRLF가 입력되지 않았을 경우 예외 발생
 void RequestParser::parseBodyChunkData(u_int8_t const& octet) {
-  const size_t crlfLength = 2;
+  size_t const crlfLength = 2;
 
-  const size_t bodySize = _body.size();
+  size_t const bodySize = _body.size();
   if ((bodySize == _bodyLength and octet != '\r') or
       (bodySize == _bodyLength + 1 and octet != '\n')) {
     throw StatusException(
