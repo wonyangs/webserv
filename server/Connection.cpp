@@ -23,7 +23,6 @@ Connection::Connection(Connection const& connection) { *this = connection; }
 
 Connection::~Connection(void) {}
 
-
 /**
  * Operator Overloading
  */
@@ -38,7 +37,6 @@ Connection& Connection::operator=(Connection const& connection) {
   return *this;
 }
 
-
 /**
  * Public method - request
  */
@@ -47,7 +45,7 @@ Connection& Connection::operator=(Connection const& connection) {
 // - 읽기에 실패한 경우 예외 발생
 // - 클라이언트 연결 종료가 감지된 경우 status를 CLOSE로 바꿈
 void Connection::readSocket(void) {
-  changeStatus(ON_RECV);
+  setStatus(ON_RECV);
 
   u_int8_t buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
@@ -56,7 +54,7 @@ void Connection::readSocket(void) {
   if (bytesRead < 0) {
     throw std::runtime_error("[4000] Connection: readSocket - read fail");
   } else if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
-    changeStatus(CLOSE);
+    setStatus(CLOSE);
     std::cout << "Client: connection closed" << std::endl;  // debug
     updateLastCallTime();
     return;
@@ -69,7 +67,7 @@ void Connection::readSocket(void) {
 // storage에 있는 요청 읽기
 // - 읽기에 실패한 경우 예외 발생
 void Connection::readStorage(void) {
-  changeStatus(ON_RECV);
+  setStatus(ON_RECV);
 
   u_int8_t tmp[1];
 
@@ -79,7 +77,7 @@ void Connection::readStorage(void) {
 
 // RequestParser에서 요청 읽기
 // - bytesRead를 0으로 하면 storage에 남아있는 내용을 파싱
-void Connection::parseRequest(u_int8_t* buffer, ssize_t bytesRead) {
+void Connection::parseRequest(u_int8_t const* buffer, ssize_t bytesRead) {
   try {
     _requestParser.parse(buffer, bytesRead);
 
@@ -97,7 +95,7 @@ void Connection::parseRequest(u_int8_t* buffer, ssize_t bytesRead) {
 
     // 전체 요청 읽기 완료
     if (_requestParser.getParsingStatus() == DONE) {
-      changeStatus(TO_SEND);
+      setStatus(TO_SEND);
 
       Request const& request = _requestParser.getRequest();
       request.print();
@@ -120,7 +118,6 @@ bool Connection::isReadStorageRequired() {
   return _requestParser.isStorageBufferNotEmpty();
 }
 
-
 /**
  * Public method - response
  */
@@ -128,7 +125,7 @@ bool Connection::isReadStorageRequired() {
 // 응답 보내기
 // - 임시 메서드
 void Connection::send(void) {
-  changeStatus(ON_SEND);
+  setStatus(ON_SEND);
 
   char const* response =
       "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: "
@@ -145,13 +142,13 @@ void Connection::send(void) {
             << response << "\n-------------" << std::endl;
   updateLastCallTime();
 
-  changeStatus(ON_WAIT);
+  setStatus(ON_WAIT);
 }
 
 // 에러 응답 보내기
 // - 임시 메서드
 void Connection::sendErrorPage(int code) {
-  changeStatus(ON_SEND);
+  setStatus(ON_SEND);
 
   // 상태 코드에 해당하는 메시지 찾기
   std::map<int, std::string>::const_iterator it =
@@ -182,9 +179,8 @@ void Connection::sendErrorPage(int code) {
 
   updateLastCallTime();
 
-  changeStatus(ON_WAIT);
+  setStatus(ON_WAIT);
 }
-
 
 /**
  * Public method - etc
@@ -207,7 +203,6 @@ long Connection::getElapsedTime(void) const {
   return std::time(0) - _lastCallTime;
 }
 
-
 /**
  * Private method
  */
@@ -217,4 +212,4 @@ long Connection::getElapsedTime(void) const {
 void Connection::updateLastCallTime(void) { _lastCallTime = std::time(0); }
 
 // Connection의 현재 상태 변경
-void Connection::changeStatus(EStatus status) { _status = status; }
+void Connection::setStatus(EStatus status) { _status = status; }

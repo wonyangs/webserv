@@ -79,7 +79,7 @@ void ServerManager::runServer(void) {
 void ServerManager::handleEvent(Event event) {
   int eventFd = event.getFd();
 
-  if (canHandleEvent(eventFd) == false) {
+  if (canHandleEvent(event) == false) {
     throw std::runtime_error(
         "[4102] ServerManager: handleEvent - unknown event fd");
   }
@@ -112,7 +112,7 @@ void ServerManager::handleServerEvent(void) {
   int clientFd = -1;
 
   try {
-    clientFd = Socket::accept(eventFd);
+    clientFd = Socket::accept(_serverFd);
 
     addConnection(clientFd);
     Kqueue::addReadEvent(clientFd);

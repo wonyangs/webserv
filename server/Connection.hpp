@@ -43,10 +43,10 @@ class Connection {
  private:
   static int const BUFFER_SIZE = 1024;
 
-  void parseRequest(u_int8_t* buffer, ssize_t bytesRead);
+  void parseRequest(u_int8_t const* buffer, ssize_t bytesRead);
 
   void updateLastCallTime(void);
-  void changeStatus(EStatus status);
+  void setStatus(EStatus status);
 
   Connection(void);
 };
