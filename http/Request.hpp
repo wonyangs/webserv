@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "../utils/Config.hpp"
 #include "../utils/Enum.hpp"
 #include "../utils/StatusException.hpp"
 
@@ -13,6 +14,7 @@ class Request {
  private:
   enum EHttpMethod _method;
   std::string _path;
+  std::string _query;
   std::string _httpVersion;
   std::map<std::string, std::vector<std::string> > _header;
   std::string _body;
@@ -26,14 +28,15 @@ class Request {
 
   enum EHttpMethod const& getMethod(void) const;
   std::string const& getPath(void) const;
+  std::string const& getQuery(void) const;
   std::string const& getHttpVersion(void) const;
   std::map<std::string, std::vector<std::string> > const& getHeader(void) const;
   std::string const& getBody(void) const;
 
-  void print(void) const;  // debug
-
   std::vector<std::string> const& getHeaderFieldValues(
       std::string const& fieldName) const;
+
+  void print(void) const;  // debug
 
   void storeRequestLine(std::vector<std::string> const& result);
   void storeHeaderField(std::vector<std::string> const& result);
@@ -46,7 +49,14 @@ class Request {
   void clear(void);
 
  private:
+  void setMethod(std::string const& method);
+  void setPath(std::string const& path);
+  void setQuery(std::string const& query);
+  void setHttpVersion(std::string const& httpVersion);
+
   EHttpMethod matchEHttpMethod(std::string method);
+  void splitRequestTarget(std::string& path, std::string& query,
+                          const std::string& requestTarget);
 };
 
 #endif

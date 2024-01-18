@@ -11,6 +11,8 @@ class Config {
   static const int MIN_LIMIT_BODY_SIZE = 0;
   // 서버가 처리할 수 있는 최대 body 크기
   static const int MAX_LIMIT_BODY_SIZE = 100000000;
+  // 서버가 처리할 수 있는 최대 URI 크기
+  static const int MAX_URI_SIZE = 8000;
 
   // 상태코드 메시지
   static const std::map<int, std::string> statusMessages;
