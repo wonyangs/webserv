@@ -31,6 +31,25 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  * Public method
  */
 
-void ErrorBuilder::build(void) {}
+void ErrorBuilder::build(void) {
+  Location const& location = _request.getLocation();
+
+  if (location.hasErrorPage(_statusCode)) {
+    readStatusCodeFile();
+  } else {
+    generateDefaultPage();
+  }
+}
 
 void ErrorBuilder::close(void) {}
+
+/**
+ * Public method
+ */
+
+void ErrorBuilder::readStatusCodeFile(void) {
+  // open file
+  
+}
+
+void ErrorBuilder::generateDefaultPage(void) {}

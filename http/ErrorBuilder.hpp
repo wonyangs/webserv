@@ -19,6 +19,9 @@ class ErrorBuilder : public AResponseBuilder {
 
  private:
   ErrorBuilder(void);
+
+  void readStatusCodeFile(void);
+  void generateDefaultPage(void);
 };
 
 #endif
