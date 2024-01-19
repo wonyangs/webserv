@@ -1,12 +1,17 @@
 #ifndef __A_RESPONSE_BUILDER_HPP__
 #define __A_RESPONSE_BUILDER_HPP__
 
+#include "Request.hpp"
 #include "Response.hpp"
 
 class AResponseBuilder {
+ protected:
+  enum EBuilderType { ERROR };
+  Request const& _request;
+  Response _response;
+
  private:
   EBuilderType _type;
-  Response _response;
 
  public:
   EBuilderType const& getType(void) const;
@@ -16,9 +21,7 @@ class AResponseBuilder {
   virtual void close(void) = 0;
 
  protected:
-  enum EBuilderType = {ERROR};
-
-  AResponseBuilder(EBuilderType const& type);
+  AResponseBuilder(EBuilderType const& type, Request const& request);
   AResponseBuilder(AResponseBuilder const& builder);
   ~AResponseBuilder(void);
 
