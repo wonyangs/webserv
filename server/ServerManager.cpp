@@ -272,6 +272,7 @@ void ServerManager::removeConnection(int fd) {
   }
 
   Connection& connection = it->second;
+  Kqueue::removeAllEvents(fd);
   connection.close();
   _connections.erase(fd);
 }
