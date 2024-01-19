@@ -2,7 +2,7 @@
 
 // Constructor & Destructor
 
-Request::Request(void) : _method(HTTP_NONE) {}
+Request::Request(void) : _method(HTTP_NONE), _locationFlag(false) {}
 
 Request::Request(Request const& request) { *this = request; }
 
@@ -18,6 +18,9 @@ Request& Request::operator=(Request const& request) {
     _httpVersion = request._httpVersion;
     _header = request._header;
     _body = request._body;
+
+    _location = request._location;
+    _locationFlag = request._locationFlag;
   }
   return *this;
 }
@@ -45,6 +48,7 @@ void Request::print() const {
   }
 
   std::cout << "Body: " << _body << std::endl;
+  std::cout << "Location uri: " << _location.getUri() << std::endl;
 }
 
 // Public Method - getter
@@ -62,6 +66,8 @@ std::map<std::string, std::vector<std::string> > const& Request::getHeader(
   return _header;
 }
 
+Location const& Request::getLocation(void) const { return _location; }
+
 std::string const& Request::getBody(void) const { return _body; }
 
 std::vector<std::string> const& Request::getHeaderFieldValues(
@@ -74,6 +80,13 @@ std::vector<std::string> const& Request::getHeaderFieldValues(
   std::map<std::string, std::vector<std::string> >::const_iterator it =
       _header.find(fieldName);
   return it->second;
+}
+
+// Public Method - setter
+
+void Request::setLocation(Location const& location) {
+  _location = location;
+  _locationFlag = true;
 }
 
 // Public Method
@@ -141,6 +154,7 @@ void Request::clear() {
   _httpVersion.clear();
   _header.clear();
   _body.clear();
+  _locationFlag = false;
 }
 
 // Private Method - setter

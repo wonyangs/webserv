@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include "../config/Location.hpp"
 #include "../utils/Config.hpp"
 #include "../utils/Enum.hpp"
 #include "../utils/StatusException.hpp"
@@ -19,6 +20,9 @@ class Request {
   std::map<std::string, std::vector<std::string> > _header;
   std::string _body;
 
+  bool _locationFlag;
+  Location _location;
+
  public:
   Request(void);
   Request(Request const& request);
@@ -32,9 +36,12 @@ class Request {
   std::string const& getHttpVersion(void) const;
   std::map<std::string, std::vector<std::string> > const& getHeader(void) const;
   std::string const& getBody(void) const;
+  Location const& getLocation(void) const;
 
   std::vector<std::string> const& getHeaderFieldValues(
       std::string const& fieldName) const;
+
+  void setLocation(Location const& location);
 
   void print(void) const;  // debug
 

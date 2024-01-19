@@ -23,6 +23,7 @@ class Location {
   std::string _redirectUri;
 
  public:
+  Location(void);
   Location(std::string const& uri, std::string const& rootPath,
            std::string const& indexFile);
   Location(Location const& location);
@@ -54,8 +55,6 @@ class Location {
 
   bool _hasAllowMethodField;
   bool _hasRedirectField;
-
-  Location(void);
 };
 
 #endif

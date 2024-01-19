@@ -18,11 +18,10 @@ Connection::Connection(int fd, ServerManager& manager)
       _lastCallTime(std::time(0)),
       _status(ON_WAIT),
       _requestParser(),
-      _location(manager.getDefaultLocation()),
       _manager(manager) {}
 
 Connection::Connection(Connection const& connection)
-    : _location(connection._location), _manager(connection._manager) {
+    : _manager(connection._manager) {
   *this = connection;
 }
 
@@ -91,8 +90,7 @@ void Connection::parseRequest(u_int8_t const* buffer, ssize_t bytesRead) {
     if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
       // Location 블록 할당
       Request const& request = _requestParser.getRequest();
-      setLocation(request);
-      // _requestParser.setLocation(location);
+      setRequestParserLocation(request);
       // 다시 파싱
       _requestParser.parse(buffer, 0);
     }
@@ -215,11 +213,12 @@ long Connection::getElapsedTime(void) const {
  */
 
 // path와 host 정보를 가지고 알맞은 location 블럭을 할당
-void Connection::setLocation(Request const& request) {
+void Connection::setRequestParserLocation(Request const& request) {
   std::string const& path = request.getPath();
   std::string const& host = request.getHeaderFieldValues("host").front();
 
-  _location = _manager.getLocation(path, host);
+  Location const& location = _manager.getLocation(path, host);
+  _requestParser.setRequestLocation(location);
 }
 
 // 마지막으로 호출된 시간 업데이트

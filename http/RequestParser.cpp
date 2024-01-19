@@ -35,6 +35,12 @@ enum EParsingStatus RequestParser::getParsingStatus() const { return _status; }
 
 Request const& RequestParser::getRequest() const { return _request; }
 
+// Public Method - setter
+
+void RequestParser::setRequestLocation(Location const& location) {
+  _request.setLocation(location);
+}
+
 // Public Method
 
 #include <iostream>

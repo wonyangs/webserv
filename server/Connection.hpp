@@ -21,7 +21,6 @@ class Connection {
   enum EStatus _status;
 
   RequestParser _requestParser;
-  Location _location;
 
  public:
   Connection(int fd, ServerManager& manager);
@@ -48,7 +47,7 @@ class Connection {
   ServerManager& _manager;
 
   void parseRequest(u_int8_t const* buffer, ssize_t bytesRead);
-  void setLocation(Request const& request);
+  void setRequestParserLocation(Request const& request);
 
   void updateLastCallTime(void);
   void setStatus(EStatus status);
