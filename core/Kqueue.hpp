@@ -4,6 +4,8 @@
 #include <sys/event.h>
 #include <time.h>
 
+#include <map>
+
 #include "Event.hpp"
 
 // kqueue를 관리하는 정적 클래스
@@ -11,6 +13,7 @@ class Kqueue {
  private:
   static int _fd;
   static struct timespec _timeout;
+  static std::map<int, int> _events;
 
  public:
   static void start(void);
@@ -21,9 +24,16 @@ class Kqueue {
   static void removeReadEvent(int fd);
   static void removeWriteEvent(int fd);
 
+  static void removeAllEvents(int fd);
+
   static Event getEvent(void);
 
  private:
+  enum EEventAction { ADD, REMOVE };
+  enum EEventType { NO_EVENT = 0, READ_EVENT = 1 << 0, WRITE_EVENT = 1 << 1 };
+
+  static void updateEventStatus(int fd, EEventType event, EEventAction action);
+
   Kqueue(void);
   Kqueue(Kqueue const& kqueue);
   ~Kqueue(void);
