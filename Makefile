@@ -14,6 +14,7 @@ SRCS		= config/Server.cpp \
 			  server/EventLoop.cpp \
 			  http/Request.cpp \
 			  http/RequestParser.cpp \
+			  http/Response.cpp \
 			  main.cpp
 
 OBJS		= $(SRCS:%.cpp=%.o)
