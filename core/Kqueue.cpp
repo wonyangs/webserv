@@ -6,6 +6,7 @@
 
 int Kqueue::_fd = -1;
 struct timespec Kqueue::_timeout;
+std::map<int, int> Kqueue::_events;
 
 // Kqueue를 할당
 // - 할당에 실패할 경우 예외 발생
@@ -37,6 +38,8 @@ void Kqueue::addReadEvent(int fd) {
   if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("[3001] Kqueue: addReadEvent - event add failed");
   }
+
+  updateEventStatus(fd, READ_EVENT, ADD);
 }
 
 // WRITE 이벤트 추가
@@ -48,6 +51,8 @@ void Kqueue::addWriteEvent(int fd) {
   if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
     throw std::runtime_error("[3002] Kqueue: addWriteEvent - event add failed");
   }
+
+  updateEventStatus(fd, READ_EVENT, ADD);
 }
 
 // READ 이벤트 제거
@@ -60,6 +65,8 @@ void Kqueue::removeReadEvent(int fd) {
     throw std::runtime_error(
         "[3003] Kqueue: removeReadEvent - event remove failed");
   }
+
+  updateEventStatus(fd, READ_EVENT, REMOVE);
 }
 
 // WRITE 이벤트 제거
@@ -72,6 +79,8 @@ void Kqueue::removeWriteEvent(int fd) {
     throw std::runtime_error(
         "[3004] Kqueue: removeWriteEvent - event remove failed");
   }
+
+  updateEventStatus(fd, WRITE_EVENT, REMOVE);
 }
 
 // 발생한 이벤트 반환
@@ -88,4 +97,53 @@ Event Kqueue::getEvent(void) {
     return Event();
   }
   return Event(tmp);
+}
+
+// Kqueue에서 fd가 가진 모든 이벤트를 제거
+// - 이벤트 제거 시스템콜이 실패한 경우 예외 발생
+// - 등록되어 있지 않은 이벤트에 대해서는 아무 동작도 하지 않음
+void Kqueue::removeAllEvents(int fd) {
+  int events = _events[fd];
+
+  // READ 이벤트 제거
+  if (events & READ_EVENT) {
+    struct kevent event;
+    EV_SET(&event, fd, Event::READ, EV_DELETE, 0, 0, NULL);
+    if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
+      throw std::runtime_error(
+          "[3006] Kqueue: removeAllEvents - remove read event failed");
+    }
+  }
+
+  // WRITE 이벤트 제거
+  if (events & WRITE_EVENT) {
+    struct kevent event;
+    EV_SET(&event, fd, Event::WRITE, EV_DELETE, 0, 0, NULL);
+    if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
+      throw std::runtime_error(
+          "[3007] Kqueue: removeAllEvents - remove write event failed");
+    }
+  }
+
+  _events.erase(fd);
+}
+
+/**
+ * Private method
+ */
+
+// 이벤트 관리 컨테이너 업데이트
+// - fd, 이벤트 타입. 등록/삭제를 선택
+void Kqueue::updateEventStatus(int fd, EEventType event, EEventAction action) {
+  switch (action) {
+    case ADD_EVENT:
+      _events[fd] |= event;
+      break;
+    case REMOVE_EVENT:
+      _events[fd] &= ~event;
+      if (_events[fd] == NO_EVENT) {
+        _events.erase(fd);
+      }
+      break;
+  }
 }
