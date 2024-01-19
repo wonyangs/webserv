@@ -136,10 +136,10 @@ void Kqueue::removeAllEvents(int fd) {
 // - fd, 이벤트 타입. 등록/삭제를 선택
 void Kqueue::updateEventStatus(int fd, EEventType event, EEventAction action) {
   switch (action) {
-    case ADD_EVENT:
+    case ADD:
       _events[fd] |= event;
       break;
-    case REMOVE_EVENT:
+    case REMOVE:
       _events[fd] &= ~event;
       if (_events[fd] == NO_EVENT) {
         _events.erase(fd);
