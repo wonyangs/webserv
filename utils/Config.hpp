@@ -17,6 +17,9 @@ class Config {
   // 상태코드 메시지
   static const std::map<int, std::string> statusMessages;
 
+  static std::string const defaultErrorPageBody(std::string const& code,
+                                                std::string const& message);
+
  private:
   static std::map<int, std::string> initializeStatusMessages(void);
 

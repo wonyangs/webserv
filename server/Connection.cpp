@@ -163,13 +163,16 @@ void Connection::sendErrorPage(int code) {
     it = Config::statusMessages.find(500);
   }
 
-  // HTTP 응답 생성
-  std::string response =
-      "HTTP/1.1 " + std::to_string(code) + " " + it->second + "\n" +
-      "Content-Length: 13\n"  // 내용 길이는 실제 내용에 맞게 조정 필요
-      + "Content-Type: text/plain\n" + "Connection: keep-alive\n\n" +
-      "Hello, world!\n\n";
+  std::string codeString = std::to_string(code);
 
+  // HTTP 응답 생성
+  std::string const& body =
+      Config::defaultErrorPageBody(codeString, it->second);
+
+  std::string response =
+      "HTTP/1.1 " + codeString + " " + it->second + "\n" +
+      "Content-Length: " + std::to_string(body.size()) +
+      "\nContent-Type: text/html\nConnection: keep-alive\n\n" + body;
   ssize_t bytesSent = write(_fd, response.c_str(), response.length());
 
   if (bytesSent < 0) {
