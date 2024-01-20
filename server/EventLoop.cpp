@@ -27,11 +27,10 @@ EventLoop::EventLoop(std::vector<Server> const& servers) {
 
   printServerMap(tmp);  // debug
 
-  Kqueue::start();
   for (ServerMap::const_iterator it = tmp.begin(); it != tmp.end(); ++it) {
     ServerKey const& key = it->first;
     ServerManager manager(key.first, key.second, it->second);
-    manager.runServer();
+    manager.init();
     int fd = manager.getServerFd();
     _managers.insert(std::make_pair(fd, manager));
   }
@@ -42,6 +41,12 @@ EventLoop::~EventLoop(void) {}
 // Public method
 
 void EventLoop::run(void) {
+  Kqueue::start();
+  for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
+       ++it) {
+    (it->second).run();
+  }
+
   while (true) {
     try {
       closeTimeoutConnections();
@@ -66,6 +71,12 @@ void EventLoop::run(void) {
       }
     } catch (std::exception const& e) {
       std::cout << e.what() << std::endl;
+
+      bool restartStatus = false;
+      do {
+        std::cout << "Server restarting..." << std::endl;
+        restartStatus = restart();
+      } while (restartStatus == false);
     }
   }
 }
@@ -78,6 +89,27 @@ void EventLoop::closeTimeoutConnections(void) {
        ++it) {
     (it->second).manageTimeoutConnections();
   }
+}
+
+// 서버 재시작
+bool EventLoop::restart(void) {
+  try {
+    for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
+         ++it) {
+      (it->second).clear();
+    }
+    Kqueue::close();
+
+    Kqueue::start();
+    for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
+         ++it) {
+      (it->second).run();
+    }
+  } catch (std::exception const& e) {
+    std::cout << e.what() << std::endl;
+    return false;
+  }
+  return true;
 }
 
 // debug

@@ -26,6 +26,8 @@ class EventLoop {
   typedef std::map<int, ServerManager> ManagerMap;
 
   void closeTimeoutConnections(void);
+  bool restart(void);
+
   void printServerMap(const ServerMap& serverMap);  // debug
 
   EventLoop(void);
