@@ -81,6 +81,7 @@ void ServerManager::clear(void) {
     (*it).second.close();
   }
   _connections.clear();
+  _managedFds.clear();
 }
 
 /**
