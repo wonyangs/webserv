@@ -23,7 +23,8 @@ ServerManager::ServerManager(ServerManager const& manager)
       _hostIp(manager._hostIp),
       _port(manager._port),
       _configs(manager._configs),
-      _connections(manager._connections) {}
+      _connections(manager._connections),
+      _managedFds(manager._managedFds) {}
 
 ServerManager::~ServerManager(void) {}
 
@@ -38,6 +39,7 @@ ServerManager& ServerManager::operator=(ServerManager const& manager) {
     _port = manager._port;
     _configs = manager._configs;
     _connections = manager._connections;
+    _managedFds = manager._managedFds;
   }
   return *this;
 }
@@ -57,6 +59,7 @@ void ServerManager::runServer(void) {
     Socket::bind(_serverFd, _hostIp, _port);
     Socket::listen(_serverFd, 3);
 
+    addManagedFd(_serverFd, _serverFd);
     Kqueue::addReadEvent(_serverFd);
   } catch (const std::exception& e) {
     if (_serverFd != -1) {
@@ -114,6 +117,7 @@ void ServerManager::handleServerEvent(void) {
   try {
     clientFd = Socket::accept(_serverFd);
 
+    addManagedFd(clientFd, clientFd);
     addConnection(clientFd);
     Kqueue::addReadEvent(clientFd);
   } catch (std::exception const& e) {
@@ -129,7 +133,8 @@ void ServerManager::handleServerEvent(void) {
 // 읽기 이벤트 처리
 // - 이벤트 처리 과정 중 예외 발생 가능
 void ServerManager::handleReadEvent(int eventFd) {
-  ConnectionMap::iterator it = _connections.find(eventFd);
+  int connectionFd = _managedFds[eventFd];
+  ConnectionMap::iterator it = _connections.find(connectionFd);
   Connection& connection = it->second;
 
   try {
@@ -155,7 +160,8 @@ void ServerManager::handleReadEvent(int eventFd) {
 // 쓰기 이벤트 처리
 // - 이벤트 처리 과정 중 예외 발생 가능
 void ServerManager::handleWriteEvent(int eventFd) {
-  ConnectionMap::iterator it = _connections.find(eventFd);
+  int connectionFd = _managedFds[eventFd];
+  ConnectionMap::iterator it = _connections.find(connectionFd);
   Connection& connection = it->second;
 
   try {
@@ -185,6 +191,44 @@ void ServerManager::handleWriteEvent(int eventFd) {
 }
 
 /**
+ * Public method - connection
+ */
+
+// 관리할 fd를 추가
+// - managedFd: connection에서 사용하는 fd
+// - ownerFd: managedFd를 사용하는 fd
+void ServerManager::addManagedFd(int managedFd, int ownerFd) {
+  _managedFds[managedFd] = ownerFd;
+}
+
+// 관리하는 fd를 제거
+void ServerManager::removeManagedFd(int managedFd) {
+  _managedFds.erase(managedFd);
+}
+
+// 해당 fd를 관리하고 있는지 여부 반환
+bool ServerManager::hasManagedFd(int fd) const {
+  return (_managedFds.find(fd) != _managedFds.end());
+}
+
+// owner fd가 소유한 모든 fd들을 _managedFds에서 삭제
+void ServerManager::removeAllManagedFd(int ownerFd) {
+  std::vector<int> keysToRemove;
+
+  for (std::map<int, int>::iterator it = _managedFds.begin();
+       it != _managedFds.end(); ++it) {
+    if (it->second == ownerFd) {
+      keysToRemove.push_back(it->first);
+    }
+  }
+
+  for (std::vector<int>::iterator it = keysToRemove.begin();
+       it != keysToRemove.end(); ++it) {
+    _managedFds.erase(*it);
+  }
+}
+
+/**
  * Public method - etc
  */
 
@@ -195,7 +239,7 @@ int ServerManager::getServerFd(void) const { return _serverFd; }
 bool ServerManager::canHandleEvent(Event event) const {
   int eventFd = event.getFd();
 
-  return (eventFd == _serverFd or hasConnectionFd(eventFd));
+  return (hasManagedFd(eventFd));
 }
 
 // timeout된 커넥션을 관리 목록에서 제거
@@ -272,6 +316,7 @@ void ServerManager::removeConnection(int fd) {
   }
 
   Connection& connection = it->second;
+  removeAllManagedFd(fd);
   Kqueue::removeAllEvents(fd);
   connection.close();
   _connections.erase(fd);

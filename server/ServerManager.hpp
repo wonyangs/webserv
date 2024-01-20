@@ -17,8 +17,10 @@ class ServerManager {
   int _serverFd;
   std::string _hostIp;
   int _port;
+
   std::vector<Server> _configs;
   std::map<int, Connection> _connections;
+  std::map<int, int> _managedFds;
 
  public:
   ServerManager(std::string hostIp, int port, std::vector<Server> configs);
@@ -35,6 +37,9 @@ class ServerManager {
   bool canHandleEvent(Event event) const;
   int getServerFd(void) const;
 
+  void addManagedFd(int managedFd, int ownerFd);
+  void removeManagedFd(int managedFd);
+
   Location const& getDefaultLocation(void);
   Location const& getLocation(std::string const& path, std::string const& host);
 
@@ -45,6 +50,9 @@ class ServerManager {
   void addConnection(int fd);
   void removeConnection(int fd);
   bool hasConnectionFd(int fd) const;
+
+  bool hasManagedFd(int fd) const;
+  void removeAllManagedFd(int managedFd);
 
   void handleServerEvent(void);
   void handleReadEvent(int eventFd);
