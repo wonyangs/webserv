@@ -60,15 +60,17 @@ std::map<std::string, std::string> const& Response::getHeader(void) const {
 
 std::string const& Response::getBody(void) const { return _body; }
 
+std::string const& Response::toString(void) const { return _responseContent; }
+
 // Public Method - setter
 
-void Response::setResponseContent(void) {
+void Response::makeResponseContent(void) {
   std::string const crlf = "\r\n";
 
   std::stringstream ss;
 
   ss << _httpVersion << " " << _statusCode << " "
-     << findStatusMessage(_statusCode) << crlf;
+     << Config::findStatusMessage(_statusCode) << crlf;
 
   for (std::map<std::string, std::string>::const_iterator it = _header.begin();
        it != _header.end(); ++it) {
@@ -113,21 +115,6 @@ void Response::clear(void) {
   _statusCode = -1;
   _header.clear();
   _body.clear();
-}
-
-// 상태 코드에 해당하는 메시지 찾기
-// - 정의되지 않은 코드일 경우 예외 발생
-std::string const& Response::findStatusMessage(int code) {
-  std::map<int, std::string>::const_iterator it =
-      Config::statusMessages.find(code);
-
-  if (it == Config::statusMessages.end()) {
-    throw std::runtime_error(
-        "[5001] Response: findStatusMessage - status message does not exist: " +
-        std::to_string(code));
-  }
-
-  return it->second;
 }
 
 // Private Method

@@ -34,8 +34,9 @@ class Response {
   int const& getStatusCode(void) const;
   std::map<std::string, std::string> const& getHeader(void) const;
   std::string const& getBody(void) const;
+  std::string const& toString(void) const;
 
-  void setResponseContent(void);
+  void makeResponseContent(void);
 
   void setHttpVersion(std::string const& httpVersion);
   void setStatusCode(int const& statusCode);
@@ -44,8 +45,6 @@ class Response {
   void appendBody(std::string const& body);
 
   void clear(void);
-
-  std::string const& findStatusMessage(int code);
 
  private:
   bool isHeaderFieldNameExists(std::string const& fieldName) const;

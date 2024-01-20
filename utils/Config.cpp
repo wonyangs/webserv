@@ -35,9 +35,27 @@ std::map<int, std::string> Config::initializeStatusMessages(void) {
   return messages;
 }
 
-std::string const Config::defaultErrorPageBody(int code,
-                                               std::string const& message) {
+// 상태 코드에 해당하는 메시지 찾기
+// - 정의되지 않은 코드일 경우 예외 발생
+std::string const& Config::findStatusMessage(int code) {
+  std::map<int, std::string>::const_iterator it =
+      Config::statusMessages.find(code);
+
+  if (it == Config::statusMessages.end()) {
+    std::stringstream ss;
+
+    ss << code;
+    throw std::runtime_error(
+        "[6000] Config: findStatusMessage - status message does not exist: " +
+        ss.str());
+  }
+
+  return it->second;
+}
+
+std::string const Config::defaultErrorPageBody(int code) {
   std::stringstream ss;
+  std::string const& message = Config::findStatusMessage(code);
 
   ss << "<!DOCTYPE html> <html> <head> <title>ERROR</title> <style> "
         "@font-face { font-family: 'WarhavenB'; src: "
@@ -48,7 +66,8 @@ std::string const Config::defaultErrorPageBody(int code,
         "align-items: center; text-align: center; } .container { margin: "
         "50px auto; animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; "
         "transform: translate3d(0, 0, 0); backface-visibility: hidden; "
-        "perspective: 1000px; } .error { font-size: 100px; color: #313438bd; } "
+        "perspective: 1000px; } .error { font-size: 100px; color: #313438bd; "
+        "} "
         "@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0);} "
         "20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% {  "
         "transform: translate3d(-4px, 0, 0); } 40%, 60% {  transform: "
