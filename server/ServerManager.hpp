@@ -29,7 +29,9 @@ class ServerManager {
 
   ServerManager& operator=(ServerManager const& manager);
 
-  void runServer(void);
+  void init(void);
+  void run(void);
+  void clear(void);
 
   void handleEvent(Event event);
   void manageTimeoutConnections(void);

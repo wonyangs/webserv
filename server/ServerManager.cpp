@@ -50,7 +50,7 @@ ServerManager& ServerManager::operator=(ServerManager const& manager) {
 
 // 서버 소켓 할당 및 listening 시작
 // - 서버 시작 실패 시 예외 발생
-void ServerManager::runServer(void) {
+void ServerManager::init(void) {
   try {
     _serverFd = Socket::socket();
 
@@ -59,14 +59,29 @@ void ServerManager::runServer(void) {
     Socket::bind(_serverFd, _hostIp, _port);
     Socket::listen(_serverFd, 3);
 
-    addManagedFd(_serverFd, _serverFd);
-    Kqueue::addReadEvent(_serverFd);
   } catch (const std::exception& e) {
     if (_serverFd != -1) {
       close(_serverFd);
     }
     throw;
   }
+}
+
+// 서버 fd를 kqueue에 추가하고 동작 시작
+// - kqueue에 이벤트 추가를 실패한 경우 예외 발생
+void ServerManager::run(void) {
+  Kqueue::addReadEvent(_serverFd);
+  addManagedFd(_serverFd, _serverFd);
+}
+
+// 서버가 관리하는 모든 client를 제거
+void ServerManager::clear(void) {
+  for (ConnectionMap::iterator it = _connections.begin();
+       it != _connections.end(); ++it) {
+    (*it).second.close();
+  }
+  _connections.clear();
+  _managedFds.clear();
 }
 
 /**
