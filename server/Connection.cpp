@@ -7,6 +7,8 @@
 
 #include "../config/Location.hpp"
 #include "../core/Kqueue.hpp"
+#include "../http/AResponseBuilder.hpp"
+#include "../http/ErrorBuilder.hpp"
 #include "../utils/Config.hpp"
 
 /**
@@ -149,28 +151,20 @@ void Connection::send(void) {
 
 // 에러 응답 보내기
 // - 임시 메서드
+// - 이후에 ErrorBuilder를 통해 만들어질 예정
 void Connection::sendErrorPage(int code) {
   setStatus(ON_SEND);
 
-  // 상태 코드에 해당하는 메시지 찾기
-  std::map<int, std::string>::const_iterator it =
-      Config::statusMessages.find(code);
-  if (it == Config::statusMessages.end()) {
-    // 정의되지 않은 코드일 경우 기본 메시지 설정
-    code = 500;
-    it = Config::statusMessages.find(500);
-  }
-
-  std::string codeString = std::to_string(code);
-
   // HTTP 응답 생성
-  std::string const& body = Config::defaultErrorPageBody(code, it->second);
 
-  std::string response =
-      "HTTP/1.1 " + codeString + " " + it->second + "\n" +
-      "Content-Length: " + std::to_string(body.size()) +
-      "\nContent-Type: text/html\nConnection: keep-alive\n\n" + body;
-  ssize_t bytesSent = write(_fd, response.c_str(), response.length());
+  ErrorBuilder builder(_requestParser.getRequest(), code);
+  builder.build();
+
+  Response const& response = builder.getResponse();
+  std::string const& responseContent = response.toString();
+
+  ssize_t bytesSent =
+      write(_fd, responseContent.c_str(), responseContent.length());
 
   if (bytesSent < 0) {
     throw std::runtime_error(
@@ -179,7 +173,7 @@ void Connection::sendErrorPage(int code) {
 
   std::cout << "[ Server: response sent ]\n"
             << "-------------\n"
-            << response << "\n-------------" << std::endl;
+            << responseContent << "\n-------------" << std::endl;
 
   updateLastCallTime();
 
