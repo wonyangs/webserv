@@ -41,11 +41,7 @@ EventLoop::~EventLoop(void) {}
 // Public method
 
 void EventLoop::run(void) {
-  Kqueue::start();
-  for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
-       ++it) {
-    (it->second).run();
-  }
+  start();
 
   while (true) {
     try {
@@ -89,6 +85,22 @@ void EventLoop::closeTimeoutConnections(void) {
        ++it) {
     (it->second).manageTimeoutConnections();
   }
+}
+
+void EventLoop::start(void) {
+  bool isStart = false;
+  do {
+    try {
+      Kqueue::start();
+      for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
+           ++it) {
+        (it->second).run();
+      }
+      isStart = true;
+    } catch (std::exception const& e) {
+      std::cout << e.what() << std::endl;
+    }
+  } while (isStart == false);
 }
 
 // 서버 재시작
