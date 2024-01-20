@@ -35,26 +35,45 @@ std::map<int, std::string> Config::initializeStatusMessages(void) {
   return messages;
 }
 
-std::string const Config::defaultErrorPageBody(std::string const& code,
-                                               std::string const& message) {
-  std::string const body =
-      "<!DOCTYPE html> <html> <head> <title>ERROR</title> <style> "
-      "@font-face { font-family: 'WarhavenB'; src: "
-      "url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2312-1@1.1/"
-      "WarhavenB.woff2') format('woff2'); font-weight: 700; font-style: "
-      "normal; } body {font-family: 'WarhavenB', Arial, sans-serif; "
-      "background-color: #d7ddcd; margin: 0; padding: 0; display: flex; "
-      "align-items: center; text-align: center; } .container { margin: "
-      "50px auto; animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; "
-      "transform: translate3d(0, 0, 0); backface-visibility: hidden; "
-      "perspective: 1000px; } .error { font-size: 100px; color: #313438bd; } "
-      "@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0);} "
-      "20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% {  "
-      "transform: translate3d(-4px, 0, 0); } 40%, 60% {  transform: "
-      "translate3d(4px, 0, 0);}} </style> </head> <body> <div class= "
-      "\"container \"> <h1 class=\"error\">" +
-      code + " " + message + "</h1> <img src=\" https://http.cat/" + code +
-      "\"alt=\"Error Image\" class=\"error-image\"> </div> </body>\n\n";
+// 상태 코드에 해당하는 메시지 찾기
+// - 정의되지 않은 코드일 경우 예외 발생
+std::string const& Config::findStatusMessage(int code) {
+  std::map<int, std::string>::const_iterator it =
+      Config::statusMessages.find(code);
 
-  return body;
+  if (it == Config::statusMessages.end()) {
+    throw std::runtime_error(
+        "[6000] Config: findStatusMessage - status message does not exist: " +
+        Util::itos(code));
+  }
+
+  return it->second;
+}
+
+std::string const Config::defaultErrorPageBody(int code) {
+  std::stringstream ss;
+  std::string const& message = Config::findStatusMessage(code);
+
+  ss << "<!DOCTYPE html> <html> <head> <title>ERROR</title> <style> "
+        "@font-face { font-family: 'WarhavenB'; src: "
+        "url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2312-1@1.1/"
+        "WarhavenB.woff2') format('woff2'); font-weight: 700; font-style: "
+        "normal; } body {font-family: 'WarhavenB', Arial, sans-serif; "
+        "background-color: #d7ddcd; margin: 0; padding: 0; display: flex; "
+        "align-items: center; text-align: center; } .container { margin: "
+        "50px auto; animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; "
+        "transform: translate3d(0, 0, 0); backface-visibility: hidden; "
+        "perspective: 1000px; } .error { font-size: 100px; color: #313438bd; "
+        "} "
+        "@keyframes shake { 10%, 90% { transform: translate3d(-1px, 0, 0);} "
+        "20%, 80% { transform: translate3d(2px, 0, 0); } 30%, 50%, 70% {  "
+        "transform: translate3d(-4px, 0, 0); } 40%, 60% {  transform: "
+        "translate3d(4px, 0, 0);}} </style> </head> <body> <div class= "
+        "\"container \"> <h1 class=\"error\">";
+
+  ss << code << " " << message << "</h1>";
+  ss << " <img src=\" https://http.cat/" << code
+     << "\"alt=\"Error Image\" class=\"error-image\"> </div> </body>\n\n";
+
+  return ss.str();
 }

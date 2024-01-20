@@ -2,7 +2,10 @@
 #define __CONFIG_HPP__
 
 #include <map>
+#include <sstream>
 #include <string>
+
+#include "Util.hpp"
 
 // 서버가 사용하는 설정들을 정의해 둔 static 클래스
 class Config {
@@ -17,8 +20,8 @@ class Config {
   // 상태코드 메시지
   static const std::map<int, std::string> statusMessages;
 
-  static std::string const defaultErrorPageBody(std::string const& code,
-                                                std::string const& message);
+  static std::string const& findStatusMessage(int code);
+  static std::string const defaultErrorPageBody(int code);
 
  private:
   static std::map<int, std::string> initializeStatusMessages(void);

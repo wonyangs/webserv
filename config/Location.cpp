@@ -4,6 +4,8 @@
 
 // Constructor & Destructor
 
+Location::Location(void){};
+
 Location::Location(std::string const& uri, std::string const& rootPath,
                    std::string const& indexFile)
     : _uri(uri),

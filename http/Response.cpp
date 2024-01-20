@@ -60,13 +60,36 @@ std::map<std::string, std::string> const& Response::getHeader(void) const {
 
 std::string const& Response::getBody(void) const { return _body; }
 
+std::string const& Response::toString(void) const { return _responseContent; }
+
 // Public Method - setter
+
+void Response::makeResponseContent(void) {
+  std::string const crlf = "\r\n";
+
+  std::stringstream ss;
+
+  ss << _httpVersion << " " << _statusCode << " "
+     << Config::findStatusMessage(_statusCode) << crlf;
+
+  for (std::map<std::string, std::string>::const_iterator it = _header.begin();
+       it != _header.end(); ++it) {
+    ss << it->first << ": " << it->second << crlf;
+  }
+  ss << crlf;
+  ss << _body;
+
+  _responseContent = ss.str();
+  _startIndex = 0;
+}
 
 void Response::setHttpVersion(std::string const& httpVersion) {
   _httpVersion = httpVersion;
 }
 
-void Response::setMethod(int const& statusCode) { _statusCode = statusCode; }
+void Response::setStatusCode(int const& statusCode) {
+  _statusCode = statusCode;
+}
 
 // Public Method
 
@@ -93,6 +116,8 @@ void Response::clear(void) {
   _header.clear();
   _body.clear();
 }
+
+// Private Method
 
 // 해당 헤더 field-name의 존재를 확인하는 함수
 bool Response::isHeaderFieldNameExists(std::string const& fieldName) const {

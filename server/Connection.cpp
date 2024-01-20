@@ -7,6 +7,8 @@
 
 #include "../config/Location.hpp"
 #include "../core/Kqueue.hpp"
+#include "../http/AResponseBuilder.hpp"
+#include "../http/ErrorBuilder.hpp"
 #include "../utils/Config.hpp"
 
 /**
@@ -18,11 +20,10 @@ Connection::Connection(int fd, ServerManager& manager)
       _lastCallTime(std::time(0)),
       _status(ON_WAIT),
       _requestParser(),
-      _location(manager.getDefaultLocation()),
       _manager(manager) {}
 
 Connection::Connection(Connection const& connection)
-    : _location(connection._location), _manager(connection._manager) {
+    : _manager(connection._manager) {
   *this = connection;
 }
 
@@ -91,8 +92,7 @@ void Connection::parseRequest(u_int8_t const* buffer, ssize_t bytesRead) {
     if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
       // Location 블록 할당
       Request const& request = _requestParser.getRequest();
-      setLocation(request);
-      // _requestParser.setLocation(location);
+      setRequestParserLocation(request);
       // 다시 파싱
       _requestParser.parse(buffer, 0);
     }
@@ -151,29 +151,20 @@ void Connection::send(void) {
 
 // 에러 응답 보내기
 // - 임시 메서드
+// - 이후에 ErrorBuilder를 통해 만들어질 예정
 void Connection::sendErrorPage(int code) {
   setStatus(ON_SEND);
 
-  // 상태 코드에 해당하는 메시지 찾기
-  std::map<int, std::string>::const_iterator it =
-      Config::statusMessages.find(code);
-  if (it == Config::statusMessages.end()) {
-    // 정의되지 않은 코드일 경우 기본 메시지 설정
-    code = 500;
-    it = Config::statusMessages.find(500);
-  }
-
-  std::string codeString = std::to_string(code);
-
   // HTTP 응답 생성
-  std::string const& body =
-      Config::defaultErrorPageBody(codeString, it->second);
 
-  std::string response =
-      "HTTP/1.1 " + codeString + " " + it->second + "\n" +
-      "Content-Length: " + std::to_string(body.size()) +
-      "\nContent-Type: text/html\nConnection: keep-alive\n\n" + body;
-  ssize_t bytesSent = write(_fd, response.c_str(), response.length());
+  ErrorBuilder builder(_requestParser.getRequest(), code);
+  builder.build();
+
+  Response const& response = builder.getResponse();
+  std::string const& responseContent = response.toString();
+
+  ssize_t bytesSent =
+      write(_fd, responseContent.c_str(), responseContent.length());
 
   if (bytesSent < 0) {
     throw std::runtime_error(
@@ -182,7 +173,7 @@ void Connection::sendErrorPage(int code) {
 
   std::cout << "[ Server: response sent ]\n"
             << "-------------\n"
-            << response << "\n-------------" << std::endl;
+            << responseContent << "\n-------------" << std::endl;
 
   updateLastCallTime();
 
@@ -215,11 +206,12 @@ long Connection::getElapsedTime(void) const {
  */
 
 // path와 host 정보를 가지고 알맞은 location 블럭을 할당
-void Connection::setLocation(Request const& request) {
+void Connection::setRequestParserLocation(Request const& request) {
   std::string const& path = request.getPath();
   std::string const& host = request.getHeaderFieldValues("host").front();
 
-  _location = _manager.getLocation(path, host);
+  Location const& location = _manager.getLocation(path, host);
+  _requestParser.setRequestLocation(location);
 }
 
 // 마지막으로 호출된 시간 업데이트

@@ -15,7 +15,10 @@ SRCS		= config/Server.cpp \
 			  http/Request.cpp \
 			  http/RequestParser.cpp \
 			  http/Response.cpp \
+			  http/AResponseBuilder.cpp \
+			  http/ErrorBuilder.cpp \
 			  main.cpp
+				
 
 OBJS		= $(SRCS:%.cpp=%.o)
 
