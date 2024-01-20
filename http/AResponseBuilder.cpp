@@ -26,6 +26,12 @@ AResponseBuilder& AResponseBuilder::operator=(AResponseBuilder const& builder) {
 }
 
 /**
+ * Protected method - setter
+ */
+
+void AResponseBuilder::setType(EBuilderType const& type) { _type = type; }
+
+/**
  * Public method
  */
 

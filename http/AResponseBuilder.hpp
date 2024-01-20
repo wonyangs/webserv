@@ -27,6 +27,8 @@ class AResponseBuilder {
 
   AResponseBuilder& operator=(AResponseBuilder const& builder);
 
+  void setType(EBuilderType const& type);
+
  private:
   AResponseBuilder(void);
 };

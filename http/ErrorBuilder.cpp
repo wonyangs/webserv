@@ -20,7 +20,7 @@ ErrorBuilder::~ErrorBuilder(void) {}
 
 ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
   if (this != &builder) {
-    _type = builder._type;
+    setType(builder.getType());
     _response = builder._response;
     _statusCode = builder._statusCode;
   }
@@ -49,7 +49,6 @@ void ErrorBuilder::close(void) {}
 
 void ErrorBuilder::readStatusCodeFile(void) {
   // open file
-  
 }
 
 void ErrorBuilder::generateDefaultPage(void) {}
