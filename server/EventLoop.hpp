@@ -28,7 +28,7 @@ class EventLoop {
   void closeTimeoutConnections(void);
 
   void start(void);
-  bool restart(void);
+  void restart(void);
 
   void printServerMap(const ServerMap& serverMap);  // debug
 

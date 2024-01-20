@@ -67,12 +67,7 @@ void EventLoop::run(void) {
       }
     } catch (std::exception const& e) {
       std::cout << e.what() << std::endl;
-
-      bool restartStatus = false;
-      do {
-        std::cout << "Server restarting..." << std::endl;
-        restartStatus = restart();
-      } while (restartStatus == false);
+      restart();
     }
   }
 }
@@ -104,24 +99,27 @@ void EventLoop::start(void) {
 }
 
 // 서버 재시작
-bool EventLoop::restart(void) {
-  try {
-    for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
-         ++it) {
-      (it->second).clear();
-    }
-    Kqueue::close();
+void EventLoop::restart(void) {
+  bool isRestart = false;
+  do {
+    std::cout << "Server restarting..." << std::endl;
+    try {
+      for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
+           ++it) {
+        (it->second).clear();
+      }
+      Kqueue::close();
 
-    Kqueue::start();
-    for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
-         ++it) {
-      (it->second).run();
+      Kqueue::start();
+      for (ManagerMap::iterator it = _managers.begin(); it != _managers.end();
+           ++it) {
+        (it->second).run();
+      }
+      isRestart = true;
+    } catch (std::exception const& e) {
+      std::cout << e.what() << std::endl;
     }
-  } catch (std::exception const& e) {
-    std::cout << e.what() << std::endl;
-    return false;
-  }
-  return true;
+  } while (isRestart == false);
 }
 
 // debug
