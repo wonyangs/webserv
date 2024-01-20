@@ -3,6 +3,7 @@
 
 #include <exception>
 #include <map>
+#include <sstream>
 #include <string>
 
 #include "../utils/Config.hpp"
@@ -34,13 +35,17 @@ class Response {
   std::map<std::string, std::string> const& getHeader(void) const;
   std::string const& getBody(void) const;
 
+  void setResponseContent(void);
+
   void setHttpVersion(std::string const& httpVersion);
-  void setMethod(int const& statusCode);
+  void setStatusCode(int const& statusCode);
 
   void addHeader(std::string const& fieldName, std::string const& fieldValue);
   void appendBody(std::string const& body);
 
   void clear(void);
+
+  std::string const& findStatusMessage(int code);
 
  private:
   bool isHeaderFieldNameExists(std::string const& fieldName) const;

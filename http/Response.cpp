@@ -62,11 +62,32 @@ std::string const& Response::getBody(void) const { return _body; }
 
 // Public Method - setter
 
+void Response::setResponseContent(void) {
+  std::string const crlf = "\r\n";
+
+  std::stringstream ss;
+
+  ss << _httpVersion << " " << _statusCode << " "
+     << findStatusMessage(_statusCode) << crlf;
+
+  for (std::map<std::string, std::string>::const_iterator it = _header.begin();
+       it != _header.end(); ++it) {
+    ss << it->first << ": " << it->second << crlf;
+  }
+  ss << crlf;
+  ss << _body;
+
+  _responseContent = ss.str();
+  _startIndex = 0;
+}
+
 void Response::setHttpVersion(std::string const& httpVersion) {
   _httpVersion = httpVersion;
 }
 
-void Response::setMethod(int const& statusCode) { _statusCode = statusCode; }
+void Response::setStatusCode(int const& statusCode) {
+  _statusCode = statusCode;
+}
 
 // Public Method
 
@@ -93,6 +114,23 @@ void Response::clear(void) {
   _header.clear();
   _body.clear();
 }
+
+// 상태 코드에 해당하는 메시지 찾기
+// - 정의되지 않은 코드일 경우 예외 발생
+std::string const& Response::findStatusMessage(int code) {
+  std::map<int, std::string>::const_iterator it =
+      Config::statusMessages.find(code);
+
+  if (it == Config::statusMessages.end()) {
+    throw std::runtime_error(
+        "[5001] Response: findStatusMessage - status message does not exist: " +
+        std::to_string(code));
+  }
+
+  return it->second;
+}
+
+// Private Method
 
 // 해당 헤더 field-name의 존재를 확인하는 함수
 bool Response::isHeaderFieldNameExists(std::string const& fieldName) const {
