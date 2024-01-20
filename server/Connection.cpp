@@ -164,8 +164,7 @@ void Connection::sendErrorPage(int code) {
   std::string codeString = std::to_string(code);
 
   // HTTP 응답 생성
-  std::string const& body =
-      Config::defaultErrorPageBody(codeString, it->second);
+  std::string const& body = Config::defaultErrorPageBody(code, it->second);
 
   std::string response =
       "HTTP/1.1 " + codeString + " " + it->second + "\n" +
