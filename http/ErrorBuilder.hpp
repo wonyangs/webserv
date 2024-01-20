@@ -1,6 +1,7 @@
 #ifndef __ERROR_BUILDER_HPP__
 #define __ERROR_BUILDER_HPP__
 
+#include "../utils/Util.hpp"
 #include "AResponseBuilder.hpp"
 
 class ErrorBuilder : public AResponseBuilder {

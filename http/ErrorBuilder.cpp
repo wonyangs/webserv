@@ -55,16 +55,14 @@ void ErrorBuilder::readStatusCodeFile(void) {
 // Connection은 request Header 정보 보고 변경되어야 함
 void ErrorBuilder::generateDefaultPage(void) {
   // HTTP 응답 생성
-  std::stringstream ss;
 
   std::string const& body = Config::defaultErrorPageBody(_statusCode);
-  ss << body.size();
 
   _response.setHttpVersion("HTTP/1.1");
   _response.setStatusCode(_statusCode);
 
   _response.addHeader("Content-Type", "text/html");
-  _response.addHeader("Content-Length", ss.str());
+  _response.addHeader("Content-Length", Util::itos(body.size()));
   _response.addHeader("Connection", "keep-alive");
 
   _response.appendBody(body);

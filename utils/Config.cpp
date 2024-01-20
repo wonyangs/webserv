@@ -42,12 +42,9 @@ std::string const& Config::findStatusMessage(int code) {
       Config::statusMessages.find(code);
 
   if (it == Config::statusMessages.end()) {
-    std::stringstream ss;
-
-    ss << code;
     throw std::runtime_error(
         "[6000] Config: findStatusMessage - status message does not exist: " +
-        ss.str());
+        Util::itos(code));
   }
 
   return it->second;
