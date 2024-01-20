@@ -32,13 +32,14 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  */
 
 void ErrorBuilder::build(void) {
-  Location const& location = _request.getLocation();
+  generateDefaultPage();
 
-  if (location.hasErrorPage(_statusCode)) {
-    readStatusCodeFile();
-  } else {
-    generateDefaultPage();
-  }
+  // Location const& location = _request.getLocation();
+  // if (location.hasErrorPage(_statusCode)) {
+  //   readStatusCodeFile();
+  // } else {
+  //   generateDefaultPage();
+  // }
 }
 
 void ErrorBuilder::close(void) {}
@@ -51,4 +52,22 @@ void ErrorBuilder::readStatusCodeFile(void) {
   // open file
 }
 
-void ErrorBuilder::generateDefaultPage(void) {}
+// Connection은 request Header 정보 보고 변경되어야 함
+void ErrorBuilder::generateDefaultPage(void) {
+  // HTTP 응답 생성
+  std::stringstream ss;
+
+  std::string const& body = Config::defaultErrorPageBody(_statusCode);
+  ss << body.size();
+
+  _response.setHttpVersion("HTTP/1.1");
+  _response.setStatusCode(_statusCode);
+
+  _response.addHeader("Content-Type", "text/html");
+  _response.addHeader("Content-Length", ss.str());
+  _response.addHeader("Connection", "keep-alive");
+
+  _response.appendBody(body);
+
+  _response.makeResponseContent();
+}
