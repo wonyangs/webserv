@@ -82,6 +82,8 @@ void EventLoop::closeTimeoutConnections(void) {
   }
 }
 
+// 서버 시작
+// - 실패할 경우 성공할 때까지 재시도
 void EventLoop::start(void) {
   bool isStart = false;
   do {
@@ -93,12 +95,14 @@ void EventLoop::start(void) {
       }
       isStart = true;
     } catch (std::exception const& e) {
+      std::cout << "Server start retry..." << std::endl;
       std::cout << e.what() << std::endl;
     }
   } while (isStart == false);
 }
 
 // 서버 재시작
+// - 실패할 경우 성공할 때까지 재시도
 void EventLoop::restart(void) {
   bool isRestart = false;
   do {
