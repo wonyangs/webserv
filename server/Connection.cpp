@@ -125,8 +125,6 @@ bool Connection::isReadStorageRequired() {
 void Connection::selectResponseBuilder(void) {
   std::cout << "selected!" << std::endl;
   _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 200);
-
-  _responseBuilder->build();
   setStatus(ON_BUILD);
 }
 
@@ -167,6 +165,40 @@ void Connection::send(void) {
     setStatus(CLOSE);
   } else {
     setStatus(ON_WAIT);
+  }
+}
+
+void Connection::resetResponseBuilder(int code) {
+  Kqueue::removeAllEvents(_fd);
+
+  if (_responseBuilder != NULL) {
+    delete _responseBuilder;
+    _responseBuilder = NULL;
+  }
+
+  _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), code);
+  setStatus(ON_BUILD);
+
+  build();
+  if (_status == Connection::ON_SEND) {
+    Kqueue::addWriteEvent(_fd);
+  }
+}
+
+void Connection::resetResponseBuilder(void) {
+  Kqueue::removeAllEvents(_fd);
+
+  if (_responseBuilder != NULL) {
+    delete _responseBuilder;
+    _responseBuilder = NULL;
+  }
+
+  _responseBuilder = new ErrorBuilder();
+  setStatus(ON_BUILD);
+
+  build();
+  if (_status == Connection::ON_SEND) {
+    Kqueue::addWriteEvent(_fd);
   }
 }
 

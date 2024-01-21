@@ -38,8 +38,10 @@ class Connection {
 
   void selectResponseBuilder(void);
   void build(void);
-
   void send(void);
+
+  void resetResponseBuilder(int code);
+  void resetResponseBuilder(void);
 
   void clear(void);
   void close(void);

@@ -57,8 +57,9 @@ class ServerManager {
   void removeAllManagedFd(int managedFd);
 
   void handleServerEvent(void);
-  void handleReadEvent(int eventFd);
-  void handleWriteEvent(int eventFd);
+  void handleReadEvent(int eventFd, Connection& connection);
+  void handleWriteEvent(int eventFd, Connection& connection);
+  Connection& findConnection(int eventFd);
 
   ServerManager(void);
 };
