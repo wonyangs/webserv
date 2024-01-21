@@ -44,7 +44,6 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
 #include <iostream>
 
 void ErrorBuilder::build(void) {
-  std::cout << "error builder!" << std::endl;
   if (_recursiveFlag) {
     generateDefaultPage();
     return;

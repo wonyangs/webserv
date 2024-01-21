@@ -52,8 +52,6 @@ void EventLoop::run(void) {
         continue;
       }
 
-      std::cout << "event!" << std::endl;
-
       ManagerMap::iterator it = _managers.begin();
       while (it != _managers.end()) {
         ServerManager& manager = it->second;

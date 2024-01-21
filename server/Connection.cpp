@@ -123,7 +123,6 @@ bool Connection::isReadStorageRequired() {
 // HTTP 요청 + Location 블록을 보고 분기
 // - 적절한 ResponseBuilder 선택
 void Connection::selectResponseBuilder(void) {
-  std::cout << "selected!" << std::endl;
   _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 200);
   setStatus(ON_BUILD);
 }
