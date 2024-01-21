@@ -35,12 +35,9 @@ class RequestParser {
   Request _request;
 
   enum EParsingStatus _status;
-  std::vector<u_int8_t> _requestLine;
-  std::vector<u_int8_t> _header;
-  std::vector<u_int8_t> _body;
-
-  std::vector<u_int8_t> _storageBuffer;
-  std::vector<u_int8_t> _chunkSizeBuffer;
+ 
+  std::vector<u_int8_t> _parsedData;
+  std::vector<u_int8_t> _tempStorage;
 
   size_t _chunkSize;
   size_t _bodyLength;
@@ -60,12 +57,12 @@ class RequestParser {
   void parse(u_int8_t const* buffer, ssize_t bytesRead);
   void clear();
 
-  bool isStorageBufferNotEmpty(void);
+  bool isTempStorageNotEmpty(void);
 
  private:
   void setBodyLength(std::string const& bodyLengthString);
   void setChunkSize(std::string const& chunkSizeString);
-  void setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
+  void setTempStorage(size_t startIdx, u_int8_t const* buffer,
                         ssize_t bytesRead);
 
   void parseOctet(u_int8_t const& octet);

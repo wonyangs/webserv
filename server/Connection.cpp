@@ -119,7 +119,7 @@ void Connection::parseRequest(u_int8_t const* buffer, ssize_t bytesRead) {
 // RequestParser의 storage가 남아있는지 여부 반환
 // - storage가 남아있는 경우 readStorage 메서드를 호출해야 함
 bool Connection::isReadStorageRequired() {
-  return _requestParser.isStorageBufferNotEmpty();
+  return _requestParser.isTempStorageNotEmpty();
 }
 
 /**
