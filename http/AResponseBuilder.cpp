@@ -4,8 +4,6 @@
  * Constructor & Destructor
  */
 
-AResponseBuilder::AResponseBuilder(void) : _isDone(false), _type(NONE) {}
-
 AResponseBuilder::AResponseBuilder(EBuilderType const& type,
                                    Request const& request)
     : _isDone(false), _request(request), _type(type) {}
@@ -35,9 +33,6 @@ AResponseBuilder& AResponseBuilder::operator=(AResponseBuilder const& builder) {
 /**
  * Public method
  */
-
-void AResponseBuilder::build(void) {}
-void AResponseBuilder::close(void) {}
 
 AResponseBuilder::EBuilderType const& AResponseBuilder::getType(void) const {
   return _type;

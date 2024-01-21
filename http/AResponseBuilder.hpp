@@ -6,7 +6,7 @@
 
 class AResponseBuilder {
  public:
-  enum EBuilderType { ERROR, NONE };
+  enum EBuilderType { ERROR };
 
  protected:
   Response _response;
@@ -17,7 +17,6 @@ class AResponseBuilder {
   EBuilderType _type;
 
  public:
-  AResponseBuilder(void);
   AResponseBuilder(EBuilderType const& type, Request const& request);
   AResponseBuilder(AResponseBuilder const& builder);
   virtual ~AResponseBuilder(void);
@@ -28,8 +27,8 @@ class AResponseBuilder {
   Response const& getResponse(void) const;
   bool isDone(void) const;
 
-  virtual void build(void);
-  virtual void close(void);
+  virtual void build(void) = 0;
+  virtual void close(void) = 0;
 
  protected:
   Request const& getRequest(void) const;
@@ -38,6 +37,7 @@ class AResponseBuilder {
   void setType(EBuilderType const& type);
 
  private:
+  AResponseBuilder(void);
 };
 
 #endif

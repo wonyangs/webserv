@@ -4,8 +4,6 @@
  * Constructor & Destructor
  */
 
-ErrorBuilder::ErrorBuilder(void) : AResponseBuilder(), _statusCode(500) {}
-
 ErrorBuilder::ErrorBuilder(Request const& request, int statusCode)
     : AResponseBuilder(ERROR, request), _statusCode(statusCode) {}
 
@@ -14,6 +12,7 @@ ErrorBuilder::ErrorBuilder(ErrorBuilder const& builder)
   _statusCode = builder._statusCode;
 }
 
+// TODO: 소멸할 때 관련된 fd를 clear하도록 구현
 ErrorBuilder::~ErrorBuilder(void) {}
 
 /**
