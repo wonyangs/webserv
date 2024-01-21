@@ -78,7 +78,8 @@ void ServerManager::run(void) {
 void ServerManager::clear(void) {
   for (ConnectionMap::iterator it = _connections.begin();
        it != _connections.end(); ++it) {
-    removeConnection(it->first);
+    it->second.clear();
+    it->second.close();
   }
   _connections.clear();
   _managedFds.clear();
@@ -300,34 +301,25 @@ void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
     }
 
     if (connection.getConnectionStatus() == Connection::TO_SEND) {
-      std::cout << "eventFd" << eventFd << std::endl;
       Kqueue::removeReadEvent(eventFd);
-      std::cout << "after eventFd: " << Kqueue::_events[eventFd] << std::endl;
 
       connection.selectResponseBuilder();
     }
 
-    throw StatusException(HTTP_NOT_ALLOWED, "hi");
-
     if (connection.getConnectionStatus() == Connection::ON_BUILD) {
-      std::cout << "build!" << std::endl;
       connection.build();
 
       if (connection.getConnectionStatus() == Connection::ON_SEND) {
         Kqueue::addWriteEvent(eventFd);
-        std::cout << "after write eventFd: " << Kqueue::_events[eventFd]
-                  << std::endl;
       }
     }
 
     if (connection.getConnectionStatus() == Connection::CLOSE) {
-      std::cout << "after2 eventFd: " << Kqueue::_events[eventFd] << std::endl;
       removeConnection(eventFd);
     }
 
   } catch (StatusException const& e) {
     std::cout << e.what() << std::endl;
-    throw StatusException(HTTP_BAD_GATEWAY, "hi");
 
     int code = e.getStatusCode();
     connection.resetResponseBuilder(code);
@@ -349,7 +341,6 @@ void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
       return;
     }
 
-    std::cout << connection.getConnectionStatus() << std::endl;
     if (connection.getConnectionStatus() == Connection::ON_WAIT) {
       connection.clear();
       Kqueue::removeWriteEvent(eventFd);
@@ -367,8 +358,6 @@ void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
       }
       return;
     }
-    std::cout << connection.getConnectionStatus() << std::endl;
-
   } catch (StatusException const& e) {
     std::cout << e.what() << std::endl;
 
