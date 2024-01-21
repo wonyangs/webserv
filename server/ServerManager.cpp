@@ -153,21 +153,36 @@ void ServerManager::handleReadEvent(int eventFd) {
   Connection& connection = it->second;
 
   try {
-    connection.readSocket();
-    if (connection.getConnectionStatus() == Connection::CLOSE) {
-      Kqueue::removeReadEvent(eventFd);
-      removeConnection(eventFd);
-    } else if (connection.getConnectionStatus() == Connection::TO_SEND) {
-      Kqueue::removeReadEvent(eventFd);
-      Kqueue::addWriteEvent(eventFd);
+    if (connection.getConnectionStatus() == Connection::ON_WAIT or
+        connection.getConnectionStatus() == Connection::ON_RECV) {
+      connection.readSocket();
     }
+
+    if (connection.getConnectionStatus() == Connection::TO_SEND) {
+      Kqueue::removeReadEvent(eventFd);
+      connection.selectResponseBuilder();
+    }
+
+    if (connection.getConnectionStatus() == Connection::ON_BUILD) {
+      std::cout << "build!" << std::endl;
+      connection.build();
+
+      if (connection.getConnectionStatus() == Connection::ON_SEND) {
+        Kqueue::addWriteEvent(eventFd);
+      }
+    }
+
+    if (connection.getConnectionStatus() == Connection::CLOSE) {
+      removeConnection(eventFd);
+    }
+
   } catch (StatusException const& e) {
-    int code = e.getStatusCode();
-    connection.sendErrorPage(code);  // 얘도 kqueue로 관리
+    // int code = e.getStatusCode();
+    connection.send();  // TODO
     removeConnection(connection.getFd());
   } catch (std::exception const& e) {
     std::cout << e.what() << std::endl;
-    connection.sendErrorPage(500);
+    connection.send();  // TODO
     removeConnection(connection.getFd());
   }
 }
@@ -181,9 +196,20 @@ void ServerManager::handleWriteEvent(int eventFd) {
 
   try {
     connection.send();
-    Kqueue::removeWriteEvent(eventFd);
 
-    if (connection.isReadStorageRequired()) {
+    if (connection.getConnectionStatus() == Connection::CLOSE) {
+      removeConnection(eventFd);
+      return;
+    }
+
+    if (connection.getConnectionStatus() == Connection::ON_WAIT) {
+      Kqueue::removeWriteEvent(eventFd);
+      Kqueue::addReadEvent(eventFd);
+    }
+
+    if (connection.getConnectionStatus() == Connection::ON_WAIT and
+        connection.isReadStorageRequired()) {
+      Kqueue::removeReadEvent(eventFd);
       connection.readStorage();
       if (connection.getConnectionStatus() == Connection::TO_SEND) {
         Kqueue::addWriteEvent(eventFd);
@@ -193,14 +219,12 @@ void ServerManager::handleWriteEvent(int eventFd) {
       return;
     }
 
-    Kqueue::addReadEvent(eventFd);
-
   } catch (StatusException const& e) {
-    int code = e.getStatusCode();
-    connection.sendErrorPage(code);  // 얘도 kqueue로 관리
+    // int code = e.getStatusCode();
+    connection.send();  // TODO
     removeConnection(connection.getFd());
   } catch (std::exception const& e) {
-    connection.sendErrorPage(500);
+    connection.send();  // TODO
     removeConnection(connection.getFd());
   }
 }

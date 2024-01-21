@@ -4,6 +4,8 @@
 #include <ctime>
 #include <string>
 
+#include "../http/AResponseBuilder.hpp"
+#include "../http/ErrorBuilder.hpp"
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
 #include "ServerManager.hpp"
@@ -13,7 +15,7 @@ class ServerManager;
 // 클라이언트 연결을 관리하는 클래스
 class Connection {
  public:
-  enum EStatus { ON_WAIT, ON_RECV, TO_SEND, ON_SEND, CLOSE };
+  enum EStatus { ON_WAIT, ON_RECV, TO_SEND, ON_BUILD, ON_SEND, CLOSE };
 
  private:
   int _fd;
@@ -21,6 +23,7 @@ class Connection {
   enum EStatus _status;
 
   RequestParser _requestParser;
+  AResponseBuilder _responseBuilder;
 
  public:
   Connection(int fd, ServerManager& manager);
@@ -33,8 +36,10 @@ class Connection {
   void readStorage(void);
   bool isReadStorageRequired(void);
 
+  void selectResponseBuilder(void);
+  void build(void);
+
   void send(void);
-  void sendErrorPage(int code);
 
   void close(void);
 

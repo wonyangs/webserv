@@ -51,7 +51,7 @@ class Request {
 
   bool isHeaderFieldNameExists(std::string const& fieldName) const;
   bool isHeaderFieldValueExists(std::string const& fieldName,
-                                std::string const& fieldValue);
+                                std::string const& fieldValue) const;
 
   void clear(void);
 

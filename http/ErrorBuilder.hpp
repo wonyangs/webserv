@@ -9,6 +9,7 @@ class ErrorBuilder : public AResponseBuilder {
   int _statusCode;
 
  public:
+  ErrorBuilder(void);
   ErrorBuilder(Request const& request, int statusCode);
   ErrorBuilder(ErrorBuilder const& builder);
   ~ErrorBuilder(void);
@@ -19,7 +20,6 @@ class ErrorBuilder : public AResponseBuilder {
   virtual void close(void);
 
  private:
-  ErrorBuilder(void);
 
   void readStatusCodeFile(void);
   void generateDefaultPage(void);

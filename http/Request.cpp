@@ -137,10 +137,13 @@ bool Request::isHeaderFieldNameExists(std::string const& fieldName) const {
 // 해당 헤더 field-value의 존재를 확인하는 함수
 // - 해당 헤더 field-name이 없다면 false 반환
 bool Request::isHeaderFieldValueExists(std::string const& fieldName,
-                                       std::string const& fieldValue) {
-  if (isHeaderFieldNameExists(fieldName) == false) return false;
+                                       std::string const& fieldValue) const {
+  std::map<std::string, std::vector<std::string> >::const_iterator found =
+      _header.find(fieldName);
 
-  std::vector<std::string> const& fieldValues = _header[fieldName];
+  if (found == _header.end()) return false;
+
+  std::vector<std::string> const& fieldValues = found->second;
   std::vector<std::string>::const_iterator it =
       std::find(fieldValues.begin(), fieldValues.end(), fieldValue);
   return (it != fieldValues.end());

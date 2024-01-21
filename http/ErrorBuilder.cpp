@@ -4,6 +4,8 @@
  * Constructor & Destructor
  */
 
+ErrorBuilder::ErrorBuilder(void) : AResponseBuilder(), _statusCode(500) {}
+
 ErrorBuilder::ErrorBuilder(Request const& request, int statusCode)
     : AResponseBuilder(ERROR, request), _statusCode(statusCode) {}
 
@@ -20,8 +22,10 @@ ErrorBuilder::~ErrorBuilder(void) {}
 
 ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
   if (this != &builder) {
-    setType(builder.getType());
     _response = builder._response;
+    _isDone = builder._isDone;
+    setRequest(builder.getRequest());
+    setType(builder.getType());
     _statusCode = builder._statusCode;
   }
   return *this;
@@ -31,7 +35,10 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  * Public method
  */
 
+#include <iostream>
+
 void ErrorBuilder::build(void) {
+  std::cout << "error builder!" << std::endl;
   generateDefaultPage();
 
   // Location const& location = _request.getLocation();
@@ -68,4 +75,6 @@ void ErrorBuilder::generateDefaultPage(void) {
   _response.appendBody(body);
 
   _response.makeResponseContent();
+
+  _isDone = true;
 }
