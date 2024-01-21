@@ -4,8 +4,15 @@
  * Constructor & Destructor
  */
 
+ErrorBuilder::ErrorBuilder(void)
+    : AResponseBuilder(ERROR, Request()),
+      _statusCode(500),
+      _recursiveFlag(true) {}
+
 ErrorBuilder::ErrorBuilder(Request const& request, int statusCode)
-    : AResponseBuilder(ERROR, request), _statusCode(statusCode) {}
+    : AResponseBuilder(ERROR, request),
+      _statusCode(statusCode),
+      _recursiveFlag(false) {}
 
 ErrorBuilder::ErrorBuilder(ErrorBuilder const& builder)
     : AResponseBuilder(builder) {
@@ -38,14 +45,20 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
 
 void ErrorBuilder::build(void) {
   std::cout << "error builder!" << std::endl;
+  if (_recursiveFlag) {
+    generateDefaultPage();
+    return;
+  }
   generateDefaultPage();
 
-  // Location const& location = _request.getLocation();
-  // if (location.hasErrorPage(_statusCode)) {
-  //   readStatusCodeFile();
-  // } else {
-  //   generateDefaultPage();
+  // if (_request.getLocationFlag()) {
+  //   Location const& location = _request.getLocation();
+  //   if (location.hasErrorPage(_statusCode)) {
+  //     readStatusCodeFile();
+  //     return;
+  //   }
   // }
+  // generateDefaultPage();
 }
 
 void ErrorBuilder::close(void) {}

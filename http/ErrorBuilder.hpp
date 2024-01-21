@@ -7,8 +7,10 @@
 class ErrorBuilder : public AResponseBuilder {
  private:
   int _statusCode;
+  bool _recursiveFlag;
 
  public:
+  ErrorBuilder(void);
   ErrorBuilder(Request const& request, int statusCode);
   ErrorBuilder(ErrorBuilder const& builder);
   virtual ~ErrorBuilder(void);
@@ -19,7 +21,6 @@ class ErrorBuilder : public AResponseBuilder {
   virtual void close(void);
 
  private:
-  ErrorBuilder(void);
   void readStatusCodeFile(void);
   void generateDefaultPage(void);
 };
