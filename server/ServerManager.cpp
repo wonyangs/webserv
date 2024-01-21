@@ -78,7 +78,7 @@ void ServerManager::run(void) {
 void ServerManager::clear(void) {
   for (ConnectionMap::iterator it = _connections.begin();
        it != _connections.end(); ++it) {
-    (*it).second.close();
+    removeConnection(it->first);
   }
   _connections.clear();
   _managedFds.clear();
@@ -203,6 +203,7 @@ void ServerManager::handleWriteEvent(int eventFd) {
     }
 
     if (connection.getConnectionStatus() == Connection::ON_WAIT) {
+      connection.clear();
       Kqueue::removeWriteEvent(eventFd);
       Kqueue::addReadEvent(eventFd);
     }
@@ -357,6 +358,7 @@ void ServerManager::removeConnection(int fd) {
   Connection& connection = it->second;
   removeAllManagedFd(fd);
   Kqueue::removeAllEvents(fd);
+  connection.clear();
   connection.close();
   _connections.erase(fd);
 }

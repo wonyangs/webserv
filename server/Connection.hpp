@@ -23,7 +23,7 @@ class Connection {
   enum EStatus _status;
 
   RequestParser _requestParser;
-  AResponseBuilder _responseBuilder;
+  AResponseBuilder* _responseBuilder;
 
  public:
   Connection(int fd, ServerManager& manager);
@@ -41,6 +41,7 @@ class Connection {
 
   void send(void);
 
+  void clear(void);
   void close(void);
 
   int getFd(void) const;
