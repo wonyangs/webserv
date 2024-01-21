@@ -20,7 +20,7 @@ class AResponseBuilder {
   AResponseBuilder(void);
   AResponseBuilder(EBuilderType const& type, Request const& request);
   AResponseBuilder(AResponseBuilder const& builder);
-  ~AResponseBuilder(void);
+  virtual ~AResponseBuilder(void);
 
   AResponseBuilder& operator=(AResponseBuilder const& builder);
 
