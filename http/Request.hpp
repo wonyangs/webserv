@@ -37,6 +37,7 @@ class Request {
   std::map<std::string, std::vector<std::string> > const& getHeader(void) const;
   std::string const& getBody(void) const;
   Location const& getLocation(void) const;
+  bool getLocationFlag(void) const;
 
   std::vector<std::string> const& getHeaderFieldValues(
       std::string const& fieldName) const;

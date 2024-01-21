@@ -68,6 +68,8 @@ std::map<std::string, std::vector<std::string> > const& Request::getHeader(
 
 Location const& Request::getLocation(void) const { return _location; }
 
+bool Request::getLocationFlag(void) const { return _locationFlag; }
+
 std::string const& Request::getBody(void) const { return _body; }
 
 std::vector<std::string> const& Request::getHeaderFieldValues(
