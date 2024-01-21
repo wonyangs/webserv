@@ -25,6 +25,7 @@ void Kqueue::close(void) {
   if (_fd != -1) {
     ::close(_fd);
   }
+  _events.clear();
 }
 
 // Public method
@@ -52,7 +53,7 @@ void Kqueue::addWriteEvent(int fd) {
     throw std::runtime_error("[3002] Kqueue: addWriteEvent - event add failed");
   }
 
-  updateEventStatus(fd, READ_EVENT, ADD);
+  updateEventStatus(fd, WRITE_EVENT, ADD);
 }
 
 // READ 이벤트 제거
