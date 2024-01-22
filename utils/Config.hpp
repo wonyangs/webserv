@@ -20,11 +20,17 @@ class Config {
   // 상태코드 메시지
   static const std::map<int, std::string> statusMessages;
 
+  // MIME type
+  static const std::map<std::string, std::string> mimeTypes;
+
   static std::string const& findStatusMessage(int code);
   static std::string const defaultErrorPageBody(int code);
 
+  static std::string const findMimeType(std::string const& path);
+
  private:
   static std::map<int, std::string> initializeStatusMessages(void);
+  static std::map<std::string, std::string> initializeMimeTypes(void);
 
   Config(void);
   Config(Config const& config);
