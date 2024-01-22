@@ -4,19 +4,20 @@
 #include <string>
 #include <vector>
 
-#include "server/EventLoop.hpp"
 #include "config/Server.hpp"
+#include "server/EventLoop.hpp"
 
 std::vector<Server> exampleParseConfig(void) {
   // Server 1의 Location 블록 설정
-  Location location1_1("/", "/var/www/html", "index.html");
+  Location location1_1("/", "/Users/wonyang/Project/webserv/www", "index.html");
   location1_1.addAllowMethod(HTTP_GET);
   location1_1.addAllowMethod(HTTP_POST);
   location1_1.setMaxBodySize(10000000);
   location1_1.setAutoIndex(false);
   location1_1.addErrorPage(404, "/404.html");
 
-  Location location1_2("/images/", "/var/www/images", "index.html");
+  Location location1_2("/images/", "/Users/wonyang/Project/webserv/www",
+                       "index.html");
   location1_2.addAllowMethod(HTTP_GET);
   location1_2.setAutoIndex(true);
 
