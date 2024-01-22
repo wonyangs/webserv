@@ -7,6 +7,7 @@
 
 #include "../core/Kqueue.hpp"
 #include "../core/Socket.hpp"
+#include "../utils/Config.hpp"
 #include "../utils/StatusException.hpp"
 #include "../utils/Util.hpp"
 #include "AResponseBuilder.hpp"
@@ -34,6 +35,7 @@ class StaticFileBuilder : public AResponseBuilder {
 
   void openStaticFile(void);
   void readStaticFile(void);
+  std::string const makeFullPath(void);
 
   virtual void buildResponseContent(std::string const& body);
 
