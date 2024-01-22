@@ -128,7 +128,7 @@ void Connection::selectResponseBuilder(void) {
 }
 
 // HTTP 응답 만들기
-void Connection::build() {
+void Connection::buildResponse() {
   _responseBuilder->build();
 
   if (_responseBuilder->isDone()) {
@@ -191,7 +191,7 @@ void Connection::resetResponseBuilder(int code) {
   _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), code);
   setStatus(ON_BUILD);
 
-  build();
+  buildResponse();
   if (_status == Connection::ON_SEND) {
     Kqueue::addWriteEvent(_fd);
   }
@@ -208,7 +208,7 @@ void Connection::resetResponseBuilder(void) {
   _responseBuilder = new ErrorBuilder();
   setStatus(ON_BUILD);
 
-  build();
+  buildResponse();
   if (_status == Connection::ON_SEND) {
     Kqueue::addWriteEvent(_fd);
   }
