@@ -6,6 +6,7 @@ SRCS		= config/Server.cpp \
 			  config/Location.cpp \
 			  utils/StatusException.cpp \
 			  utils/Config.cpp \
+				utils/Util.cpp \
 			  core/Kqueue.cpp \
 			  core/Event.cpp \
 			  core/Socket.cpp \

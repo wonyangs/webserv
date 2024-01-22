@@ -4,14 +4,22 @@
  * Constructor & Destructor
  */
 
+ErrorBuilder::ErrorBuilder(void)
+    : AResponseBuilder(ERROR, Request()),
+      _statusCode(500),
+      _recursiveFlag(true) {}
+
 ErrorBuilder::ErrorBuilder(Request const& request, int statusCode)
-    : AResponseBuilder(ERROR, request), _statusCode(statusCode) {}
+    : AResponseBuilder(ERROR, request),
+      _statusCode(statusCode),
+      _recursiveFlag(false) {}
 
 ErrorBuilder::ErrorBuilder(ErrorBuilder const& builder)
     : AResponseBuilder(builder) {
   _statusCode = builder._statusCode;
 }
 
+// TODO: 소멸할 때 관련된 fd를 clear하도록 구현
 ErrorBuilder::~ErrorBuilder(void) {}
 
 /**
@@ -20,8 +28,10 @@ ErrorBuilder::~ErrorBuilder(void) {}
 
 ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
   if (this != &builder) {
-    setType(builder.getType());
     _response = builder._response;
+    _isDone = builder._isDone;
+    setRequest(builder.getRequest());
+    setType(builder.getType());
     _statusCode = builder._statusCode;
   }
   return *this;
@@ -31,15 +41,23 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  * Public method
  */
 
+#include <iostream>
+
 void ErrorBuilder::build(void) {
+  if (_recursiveFlag) {
+    generateDefaultPage();
+    return;
+  }
   generateDefaultPage();
 
-  // Location const& location = _request.getLocation();
-  // if (location.hasErrorPage(_statusCode)) {
-  //   readStatusCodeFile();
-  // } else {
-  //   generateDefaultPage();
+  // if (_request.getLocationFlag()) {
+  //   Location const& location = _request.getLocation();
+  //   if (location.hasErrorPage(_statusCode)) {
+  //     readStatusCodeFile();
+  //     return;
+  //   }
   // }
+  // generateDefaultPage();
 }
 
 void ErrorBuilder::close(void) {}
@@ -68,4 +86,6 @@ void ErrorBuilder::generateDefaultPage(void) {
   _response.appendBody(body);
 
   _response.makeResponseContent();
+
+  _isDone = true;
 }

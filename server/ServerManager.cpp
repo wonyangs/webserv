@@ -78,7 +78,8 @@ void ServerManager::run(void) {
 void ServerManager::clear(void) {
   for (ConnectionMap::iterator it = _connections.begin();
        it != _connections.end(); ++it) {
-    (*it).second.close();
+    it->second.clear();
+    it->second.close();
   }
   _connections.clear();
   _managedFds.clear();
@@ -108,100 +109,26 @@ void ServerManager::handleEvent(Event event) {
     return;
   }
 
-  // 클라이언트 fd인 경우 이벤트 처리
-  switch (event.getType()) {
-    case Event::READ:
-      handleReadEvent(eventFd);
-      break;
-
-    case Event::WRITE:
-      handleWriteEvent(eventFd);
-      break;
-
-    default:
-      throw std::runtime_error(
-          "[4103] ServerManager: handleEvent - unknown event type");
-  }
-}
-
-// 커넥션 추가 이벤트 처리
-// - 예외 발생 시 자원 정리 후 예외 전달
-void ServerManager::handleServerEvent(void) {
-  int clientFd = -1;
+  Connection& connection = findConnection(eventFd);
 
   try {
-    clientFd = Socket::accept(_serverFd);
+    // 클라이언트 fd인 경우 이벤트 처리
+    switch (event.getType()) {
+      case Event::READ:
+        handleReadEvent(eventFd, connection);
+        break;
 
-    addManagedFd(clientFd, clientFd);
-    addConnection(clientFd);
-    Kqueue::addReadEvent(clientFd);
-  } catch (std::exception const& e) {
-    if (hasConnectionFd(clientFd)) {
-      removeConnection(clientFd);
-    } else if (clientFd != -1) {
-      close(clientFd);
+      case Event::WRITE:
+        handleWriteEvent(eventFd, connection);
+        break;
+
+      default:
+        throw std::runtime_error(
+            "[4103] ServerManager: handleEvent - unknown event type");
     }
-    throw;
-  }
-}
-
-// 읽기 이벤트 처리
-// - 이벤트 처리 과정 중 예외 발생 가능
-void ServerManager::handleReadEvent(int eventFd) {
-  int connectionFd = _managedFds[eventFd];
-  ConnectionMap::iterator it = _connections.find(connectionFd);
-  Connection& connection = it->second;
-
-  try {
-    connection.readSocket();
-    if (connection.getConnectionStatus() == Connection::CLOSE) {
-      Kqueue::removeReadEvent(eventFd);
-      removeConnection(eventFd);
-    } else if (connection.getConnectionStatus() == Connection::TO_SEND) {
-      Kqueue::removeReadEvent(eventFd);
-      Kqueue::addWriteEvent(eventFd);
-    }
-  } catch (StatusException const& e) {
-    int code = e.getStatusCode();
-    connection.sendErrorPage(code);  // 얘도 kqueue로 관리
-    removeConnection(connection.getFd());
   } catch (std::exception const& e) {
     std::cout << e.what() << std::endl;
-    connection.sendErrorPage(500);
-    removeConnection(connection.getFd());
-  }
-}
-
-// 쓰기 이벤트 처리
-// - 이벤트 처리 과정 중 예외 발생 가능
-void ServerManager::handleWriteEvent(int eventFd) {
-  int connectionFd = _managedFds[eventFd];
-  ConnectionMap::iterator it = _connections.find(connectionFd);
-  Connection& connection = it->second;
-
-  try {
-    connection.send();
-    Kqueue::removeWriteEvent(eventFd);
-
-    if (connection.isReadStorageRequired()) {
-      connection.readStorage();
-      if (connection.getConnectionStatus() == Connection::TO_SEND) {
-        Kqueue::addWriteEvent(eventFd);
-      } else {
-        Kqueue::addReadEvent(eventFd);
-      }
-      return;
-    }
-
-    Kqueue::addReadEvent(eventFd);
-
-  } catch (StatusException const& e) {
-    int code = e.getStatusCode();
-    connection.sendErrorPage(code);  // 얘도 kqueue로 관리
-    removeConnection(connection.getFd());
-  } catch (std::exception const& e) {
-    connection.sendErrorPage(500);
-    removeConnection(connection.getFd());
+    connection.resetResponseBuilder();
   }
 }
 
@@ -333,6 +260,7 @@ void ServerManager::removeConnection(int fd) {
   Connection& connection = it->second;
   removeAllManagedFd(fd);
   Kqueue::removeAllEvents(fd);
+  connection.clear();
   connection.close();
   _connections.erase(fd);
 }
@@ -340,4 +268,110 @@ void ServerManager::removeConnection(int fd) {
 // 커넥션 중 해당하는 fd가 있는지 확인
 bool ServerManager::hasConnectionFd(int fd) const {
   return (_connections.find(fd) != _connections.end());
+}
+
+// 커넥션 추가 이벤트 처리
+// - 예외 발생 시 자원 정리 후 예외 전달
+void ServerManager::handleServerEvent(void) {
+  int clientFd = -1;
+
+  try {
+    clientFd = Socket::accept(_serverFd);
+
+    addManagedFd(clientFd, clientFd);
+    addConnection(clientFd);
+    Kqueue::addReadEvent(clientFd);
+  } catch (std::exception const& e) {
+    if (hasConnectionFd(clientFd)) {
+      removeConnection(clientFd);
+    } else if (clientFd != -1) {
+      close(clientFd);
+    }
+    throw;
+  }
+}
+
+// 읽기 이벤트 처리
+// - 이벤트 처리 과정 중 예외 발생 가능
+void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
+  try {
+    if (connection.getConnectionStatus() == Connection::ON_WAIT or
+        connection.getConnectionStatus() == Connection::ON_RECV) {
+      connection.readSocket();
+    }
+
+    if (connection.getConnectionStatus() == Connection::TO_SEND) {
+      Kqueue::removeReadEvent(eventFd);
+
+      connection.selectResponseBuilder();
+    }
+
+    if (connection.getConnectionStatus() == Connection::ON_BUILD) {
+      connection.build();
+
+      if (connection.getConnectionStatus() == Connection::ON_SEND) {
+        Kqueue::addWriteEvent(eventFd);
+      }
+    }
+
+    if (connection.getConnectionStatus() == Connection::CLOSE) {
+      removeConnection(eventFd);
+    }
+
+  } catch (StatusException const& e) {
+    std::cout << e.what() << std::endl;
+
+    int code = e.getStatusCode();
+    connection.resetResponseBuilder(code);
+  } catch (std::exception const& e) {
+    std::cout << e.what() << std::endl;
+
+    connection.resetResponseBuilder(500);
+  }
+}
+
+// 쓰기 이벤트 처리
+// - 이벤트 처리 과정 중 예외 발생 가능
+void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
+  try {
+    connection.send();
+
+    if (connection.getConnectionStatus() == Connection::CLOSE) {
+      removeConnection(eventFd);
+      return;
+    }
+
+    if (connection.getConnectionStatus() == Connection::ON_WAIT) {
+      connection.clear();
+      Kqueue::removeWriteEvent(eventFd);
+      Kqueue::addReadEvent(eventFd);
+    }
+
+    if (connection.getConnectionStatus() == Connection::ON_WAIT and
+        connection.isReadStorageRequired()) {
+      Kqueue::removeReadEvent(eventFd);
+      connection.readStorage();
+      if (connection.getConnectionStatus() == Connection::TO_SEND) {
+        Kqueue::addWriteEvent(eventFd);
+      } else {
+        Kqueue::addReadEvent(eventFd);
+      }
+      return;
+    }
+  } catch (StatusException const& e) {
+    std::cout << e.what() << std::endl;
+
+    int code = e.getStatusCode();
+    connection.resetResponseBuilder(code);
+  } catch (std::exception const& e) {
+    std::cout << e.what() << std::endl;
+
+    connection.resetResponseBuilder(500);
+  }
+}
+
+Connection& ServerManager::findConnection(int eventFd) {
+  int connectionFd = _managedFds[eventFd];
+  ConnectionMap::iterator it = _connections.find(connectionFd);
+  return it->second;
 }

@@ -6,10 +6,13 @@
 
 AResponseBuilder::AResponseBuilder(EBuilderType const& type,
                                    Request const& request)
-    : _request(request), _type(type) {}
+    : _isDone(false), _request(request), _type(type) {}
 
 AResponseBuilder::AResponseBuilder(AResponseBuilder const& builder)
-    : _request(builder._request), _type(builder._type) {}
+    : _response(builder._response),
+      _isDone(builder._isDone),
+      _request(builder._request),
+      _type(builder._type) {}
 
 AResponseBuilder::~AResponseBuilder(void) {}
 
@@ -19,17 +22,13 @@ AResponseBuilder::~AResponseBuilder(void) {}
 
 AResponseBuilder& AResponseBuilder::operator=(AResponseBuilder const& builder) {
   if (this != &builder) {
-    _type = builder._type;
     _response = builder._response;
+    _isDone = builder._isDone;
+    _request = builder._request;
+    _type = builder._type;
   }
   return *this;
 }
-
-/**
- * Protected method - setter
- */
-
-void AResponseBuilder::setType(EBuilderType const& type) { _type = type; }
 
 /**
  * Public method
@@ -40,3 +39,17 @@ AResponseBuilder::EBuilderType const& AResponseBuilder::getType(void) const {
 }
 
 Response const& AResponseBuilder::getResponse(void) const { return _response; }
+
+bool AResponseBuilder::isDone(void) const { return _isDone; }
+
+/**
+ * Protected method - setter
+ */
+
+Request const& AResponseBuilder::getRequest(void) const { return _request; }
+
+void AResponseBuilder::setRequest(Request const& request) {
+  _request = request;
+}
+
+void AResponseBuilder::setType(EBuilderType const& type) { _type = type; }
