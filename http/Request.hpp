@@ -37,6 +37,7 @@ class Request {
   std::map<std::string, std::vector<std::string> > const& getHeader(void) const;
   std::string const& getBody(void) const;
   Location const& getLocation(void) const;
+  bool getLocationFlag(void) const;
 
   std::vector<std::string> const& getHeaderFieldValues(
       std::string const& fieldName) const;
@@ -51,7 +52,7 @@ class Request {
 
   bool isHeaderFieldNameExists(std::string const& fieldName) const;
   bool isHeaderFieldValueExists(std::string const& fieldName,
-                                std::string const& fieldValue);
+                                std::string const& fieldValue) const;
 
   void clear(void);
 

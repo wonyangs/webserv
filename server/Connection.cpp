@@ -7,8 +7,6 @@
 
 #include "../config/Location.hpp"
 #include "../core/Kqueue.hpp"
-#include "../http/AResponseBuilder.hpp"
-#include "../http/ErrorBuilder.hpp"
 #include "../utils/Config.hpp"
 
 /**
@@ -20,6 +18,8 @@ Connection::Connection(int fd, ServerManager& manager)
       _lastCallTime(std::time(0)),
       _status(ON_WAIT),
       _requestParser(),
+      _responseBuilder(NULL),
+      _builderFd(-1),
       _manager(manager) {}
 
 Connection::Connection(Connection const& connection)
@@ -39,6 +39,8 @@ Connection& Connection::operator=(Connection const& connection) {
     _lastCallTime = connection._lastCallTime;
     _status = connection._status;
     _requestParser = connection._requestParser;
+    _responseBuilder = connection._responseBuilder;
+    _builderFd = connection._builderFd;
     _manager = connection._manager;
   }
   return *this;
@@ -52,15 +54,19 @@ Connection& Connection::operator=(Connection const& connection) {
 // - 읽기에 실패한 경우 예외 발생
 // - 클라이언트 연결 종료가 감지된 경우 status를 CLOSE로 바꿈
 void Connection::readSocket(void) {
-  setStatus(ON_RECV);
+  if (_status == ON_WAIT) {
+    setStatus(ON_RECV);
+  }
 
   u_int8_t buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
-  ssize_t bytesRead = read(_fd, buffer, sizeof(buffer) - 1);
+  ssize_t bytesRead = read(_fd, buffer, sizeof(buffer));
 
   if (bytesRead < 0) {
     throw std::runtime_error("[4000] Connection: readSocket - read fail");
-  } else if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
+  }
+
+  if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
     setStatus(CLOSE);
     std::cout << "Client: connection closed" << std::endl;  // debug
     updateLastCallTime();
@@ -74,7 +80,9 @@ void Connection::readSocket(void) {
 // storage에 있는 요청 읽기
 // - 읽기에 실패한 경우 예외 발생
 void Connection::readStorage(void) {
-  setStatus(ON_RECV);
+  if (_status == ON_WAIT) {
+    setStatus(ON_RECV);
+  }
 
   u_int8_t tmp[1];
 
@@ -85,34 +93,24 @@ void Connection::readStorage(void) {
 // RequestParser에서 요청 읽기
 // - bytesRead를 0으로 하면 storage에 남아있는 내용을 파싱
 void Connection::parseRequest(u_int8_t const* buffer, ssize_t bytesRead) {
-  try {
-    _requestParser.parse(buffer, bytesRead);
+  _requestParser.parse(buffer, bytesRead);
 
-    // 헤더 읽기 완료
-    if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
-      // Location 블록 할당
-      Request const& request = _requestParser.getRequest();
-      setRequestParserLocation(request);
-      // 다시 파싱
-      _requestParser.parse(buffer, 0);
-    }
+  // 헤더 읽기 완료
+  if (_requestParser.getParsingStatus() == HEADER_FIELD_END) {
+    // Location 블록 할당
+    Request const& request = _requestParser.getRequest();
+    setRequestParserLocation(request);
+    // 다시 파싱
+    _requestParser.parse(buffer, 0);
+  }
 
-    // 전체 요청 읽기 완료
-    if (_requestParser.getParsingStatus() == DONE) {
-      setStatus(TO_SEND);
+  // 전체 요청 읽기 완료
+  if (_requestParser.getParsingStatus() == DONE) {
+    setStatus(TO_SEND);
 
-      Request const& request = _requestParser.getRequest();
-      request.print();
-
-      // 응답 만들기
-      // WRITE 등록
-      _requestParser.clear();
-    }
-
-  } catch (std::exception& e) {
-    // TODO: StatusException의 경우 해당하는 에러 코드 전송 및 커넥션 끊기
-    _requestParser.clear();
-    throw;
+    // debug
+    Request const& request = _requestParser.getRequest();
+    request.print();
   }
 }
 
@@ -126,63 +124,120 @@ bool Connection::isReadStorageRequired() {
  * Public method - response
  */
 
-// 응답 보내기
-// - 임시 메서드
-void Connection::send(void) {
-  setStatus(ON_SEND);
-
-  char const* response =
-      "HTTP/1.1 200 OK\nContent-Length: 13\nContent-Type: "
-      "text/plain\nConnection: keep-alive\n\nHello, "
-      "world!\n\n";
-  ssize_t bytesSent = write(_fd, response, strlen(response));
-
-  if (bytesSent < 0) {
-    throw std::runtime_error("[4001] Connection: send - fail to write socket");
-  }
-
-  std::cout << "[ Server: response sent ]\n"
-            << "-------------\n"
-            << response << "\n-------------" << std::endl;
-  updateLastCallTime();
-
-  setStatus(ON_WAIT);
+// HTTP 요청 + Location 블록을 보고 분기
+// - 적절한 ResponseBuilder 선택
+void Connection::selectResponseBuilder(void) {
+  _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 200);
+  setStatus(ON_BUILD);
 }
 
-// 에러 응답 보내기
-// - 임시 메서드
-// - 이후에 ErrorBuilder를 통해 만들어질 예정
-void Connection::sendErrorPage(int code) {
-  setStatus(ON_SEND);
+// HTTP 응답 만들기
+void Connection::buildResponse() {
+  int builderFd = _responseBuilder->build();
 
-  // HTTP 응답 생성
+  if (builderFd != -1) {
+    _manager.addManagedFd(builderFd, _fd);
+    _builderFd = builderFd;
+  }
 
-  ErrorBuilder builder(_requestParser.getRequest(), code);
-  builder.build();
+  if (_responseBuilder->isDone()) {
+    setStatus(ON_SEND);
+    _responseBuilder->close();
+    if (_builderFd != -1) {
+      _manager.removeManagedFd(_builderFd);
+      _builderFd = -1;
+    }
+  }
+}
 
-  Response const& response = builder.getResponse();
+// 응답 전송
+void Connection::sendResponse(void) {
+  bool isDone = false;
+  Response& response = _responseBuilder->getResponse();
   std::string const& responseContent = response.toString();
 
-  ssize_t bytesSent =
-      write(_fd, responseContent.c_str(), responseContent.length());
+  size_t startIndex = response.getStartIndex();
+  size_t contentLength = responseContent.length() - startIndex;
 
+  std::string sendString;
+  if (BUFFER_SIZE < contentLength) {
+    sendString = responseContent.substr(startIndex, BUFFER_SIZE);
+  } else {
+    sendString = responseContent.substr(startIndex);
+    isDone = true;
+  }
+
+  ssize_t bytesSent;
+  bytesSent = write(_fd, sendString.c_str(), sendString.length());
   if (bytesSent < 0) {
     throw std::runtime_error(
         "[4002] Connection: sendErrorPage - fail to write socket");
   }
 
-  std::cout << "[ Server: response sent ]\n"
-            << "-------------\n"
-            << responseContent << "\n-------------" << std::endl;
-
+  response.setStartIndex(startIndex + BUFFER_SIZE);
   updateLastCallTime();
 
-  setStatus(ON_WAIT);
+  if (isDone or bytesSent == 0) {
+    std::cout << "[ Server: response sent ]\n"
+              << "-------------\n"
+              << responseContent << "\n-------------" << std::endl;
+
+    // ERROR BUILDER or Request -> Connection: close
+    Request const& request = _requestParser.getRequest();
+    if (_responseBuilder->getType() == AResponseBuilder::ERROR or
+        request.isHeaderFieldValueExists("connection", "Close")) {
+      setStatus(CLOSE);
+    } else {
+      setStatus(ON_WAIT);
+    }
+  }
+}
+
+void Connection::resetResponseBuilder(int code) {
+  Kqueue::removeAllEvents(_fd);
+
+  if (_responseBuilder != NULL) {
+    delete _responseBuilder;
+    _responseBuilder = NULL;
+  }
+
+  _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), code);
+  setStatus(ON_BUILD);
+
+  buildResponse();
+  if (_status == Connection::ON_SEND) {
+    Kqueue::addWriteEvent(_fd);
+  }
+}
+
+void Connection::resetResponseBuilder(void) {
+  Kqueue::removeAllEvents(_fd);
+
+  if (_responseBuilder != NULL) {
+    delete _responseBuilder;
+    _responseBuilder = NULL;
+  }
+
+  _responseBuilder = new ErrorBuilder();
+  setStatus(ON_BUILD);
+
+  buildResponse();
+  if (_status == Connection::ON_SEND) {
+    Kqueue::addWriteEvent(_fd);
+  }
 }
 
 /**
  * Public method - etc
  */
+
+void Connection::clear(void) {
+  _requestParser.clear();
+  if (_responseBuilder != NULL) {
+    delete _responseBuilder;
+    _responseBuilder = NULL;
+  }
+}
 
 // 커넥션 닫기
 void Connection::close(void) { ::close(_fd); }
