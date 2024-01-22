@@ -128,7 +128,7 @@ void RequestParser::setChunkSize(std::string const& chunkSizeString) {
 // TempStorage 저장
 // - 남아있는 값에서 startIdx 이전 값들 삭제 후 buffer 값 추가
 void RequestParser::setTempStorage(size_t startIdx, u_int8_t const* buffer,
-                                     ssize_t bytesRead) {
+                                   ssize_t bytesRead) {
   std::vector<u_int8_t> tmp;
 
   for (size_t i = startIdx; i < _tempStorage.size(); i++) {
