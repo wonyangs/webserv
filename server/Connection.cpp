@@ -19,6 +19,7 @@ Connection::Connection(int fd, ServerManager& manager)
       _status(ON_WAIT),
       _requestParser(),
       _responseBuilder(NULL),
+      _builderFd(-1),
       _manager(manager) {}
 
 Connection::Connection(Connection const& connection)
@@ -38,8 +39,9 @@ Connection& Connection::operator=(Connection const& connection) {
     _lastCallTime = connection._lastCallTime;
     _status = connection._status;
     _requestParser = connection._requestParser;
-    _manager = connection._manager;
     _responseBuilder = connection._responseBuilder;
+    _builderFd = connection._builderFd;
+    _manager = connection._manager;
   }
   return *this;
 }
@@ -58,11 +60,13 @@ void Connection::readSocket(void) {
 
   u_int8_t buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
-  ssize_t bytesRead = read(_fd, buffer, sizeof(buffer) - 1);
+  ssize_t bytesRead = read(_fd, buffer, sizeof(buffer));
 
   if (bytesRead < 0) {
     throw std::runtime_error("[4000] Connection: readSocket - read fail");
-  } else if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
+  }
+
+  if (bytesRead == 0) {  // 클라이언트가 연결을 종료했음
     setStatus(CLOSE);
     std::cout << "Client: connection closed" << std::endl;  // debug
     updateLastCallTime();
@@ -129,11 +133,20 @@ void Connection::selectResponseBuilder(void) {
 
 // HTTP 응답 만들기
 void Connection::buildResponse() {
-  _responseBuilder->build();
+  int builderFd = _responseBuilder->build();
+
+  if (builderFd != -1) {
+    _manager.addManagedFd(builderFd, _fd);
+    _builderFd = builderFd;
+  }
 
   if (_responseBuilder->isDone()) {
     setStatus(ON_SEND);
     _responseBuilder->close();
+    if (_builderFd != -1) {
+      _manager.removeManagedFd(_builderFd);
+      _builderFd = -1;
+    }
   }
 }
 
@@ -155,7 +168,7 @@ void Connection::sendResponse(void) {
   }
 
   ssize_t bytesSent;
-  bytesSent = write(_fd, sendString.c_str(), BUFFER_SIZE);
+  bytesSent = write(_fd, sendString.c_str(), sendString.length());
   if (bytesSent < 0) {
     throw std::runtime_error(
         "[4002] Connection: sendErrorPage - fail to write socket");
