@@ -87,7 +87,7 @@ void StaticFileBuilder::openStaticFile(void) {
   // 파일 접근 권한 확인
   if (access(fullPath.c_str(), R_OK) == -1) {
     throw StatusException(
-        HTTP_NOT_ALLOWED,
+        HTTP_FORBIDDEN,
         "[] StaticFileBuilder: openStaticFile - file permissions denied");
   }
 
