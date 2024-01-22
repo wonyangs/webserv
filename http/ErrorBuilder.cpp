@@ -101,7 +101,7 @@ int ErrorBuilder::readStatusCodeFile(Location const& location) {
 
   if (bytesRead < 0) {
     throw std::runtime_error(
-        "[] ErrorBuilder: readStatusCodeFile - read failed");
+        "[5100] ErrorBuilder: readStatusCodeFile - read failed");
   }
 
   for (ssize_t i = 0; i < bytesRead; i++) {
@@ -128,7 +128,7 @@ void ErrorBuilder::openStatusCodeFile(Location const& location) {
   if (access(fullPath.c_str(), F_OK | R_OK) == -1) {
     throw StatusException(
         HTTP_INTERNAL_SERVER_ERROR,
-        "[] ErrorBuilder: openStatusCodeFile - file permissions denied");
+        "[5101] ErrorBuilder: openStatusCodeFile - file permissions denied");
   }
 
   // 파일 크기 측정
@@ -136,7 +136,7 @@ void ErrorBuilder::openStatusCodeFile(Location const& location) {
 
   if (stat(fullPath.c_str(), &statbuf) == -1) {
     throw std::runtime_error(
-        "[] ErrorBuilder: openStatusCodeFile - stat failed");
+        "[5102] ErrorBuilder: openStatusCodeFile - stat failed");
   }
 
   _fileSize = statbuf.st_size;
@@ -145,7 +145,7 @@ void ErrorBuilder::openStatusCodeFile(Location const& location) {
   _fileFd = open(fullPath.c_str(), O_RDONLY);
   if (_fileFd < 0) {
     throw std::runtime_error(
-        "[] ErrorBuilder: openStatusCodeFile - open failed");
+        "[5103] ErrorBuilder: openStatusCodeFile - open failed");
   }
 
   Socket::setNonBlocking(_fileFd);
