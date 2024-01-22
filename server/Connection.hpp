@@ -5,6 +5,7 @@
 #include <string>
 
 #include "../http/AResponseBuilder.hpp"
+#include "../http/AutoindexBuilder.hpp"
 #include "../http/ErrorBuilder.hpp"
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
