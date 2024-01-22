@@ -14,7 +14,7 @@
 class Response {
  private:
   std::string _responseContent;
-  ssize_t _startIndex;
+  size_t _startIndex;
 
   std::string _httpVersion;
   int _statusCode;
@@ -34,12 +34,15 @@ class Response {
   int const& getStatusCode(void) const;
   std::map<std::string, std::string> const& getHeader(void) const;
   std::string const& getBody(void) const;
+  size_t getStartIndex(void) const;
+
   std::string const& toString(void) const;
 
   void makeResponseContent(void);
 
   void setHttpVersion(std::string const& httpVersion);
   void setStatusCode(int const& statusCode);
+  void setStartIndex(size_t const& startIndex);
 
   void addHeader(std::string const& fieldName, std::string const& fieldValue);
   void appendBody(std::string const& body);

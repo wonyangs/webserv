@@ -307,7 +307,7 @@ void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
     }
 
     if (connection.getConnectionStatus() == Connection::ON_BUILD) {
-      connection.build();
+      connection.buildResponse();
 
       if (connection.getConnectionStatus() == Connection::ON_SEND) {
         Kqueue::addWriteEvent(eventFd);
@@ -334,7 +334,9 @@ void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
 // - 이벤트 처리 과정 중 예외 발생 가능
 void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
   try {
-    connection.send();
+    if (connection.getConnectionStatus() == Connection::ON_SEND) {
+      connection.sendResponse();
+    }
 
     if (connection.getConnectionStatus() == Connection::CLOSE) {
       removeConnection(eventFd);

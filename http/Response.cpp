@@ -4,7 +4,7 @@
 
 Response::Response(void)
     : _responseContent(""),
-      _startIndex(-1),
+      _startIndex(0),
       _httpVersion(""),
       _statusCode(-1),
       _body("") {}
@@ -60,6 +60,8 @@ std::map<std::string, std::string> const& Response::getHeader(void) const {
 
 std::string const& Response::getBody(void) const { return _body; }
 
+size_t Response::getStartIndex(void) const { return _startIndex; }
+
 std::string const& Response::toString(void) const { return _responseContent; }
 
 // Public Method - setter
@@ -80,7 +82,6 @@ void Response::makeResponseContent(void) {
   ss << _body;
 
   _responseContent = ss.str();
-  _startIndex = 0;
 }
 
 void Response::setHttpVersion(std::string const& httpVersion) {
@@ -89,6 +90,10 @@ void Response::setHttpVersion(std::string const& httpVersion) {
 
 void Response::setStatusCode(int const& statusCode) {
   _statusCode = statusCode;
+}
+
+void Response::setStartIndex(size_t const& startIndex) {
+  _startIndex = startIndex;
 }
 
 // Public Method
@@ -110,7 +115,7 @@ void Response::appendBody(std::string const& body) { _body.append(body); }
 // 멤버 변수를 비어있는 상태로 초기화
 void Response::clear(void) {
   _responseContent.clear();
-  _startIndex = -1;
+  _startIndex = 0;
   _httpVersion.clear();
   _statusCode = -1;
   _header.clear();

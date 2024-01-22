@@ -37,8 +37,8 @@ class Connection {
   bool isReadStorageRequired(void);
 
   void selectResponseBuilder(void);
-  void build(void);
-  void send(void);
+  void buildResponse(void);
+  void sendResponse(void);
 
   void resetResponseBuilder(int code);
   void resetResponseBuilder(void);
