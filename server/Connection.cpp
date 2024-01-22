@@ -137,33 +137,46 @@ void Connection::build() {
   }
 }
 
-// 응답 보내기
-// - 임시 메서드
-void Connection::send(void) {
-  Response const& response = _responseBuilder->getResponse();
+// 응답 전송
+void Connection::sendResponse(void) {
+  bool isDone = false;
+  Response& response = _responseBuilder->getResponse();
   std::string const& responseContent = response.toString();
 
-  ssize_t bytesSent =
-      write(_fd, responseContent.c_str(), responseContent.length());
+  size_t startIndex = response.getStartIndex();
+  size_t contentLength = responseContent.length() - startIndex;
 
+  std::string sendString;
+  if (BUFFER_SIZE < contentLength) {
+    sendString = responseContent.substr(startIndex, BUFFER_SIZE);
+  } else {
+    sendString = responseContent.substr(startIndex);
+    isDone = true;
+  }
+
+  ssize_t bytesSent;
+  bytesSent = write(_fd, sendString.c_str(), BUFFER_SIZE);
   if (bytesSent < 0) {
     throw std::runtime_error(
         "[4002] Connection: sendErrorPage - fail to write socket");
   }
 
-  std::cout << "[ Server: response sent ]\n"
-            << "-------------\n"
-            << responseContent << "\n-------------" << std::endl;
-
+  response.setStartIndex(startIndex + BUFFER_SIZE);
   updateLastCallTime();
 
-  // ERROR BUILDER or Request -> Connection: close
-  Request const& request = _requestParser.getRequest();
-  if (_responseBuilder->getType() == AResponseBuilder::ERROR or
-      request.isHeaderFieldValueExists("connection", "Close")) {
-    setStatus(CLOSE);
-  } else {
-    setStatus(ON_WAIT);
+  if (isDone or bytesSent == 0) {
+    std::cout << "[ Server: response sent ]\n"
+              << "-------------\n"
+              << responseContent << "\n-------------" << std::endl;
+
+    // ERROR BUILDER or Request -> Connection: close
+    Request const& request = _requestParser.getRequest();
+    if (_responseBuilder->getType() == AResponseBuilder::ERROR or
+        request.isHeaderFieldValueExists("connection", "Close")) {
+      setStatus(CLOSE);
+    } else {
+      setStatus(ON_WAIT);
+    }
   }
 }
 

@@ -38,7 +38,7 @@ class Connection {
 
   void selectResponseBuilder(void);
   void build(void);
-  void send(void);
+  void sendResponse(void);
 
   void resetResponseBuilder(int code);
   void resetResponseBuilder(void);
