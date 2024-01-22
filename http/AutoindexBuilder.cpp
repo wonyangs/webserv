@@ -70,12 +70,13 @@ int AutoindexBuilder::build(void) {
 
   if (method == HTTP_POST || location.isAutoIndex() == false) {
     throw StatusException(
-        HTTP_FORBIDDEN, "[] AutoindexBuilder: build - autoindex is forbidden");
+        HTTP_FORBIDDEN,
+        "[5203] AutoindexBuilder: build - autoindex is forbidden");
   }
 
   DIR* directory;
   if ((directory = opendir(fullPath.c_str())) == NULL)
-    throw std::runtime_error("[] AutoindexBuilder: build - opendir failed");
+    throw std::runtime_error("[5204] AutoindexBuilder: build - opendir failed");
 
   generateAutoindexPage(fullPath, path, directory);
   return -1;
@@ -112,7 +113,7 @@ void AutoindexBuilder::generateAutoindexPage(std::string const& fullPath,
 
     if (stat(filePath.c_str(), &fileStat) == -1) {
       throw std::runtime_error(
-          "[5203] AutoindexBuilder: generateAutoindexPage - stat failed: " +
+          "[5205] AutoindexBuilder: generateAutoindexPage - stat failed: " +
           filePath);
     }
 
