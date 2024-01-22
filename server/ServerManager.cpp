@@ -310,7 +310,8 @@ void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
       connection.buildResponse();
 
       if (connection.getConnectionStatus() == Connection::ON_SEND) {
-        Kqueue::addWriteEvent(eventFd);
+        int clientFd = connection.getFd();
+        Kqueue::addWriteEvent(clientFd);
       }
     }
 

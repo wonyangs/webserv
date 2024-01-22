@@ -7,20 +7,31 @@
 ErrorBuilder::ErrorBuilder(void)
     : AResponseBuilder(ERROR, Request()),
       _statusCode(500),
-      _recursiveFlag(true) {}
+      _recursiveFlag(true),
+      _fileFd(-1),
+      _fileSize(-1),
+      _readIndex(0) {}
 
 ErrorBuilder::ErrorBuilder(Request const& request, int statusCode)
     : AResponseBuilder(ERROR, request),
       _statusCode(statusCode),
-      _recursiveFlag(false) {}
+      _recursiveFlag(false),
+      _fileFd(-1),
+      _fileSize(-1),
+      _readIndex(0) {}
 
 ErrorBuilder::ErrorBuilder(ErrorBuilder const& builder)
     : AResponseBuilder(builder) {
   _statusCode = builder._statusCode;
+  _recursiveFlag = builder._recursiveFlag;
+  _fileFd = builder._fileFd;
+  _fileSize = builder._fileSize;
+  _readIndex = builder._readIndex;
+  _storageBuffer = builder._storageBuffer;
 }
 
 // TODO: 소멸할 때 관련된 fd를 clear하도록 구현
-ErrorBuilder::~ErrorBuilder(void) {}
+ErrorBuilder::~ErrorBuilder(void) { close(); }
 
 /**
  * Operator Overloading
@@ -33,6 +44,11 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
     setRequest(builder.getRequest());
     setType(builder.getType());
     _statusCode = builder._statusCode;
+    _recursiveFlag = builder._recursiveFlag;
+    _fileFd = builder._fileFd;
+    _fileSize = builder._fileSize;
+    _readIndex = builder._readIndex;
+    _storageBuffer = builder._storageBuffer;
   }
   return *this;
 }
@@ -41,40 +57,113 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  * Public method
  */
 
-#include <iostream>
+// 새로운 이벤트가 등록되었다면 해당 fd 반환, 아니라면 -1 반환
+int ErrorBuilder::build(void) {
+  Request const& request = getRequest();
 
-void ErrorBuilder::build(void) {
-  if (_recursiveFlag) {
-    generateDefaultPage();
-    return;
+  if (_recursiveFlag == false and request.getLocationFlag()) {
+    Location const& location = request.getLocation();
+    if (location.hasErrorPage(_statusCode)) {
+      return readStatusCodeFile(location);
+    }
   }
   generateDefaultPage();
-
-  // if (_request.getLocationFlag()) {
-  //   Location const& location = _request.getLocation();
-  //   if (location.hasErrorPage(_statusCode)) {
-  //     readStatusCodeFile();
-  //     return;
-  //   }
-  // }
-  // generateDefaultPage();
+  return -1;
 }
 
-void ErrorBuilder::close(void) {}
+void ErrorBuilder::close(void) {
+  if (_fileFd != -1) {
+    Kqueue::removeReadEvent(_fileFd);
+    ::close(_fileFd);
+    _fileFd = -1;
+  }
+}
 
 /**
- * Public method
+ * Private method
  */
 
-void ErrorBuilder::readStatusCodeFile(void) {
-  // open file
+// 첫 번째 호출 시 파일을 열고, 이후 호출 시 파일을 계속 읽음
+// - location에 상태코드에 해당하는 에러 페이지가 있다고 가정
+// - read에 실패한 경우 예외 발생
+int ErrorBuilder::readStatusCodeFile(Location const& location) {
+  // 첫 번째 호출 시 파일을 열음
+  if (_fileFd == -1) {
+    openStatusCodeFile(location);
+    return _fileFd;
+  }
+
+  // 파일 읽기
+  u_int8_t buffer[BUFFER_SIZE];
+  memset(buffer, 0, BUFFER_SIZE);
+  ssize_t bytesRead = read(_fileFd, buffer, sizeof(buffer));
+  _readIndex += bytesRead;
+
+  if (bytesRead < 0) {
+    throw std::runtime_error(
+        "[5100] ErrorBuilder: readStatusCodeFile - read failed");
+  }
+
+  for (ssize_t i = 0; i < bytesRead; i++) {
+    _storageBuffer.push_back(buffer[i]);
+  }
+
+  if (bytesRead == 0 or _fileSize == _readIndex) {  // 파일의 끝까지 읽음
+    std::string body(_storageBuffer.begin(), _storageBuffer.end());
+    buildResponseContent(body);
+    _isDone = true;
+  }
+  return -1;
 }
 
-// Connection은 request Header 정보 보고 변경되어야 함
-void ErrorBuilder::generateDefaultPage(void) {
-  // HTTP 응답 생성
+// 상태코드에 해당하는 에러 파일 열기
+// - 파일이 없거나 open에 실패한 경우 예외 발생
+void ErrorBuilder::openStatusCodeFile(Location const& location) {
+  // 파일 경로 제작
+  std::string const& root = location.getRootPath();
+  std::string const& path = location.getErrorPagePath(_statusCode);
+  std::string const& fullPath = root + path;
 
+  // 파일 접근 권한 확인
+  if (access(fullPath.c_str(), F_OK | R_OK) == -1) {
+    throw StatusException(
+        HTTP_INTERNAL_SERVER_ERROR,
+        "[5101] ErrorBuilder: openStatusCodeFile - file permissions denied");
+  }
+
+  // 파일 크기 측정
+  struct stat statbuf;
+
+  if (stat(fullPath.c_str(), &statbuf) == -1) {
+    throw std::runtime_error(
+        "[5102] ErrorBuilder: openStatusCodeFile - stat failed");
+  }
+
+  _fileSize = statbuf.st_size;
+
+  // 파일 열기
+  _fileFd = open(fullPath.c_str(), O_RDONLY);
+  if (_fileFd < 0) {
+    throw std::runtime_error(
+        "[5103] ErrorBuilder: openStatusCodeFile - open failed");
+  }
+
+  Socket::setNonBlocking(_fileFd);
+  Kqueue::addReadEvent(_fileFd);
+}
+
+// 기본 에러 페이지 생성
+void ErrorBuilder::generateDefaultPage(void) {
   std::string const& body = Config::defaultErrorPageBody(_statusCode);
+
+  buildResponseContent(body);
+
+  _isDone = true;
+}
+
+// body 정보를 받아 response 제작
+void ErrorBuilder::buildResponseContent(std::string const& body) {
+  // Todo: Connection은 request Header 정보 보고 변경되어야 함
 
   _response.setHttpVersion("HTTP/1.1");
   _response.setStatusCode(_statusCode);
@@ -86,6 +175,4 @@ void ErrorBuilder::generateDefaultPage(void) {
   _response.appendBody(body);
 
   _response.makeResponseContent();
-
-  _isDone = true;
 }

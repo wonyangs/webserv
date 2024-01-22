@@ -24,6 +24,7 @@ class Connection {
 
   RequestParser _requestParser;
   AResponseBuilder* _responseBuilder;
+  int _builderFd;
 
  public:
   Connection(int fd, ServerManager& manager);

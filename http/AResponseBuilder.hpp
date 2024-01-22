@@ -1,6 +1,8 @@
 #ifndef __A_RESPONSE_BUILDER_HPP__
 #define __A_RESPONSE_BUILDER_HPP__
 
+#include <string>
+
 #include "Request.hpp"
 #include "Response.hpp"
 
@@ -27,7 +29,7 @@ class AResponseBuilder {
   Response& getResponse(void);
   bool isDone(void) const;
 
-  virtual void build(void) = 0;
+  virtual int build(void) = 0;
   virtual void close(void) = 0;
 
  protected:
@@ -35,6 +37,8 @@ class AResponseBuilder {
 
   void setRequest(Request const& request);
   void setType(EBuilderType const& type);
+
+  virtual void buildResponseContent(std::string const& body) = 0;
 
  private:
   AResponseBuilder(void);
