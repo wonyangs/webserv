@@ -24,7 +24,7 @@ class AResponseBuilder {
   AResponseBuilder& operator=(AResponseBuilder const& builder);
 
   EBuilderType const& getType(void) const;
-  Response const& getResponse(void) const;
+  Response& getResponse(void);
   bool isDone(void) const;
 
   virtual void build(void) = 0;

@@ -38,7 +38,7 @@ AResponseBuilder::EBuilderType const& AResponseBuilder::getType(void) const {
   return _type;
 }
 
-Response const& AResponseBuilder::getResponse(void) const { return _response; }
+Response& AResponseBuilder::getResponse(void) { return _response; }
 
 bool AResponseBuilder::isDone(void) const { return _isDone; }
 
