@@ -19,7 +19,7 @@ stringVec Util::splitVector(octetVec const& vec, char del) {
 
   if (result.size() == 0) {
     throw StatusException(HTTP_BAD_REQUEST,
-                          "[] Util: splitVector - vector is empty");
+                          "[6100] Util: splitVector - vector is empty");
   }
   return result;
 }
@@ -37,7 +37,7 @@ stringVec Util::splitVectorOnce(octetVec const& vec, char del) {
 
   if (result.size() == 0) {
     throw StatusException(HTTP_BAD_REQUEST,
-                          "[] Util: splitVectorOnce - vector is empty");
+                          "[6101] Util: splitVectorOnce - vector is empty");
   }
   return result;
 }
