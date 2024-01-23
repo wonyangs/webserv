@@ -22,6 +22,11 @@ class Location {
   bool _autoIndex;
   std::string _redirectUri;
 
+  bool _cgiFlag;
+  std::string _cgiExtention;
+  std::string _cgiPath;
+  std::string _uploadPath;
+
  public:
   Location(void);
   Location(std::string const& uri, std::string const& rootPath,
@@ -37,6 +42,9 @@ class Location {
   void addAllowMethod(EHttpMethod method);
   void setAutoIndex(bool setting);
   void setRedirectUri(std::string const& path);
+  void setCgiExtention(std::string const& extention);
+  void setCgiPath(std::string const& cgiPath);
+  void setUploadDir(std::string const& dirPath);
 
   // getter
   std::string const& getUri(void) const;
@@ -49,6 +57,10 @@ class Location {
   bool isAutoIndex(void) const;
   bool isRedirectBlock(void) const;
   std::string const& getRedirectUri(void) const;
+  bool hasCgiInfo(void) const;
+  std::string const& getCgiExtention(void) const;
+  std::string const& getCgiPath(void) const;
+  std::string const& getUploadDirPath(void) const;
 
  private:
   static int const DEFAULT_MAX_BODY_SIZE = 6000;
