@@ -127,8 +127,9 @@ bool Connection::isReadStorageRequired() {
 // HTTP 요청 + Location 블록을 보고 분기
 // - 적절한 ResponseBuilder 선택
 void Connection::selectResponseBuilder(void) {
-  // _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 200);
-  _responseBuilder = new StaticFileBuilder(_requestParser.getRequest());
+  // _responseBuilder = new StaticFileBuilder(_requestParser.getRequest());
+  // _responseBuilder = new AutoindexBuilder(_requestParser.getRequest());
+  _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 200);
   setStatus(ON_BUILD);
 }
 

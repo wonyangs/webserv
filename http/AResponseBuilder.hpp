@@ -8,7 +8,7 @@
 
 class AResponseBuilder {
  public:
-  enum EBuilderType { STATIC, ERROR };
+  enum EBuilderType { AUTOINDEX, STATIC, ERROR };
 
  protected:
   Response _response;
