@@ -76,14 +76,14 @@ void StaticFileBuilder::openStaticFile(void) {
   if (access(fullPath.c_str(), F_OK) == -1) {
     throw StatusException(
         HTTP_NOT_FOUND,
-        "[] StaticFileBuilder: openStaticFile - can't find file");
+        "[5300] StaticFileBuilder: openStaticFile - can't find file");
   }
 
   // 파일 접근 권한 확인
   if (access(fullPath.c_str(), R_OK) == -1) {
     throw StatusException(
         HTTP_FORBIDDEN,
-        "[] StaticFileBuilder: openStaticFile - file permissions denied");
+        "[5301] StaticFileBuilder: openStaticFile - file permissions denied");
   }
 
   // 파일 정보 확인
@@ -91,13 +91,13 @@ void StaticFileBuilder::openStaticFile(void) {
 
   if (stat(fullPath.c_str(), &statbuf) == -1) {
     throw std::runtime_error(
-        "[] StaticFileBuilder: openStaticFile - stat failed");
+        "[5302] StaticFileBuilder: openStaticFile - stat failed");
   }
 
   // 파일이 디렉토리인지 확인
   if (S_ISDIR(statbuf.st_mode)) {
     throw std::runtime_error(
-        "[] StaticFileBuilder: openStaticFile - path is a directory");
+        "[5303] StaticFileBuilder: openStaticFile - path is a directory");
   }
 
   // 파일 크기 측정
@@ -107,7 +107,7 @@ void StaticFileBuilder::openStaticFile(void) {
   _fileFd = open(fullPath.c_str(), O_RDONLY);
   if (_fileFd < 0) {
     throw std::runtime_error(
-        "[] StaticFileBuilder: openStaticFile - open failed");
+        "[5304] StaticFileBuilder: openStaticFile - open failed");
   }
 
   Socket::setNonBlocking(_fileFd);
@@ -123,7 +123,7 @@ void StaticFileBuilder::readStaticFile(void) {
 
   if (bytesRead < 0) {
     throw std::runtime_error(
-        "[] ErrorBuilder: readStatusCodeFile - read failed");
+        "[5305] ErrorBuilder: readStatusCodeFile - read failed");
   }
 
   for (ssize_t i = 0; i < bytesRead; i++) {
