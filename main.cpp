@@ -14,7 +14,7 @@ std::vector<Server> exampleParseConfig(void) {
   location1_1.addAllowMethod(HTTP_GET);
   location1_1.addAllowMethod(HTTP_POST);
   location1_1.setMaxBodySize(10000000);
-  location1_1.setAutoIndex(false);
+  location1_1.setAutoIndex(true);
   location1_1.addErrorPage(404, "/404.html");
 
   Location location1_2("/images/", "/Users/wonyang/Project/webserv/www/images/",
