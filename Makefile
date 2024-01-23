@@ -18,6 +18,7 @@ SRCS		= config/Server.cpp \
 			  http/Response.cpp \
 			  http/AResponseBuilder.cpp \
 			  http/ErrorBuilder.cpp \
+			  http/StaticFileBuilder.cpp \
 			  http/AutoindexBuilder.cpp \
 			  main.cpp
 				

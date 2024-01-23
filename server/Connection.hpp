@@ -9,6 +9,7 @@
 #include "../http/ErrorBuilder.hpp"
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
+#include "../http/StaticFileBuilder.hpp"
 #include "ServerManager.hpp"
 
 class ServerManager;

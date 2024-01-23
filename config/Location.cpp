@@ -33,6 +33,8 @@ Location& Location::operator=(Location const& location) {
     this->_allowMethods = location._allowMethods;
     this->_autoIndex = location._autoIndex;
     this->_redirectUri = location._redirectUri;
+    this->_hasAllowMethodField = location._hasAllowMethodField;
+    this->_hasRedirectField = location._hasRedirectField;
   }
   return *this;
 }

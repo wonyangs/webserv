@@ -127,8 +127,19 @@ bool Connection::isReadStorageRequired() {
 // HTTP 요청 + Location 블록을 보고 분기
 // - 적절한 ResponseBuilder 선택
 void Connection::selectResponseBuilder(void) {
-  // _responseBuilder = new AutoindexBuilder(_requestParser.getRequest());
-  _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 200);
+  Request const& request = _requestParser.getRequest();
+  std::string const& path = request.getPath();
+  Location const& location = request.getLocation();
+
+  if (path.back() == '/') {
+    if (location.isAutoIndex()) {
+      _responseBuilder = new AutoindexBuilder(request);
+    } else {
+      _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 404);
+    }
+  } else {
+    _responseBuilder = new StaticFileBuilder(request);
+  }
   setStatus(ON_BUILD);
 }
 

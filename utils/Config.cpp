@@ -3,6 +3,9 @@
 const std::map<int, std::string> Config::statusMessages =
     Config::initializeStatusMessages();
 
+const std::map<std::string, std::string> Config::mimeTypes =
+    Config::initializeMimeTypes();
+
 std::map<int, std::string> Config::initializeStatusMessages(void) {
   std::map<int, std::string> messages;
   messages[200] = "OK";
@@ -33,6 +36,47 @@ std::map<int, std::string> Config::initializeStatusMessages(void) {
   messages[503] = "Service Unavailable";
   messages[504] = "Gateway Timeout";
   return messages;
+}
+
+std::map<std::string, std::string> Config::initializeMimeTypes() {
+  std::map<std::string, std::string> m;
+  m[".html"] = "text/html";
+  m[".htm"] = "text/html";
+  m[".css"] = "text/css";
+  m[".js"] = "text/javascript";
+  m[".json"] = "application/json";
+  m[".xml"] = "application/xml";
+  m[".txt"] = "text/plain";
+  m[".md"] = "text/markdown";
+  m[".csv"] = "text/csv";
+  m[".jpg"] = "image/jpeg";
+  m[".jpeg"] = "image/jpeg";
+  m[".png"] = "image/png";
+  m[".gif"] = "image/gif";
+  m[".bmp"] = "image/bmp";
+  m[".svg"] = "image/svg+xml";
+  m[".ico"] = "image/x-icon";
+  m[".webp"] = "image/webp";
+  m[".pdf"] = "application/pdf";
+  m[".zip"] = "application/zip";
+  m[".rar"] = "application/vnd.rar";
+  m[".7z"] = "application/x-7z-compressed";
+  m[".tar"] = "application/x-tar";
+  m[".gz"] = "application/gzip";
+  m[".mp3"] = "audio/mpeg";
+  m[".wav"] = "audio/wav";
+  m[".mp4"] = "video/mp4";
+  m[".avi"] = "video/x-msvideo";
+  m[".mov"] = "video/quicktime";
+  m[".wmv"] = "video/x-ms-wmv";
+  m[".flv"] = "video/x-flv";
+  m[".webm"] = "video/webm";
+  m[".m4a"] = "audio/mp4";
+  m[".mpg"] = "video/mpeg";
+  m[".mpeg"] = "video/mpeg";
+  m[".ogg"] = "audio/ogg";
+  m[".ogv"] = "video/ogg";
+  return m;
 }
 
 // 상태 코드에 해당하는 메시지 찾기
@@ -76,4 +120,26 @@ std::string const Config::defaultErrorPageBody(int code) {
      << "\"alt=\"Error Image\" class=\"error-image\"> </div> </body>\n\n";
 
   return ss.str();
+}
+
+// path에 포함된 확장자에 맞는 MIME 타입 반환
+// - 알 수 없는 확장자의 경우 기본 설정된 MIME 타입 반환
+std::string const Config::findMimeType(const std::string& path) {
+  // 마지막 '.' 위치를 찾음
+  size_t dotPos = path.find_last_of('.');
+  std::string extension;
+
+  // 확장자가 없는 경우 기본 MIME 타입 반환
+  if (dotPos == std::string::npos) return "application/octet-stream";
+
+  // 확장자 추출 (마지막 '.' 이후의 모든 문자)
+  extension = path.substr(dotPos);
+
+  // 확장자에 맞는 MIME 타입 반환
+  std::map<std::string, std::string>::const_iterator it =
+      mimeTypes.find(extension);
+  if (it != mimeTypes.end()) {
+    return it->second;
+  }
+  return "application/octet-stream";
 }
