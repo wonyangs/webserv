@@ -7,6 +7,7 @@
 #include "../http/AResponseBuilder.hpp"
 #include "../http/AutoindexBuilder.hpp"
 #include "../http/ErrorBuilder.hpp"
+#include "../http/RedirectBuilder.hpp"
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
 #include "../http/StaticFileBuilder.hpp"

@@ -139,6 +139,7 @@ void Connection::selectResponseBuilder(void) {
     }
   } else {
     _responseBuilder = new StaticFileBuilder(request);
+    // _responseBuilder = new RedirectBuilder(request, path + '/');
   }
   setStatus(ON_BUILD);
 }
