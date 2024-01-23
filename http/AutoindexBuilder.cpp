@@ -43,17 +43,8 @@ int AutoindexBuilder::build(void) {
   }
 
   Location const& location = request.getLocation();
-  std::string const& root = location.getRootPath();
   std::string const& path = request.getPath();
-  std::string const& locationUri = location.getUri();
-
-  std::string fullPath;
-  size_t pos = path.find(locationUri);
-  if (pos != std::string::npos and pos == 0) {
-    fullPath = root + path.substr(locationUri.length());
-  } else {
-    fullPath = root + path;
-  }
+  std::string const& fullPath = request.getFullPath();
 
   if (access(fullPath.c_str(), F_OK) == -1) {
     throw StatusException(

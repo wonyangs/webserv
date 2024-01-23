@@ -53,6 +53,8 @@ class Connection {
   EStatus getConnectionStatus(void) const;
   long getElapsedTime(void) const;
 
+  bool isSameState(EStatus status);
+
  private:
   static int const BUFFER_SIZE = 1024;
   ServerManager& _manager;

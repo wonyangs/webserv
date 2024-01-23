@@ -21,6 +21,7 @@ Request& Request::operator=(Request const& request) {
 
     _location = request._location;
     _locationFlag = request._locationFlag;
+    _fullPath = request._fullPath;
   }
   return *this;
 }
@@ -49,6 +50,7 @@ void Request::print() const {
 
   std::cout << "Body: " << _body << std::endl;
   std::cout << "Location uri: " << _location.getUri() << std::endl;
+  std::cout << "fullPath: " << _fullPath << std::endl;
 }
 
 // Public Method - getter
@@ -66,11 +68,19 @@ std::map<std::string, std::vector<std::string> > const& Request::getHeader(
   return _header;
 }
 
-Location const& Request::getLocation(void) const { return _location; }
+std::string const& Request::getBody(void) const { return _body; }
+
+Location const& Request::getLocation(void) const {
+  if (_locationFlag == false) {
+    throw std::runtime_error(
+        "[2400] Request: getLocation - location flag is false");
+  }
+  return _location;
+}
 
 bool Request::getLocationFlag(void) const { return _locationFlag; }
 
-std::string const& Request::getBody(void) const { return _body; }
+std::string const& Request::getFullPath(void) const { return _fullPath; }
 
 std::vector<std::string> const& Request::getHeaderFieldValues(
     std::string const& fieldName) const {
@@ -131,6 +141,25 @@ void Request::storeHeaderField(std::vector<std::string> const& result) {
 // body 저장
 void Request::storeBody(std::string const& result) { _body = result; }
 
+// fullPath 저장
+void Request::storeFullPath(void) {
+  Location const& location = getLocation();
+  std::string root = location.getRootPath();
+  std::string locationUri = location.getUri();
+
+  // path의 맨 처음이 무조건 /로 시작해 /를 제거
+  if (root.back() == '/') root.pop_back();
+  if (locationUri.back() == '/') locationUri.pop_back();
+
+  size_t pos = _path.find(locationUri);
+
+  if (pos != std::string::npos and pos == 0) {
+    setFullPath(root + _path.substr(locationUri.length()));
+  } else {
+    setFullPath(root + _path);
+  }
+}
+
 // 해당 헤더 field-name의 존재를 확인하는 함수
 bool Request::isHeaderFieldNameExists(std::string const& fieldName) const {
   return (_header.find(fieldName) != _header.end());
@@ -160,6 +189,7 @@ void Request::clear() {
   _header.clear();
   _body.clear();
   _locationFlag = false;
+  _fullPath.clear();
 }
 
 // Private Method - setter
@@ -175,6 +205,8 @@ void Request::setQuery(std::string const& query) { _query = query; }
 void Request::setHttpVersion(std::string const& httpVersion) {
   _httpVersion = httpVersion;
 }
+
+void Request::setFullPath(std::string const& fullPath) { _fullPath = fullPath; }
 
 // Private Method
 

@@ -268,6 +268,9 @@ long Connection::getElapsedTime(void) const {
   return std::time(0) - _lastCallTime;
 }
 
+// Connection의 현재 상태가 파라미터 상태와 동일한지 확인
+bool Connection::isSameState(EStatus status) { return (_status == status); }
+
 /**
  * Private method
  */
@@ -278,7 +281,7 @@ void Connection::setRequestParserLocation(Request const& request) {
   std::string const& host = request.getHeaderFieldValues("host").front();
 
   Location const& location = _manager.getLocation(path, host);
-  _requestParser.setRequestLocation(location);
+  _requestParser.initRequestLocationAndFullPath(location);
 }
 
 // 마지막으로 호출된 시간 업데이트

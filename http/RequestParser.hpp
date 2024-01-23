@@ -55,7 +55,7 @@ class RequestParser {
   enum EParsingStatus getParsingStatus(void) const;
   Request const& getRequest(void) const;
 
-  void setRequestLocation(Location const& location);
+  void initRequestLocationAndFullPath(Location const& location);
 
   void parse(u_int8_t const* buffer, ssize_t bytesRead);
   void clear();

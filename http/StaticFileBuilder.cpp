@@ -70,7 +70,7 @@ void StaticFileBuilder::close(void) {
 // 파일 존재 여부를 확인 후 파일 열기
 void StaticFileBuilder::openStaticFile(void) {
   // 파일 경로 제작
-  std::string const& fullPath = makeFullPath();
+  std::string const& fullPath = getRequest().getFullPath();
 
   // 파일 존재 여부 확인
   if (access(fullPath.c_str(), F_OK) == -1) {
@@ -137,26 +137,6 @@ void StaticFileBuilder::readStaticFile(void) {
   }
 }
 
-// 최종 파일 경로를 제작
-// - request와 location 정보를 합쳐 제작
-std::string const StaticFileBuilder::makeFullPath(void) {
-  Request const& request = getRequest();
-  Location const& location = request.getLocation();
-  std::string const& root = location.getRootPath();
-  std::string const& path = request.getPath();
-  std::string const& locationUri = location.getUri();
-
-  std::string fullPath;
-  size_t pos = path.find(locationUri);
-  if (pos != std::string::npos and pos == 0) {
-    fullPath = root + path.substr(locationUri.length());
-  } else {
-    fullPath = root + path;
-  }
-
-  return fullPath;
-}
-
 // body 정보를 받아 response 제작
 void StaticFileBuilder::buildResponseContent(std::string const& body) {
   // Todo: Connection은 request Header 정보 보고 변경되어야 함
@@ -164,7 +144,7 @@ void StaticFileBuilder::buildResponseContent(std::string const& body) {
   _response.setHttpVersion("HTTP/1.1");
   _response.setStatusCode(200);
 
-  std::string const& fullPath = makeFullPath();
+  std::string const& fullPath = getRequest().getFullPath();
   std::string const& mime = Config::findMimeType(fullPath);
   _response.addHeader("Content-Type", mime);
 
