@@ -86,7 +86,7 @@ void StaticFileBuilder::openStaticFile(void) {
         "[] StaticFileBuilder: openStaticFile - file permissions denied");
   }
 
-  // 파일 크기 측정
+  // 파일 정보 확인
   struct stat statbuf;
 
   if (stat(fullPath.c_str(), &statbuf) == -1) {
@@ -94,6 +94,13 @@ void StaticFileBuilder::openStaticFile(void) {
         "[] StaticFileBuilder: openStaticFile - stat failed");
   }
 
+  // 파일이 디렉토리인지 확인
+  if (S_ISDIR(statbuf.st_mode)) {
+    throw std::runtime_error(
+        "[] StaticFileBuilder: openStaticFile - path is a directory");
+  }
+
+  // 파일 크기 측정
   _fileSize = statbuf.st_size;
 
   // 파일 열기
