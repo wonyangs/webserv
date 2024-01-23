@@ -129,20 +129,17 @@ std::string const Config::findMimeType(const std::string& path) {
   size_t dotPos = path.find_last_of('.');
   std::string extension;
 
-  if (dotPos != std::string::npos) {
-    // 확장자 추출 (마지막 '.' 이후의 모든 문자)
-    extension = path.substr(dotPos);
-  } else {
-    // 확장자가 없는 경우 기본 MIME 타입 반환
-    return "application/octet-stream";
-  }
+  // 확장자가 없는 경우 기본 MIME 타입 반환
+  if (dotPos == std::string::npos) return "application/octet-stream";
+
+  // 확장자 추출 (마지막 '.' 이후의 모든 문자)
+  extension = path.substr(dotPos);
 
   // 확장자에 맞는 MIME 타입 반환
   std::map<std::string, std::string>::const_iterator it =
       mimeTypes.find(extension);
   if (it != mimeTypes.end()) {
     return it->second;
-  } else {
-    return "application/octet-stream";
   }
+  return "application/octet-stream";
 }
