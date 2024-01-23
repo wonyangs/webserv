@@ -14,8 +14,9 @@ typedef std::vector<std::string> stringVec;
 class Util {
  public:
   static std::string const itos(int n);
-  static stringVec splitVector(octetVec const& vec, char del);
-  static stringVec splitVectorOnce(octetVec const& vec, char del);
+
+  static stringVec split(octetVec const& vec, char del);
+  static stringVec splitOnce(octetVec const& vec, char del);
 
  private:
   Util(void);

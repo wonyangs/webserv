@@ -6,7 +6,7 @@ std::string const Util::itos(int n) {
   return ss.str();
 }
 
-stringVec Util::splitVector(octetVec const& vec, char del) {
+stringVec Util::split(octetVec const& vec, char del) {
   stringVec result;
 
   std::string data(vec.begin(), vec.end());
@@ -19,12 +19,12 @@ stringVec Util::splitVector(octetVec const& vec, char del) {
 
   if (result.size() == 0) {
     throw StatusException(HTTP_BAD_REQUEST,
-                          "[6100] Util: splitVector - vector is empty");
+                          "[6100] Util: split - vector is empty");
   }
   return result;
 }
 
-stringVec Util::splitVectorOnce(octetVec const& vec, char del) {
+stringVec Util::splitOnce(octetVec const& vec, char del) {
   stringVec result;
 
   std::string data(vec.begin(), vec.end());
@@ -37,7 +37,7 @@ stringVec Util::splitVectorOnce(octetVec const& vec, char del) {
 
   if (result.size() == 0) {
     throw StatusException(HTTP_BAD_REQUEST,
-                          "[6101] Util: splitVectorOnce - vector is empty");
+                          "[6101] Util: splitOnce - vector is empty");
   }
   return result;
 }
