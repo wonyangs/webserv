@@ -305,9 +305,7 @@ void RequestParser::parseBodyChunkTrailer(u_int8_t const& octet) {
 std::vector<std::string> RequestParser::processRequestLine() {
   removeCRLF(_parsedData);
 
-  std::vector<std::string> result;
-  splitRequestLine(result);
-
+  std::vector<std::string> result = Util::split(_parsedData, SP);
   _parsedData.clear();
 
   if (isInvalidFormatSize(result, 3)) {
@@ -338,8 +336,7 @@ void RequestParser::setupBodyParse(void) {
 std::vector<std::string> RequestParser::processHeaderField() {
   removeCRLF(_parsedData);
 
-  std::vector<std::string> result;
-  splitHeaderField(result);
+  std::vector<std::string> result = Util::splitOnce(_parsedData, COLON);
   _parsedData.clear();
 
   if (isInvalidFormatSize(result, 2)) {
@@ -373,8 +370,7 @@ std::vector<std::string> RequestParser::processHeaderField() {
 void RequestParser::processBodyChunkSize() {
   removeCRLF(_parsedData);
 
-  std::vector<std::string> result;
-  splitBodyChunkSize(result);
+  std::vector<std::string> result = Util::split(_parsedData, SEMICOLON);
 
   std::string const& chunkSizeString = result[0];
   setChunkSize(chunkSizeString);
@@ -388,60 +384,6 @@ std::string RequestParser::processBody() {
   std::string result(_parsedData.begin(), _parsedData.end());
   _parsedData.clear();
   return result;
-}
-
-// requestLine를 SP( )을 기준으로 split
-// - split한 결과는 매개변수 result에 저장
-void RequestParser::splitRequestLine(std::vector<std::string>& result) {
-  std::string requestLine(_parsedData.begin(), _parsedData.end());
-  std::stringstream ss(requestLine);
-  std::string token;
-
-  while (std::getline(ss, token, ' ')) {
-    result.push_back(token);
-  }
-
-  if (result.size() == 0) {
-    throw StatusException(
-        HTTP_BAD_REQUEST,
-        "[2102] RequestParser: splitRequestLine - requestLine is empty");
-  }
-}
-
-// header를 가장 처음 나온 COLON(:)을 기준으로 split
-// - split한 결과는 매개변수 result에 저장
-void RequestParser::splitHeaderField(std::vector<std::string>& result) {
-  std::string headerField(_parsedData.begin(), _parsedData.end());
-  size_t pos = headerField.find(COLON);
-
-  if (pos != std::string::npos) {
-    result.push_back(headerField.substr(0, pos));
-    result.push_back(headerField.substr(pos + 1));
-  }
-
-  if (result.size() == 0) {
-    throw StatusException(
-        HTTP_BAD_REQUEST,
-        "[2204] RequestParser: splitHeaderField - headerField is empty");
-  }
-}
-
-// chunkSizeBuffer SEMICOLON(;)을 기준으로 split
-// - split한 결과는 매개변수 result에 저장
-void RequestParser::splitBodyChunkSize(std::vector<std::string>& result) {
-  std::string chunkSizeBuffer(_parsedData.begin(), _parsedData.end());
-  std::stringstream ss(chunkSizeBuffer);
-  std::string token;
-
-  while (std::getline(ss, token, ';')) {
-    result.push_back(token);
-  }
-
-  if (result.size() == 0) {
-    throw StatusException(
-        HTTP_BAD_REQUEST,
-        "[2300] RequestParser: splitBodyChunkSize - chunkSizeBuffer is empty");
-  }
 }
 
 // _request 객체의 현재 Body Parsing Status 검사 후 enum EParsingStatus 반환

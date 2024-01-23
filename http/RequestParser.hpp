@@ -9,11 +9,13 @@
 #include <vector>
 
 #include "../utils/StatusException.hpp"
+#include "../utils/Util.hpp"
 #include "Request.hpp"
 
 #define HTAB 9
 #define SP 32
 #define COLON 58
+#define SEMICOLON 59
 
 enum EParsingStatus {
   READY = 0,
@@ -35,7 +37,7 @@ class RequestParser {
   Request _request;
 
   enum EParsingStatus _status;
- 
+
   std::vector<u_int8_t> _parsedData;
   std::vector<u_int8_t> _tempStorage;
 
@@ -63,7 +65,7 @@ class RequestParser {
   void setBodyLength(std::string const& bodyLengthString);
   void setChunkSize(std::string const& chunkSizeString);
   void setTempStorage(size_t startIdx, u_int8_t const* buffer,
-                        ssize_t bytesRead);
+                      ssize_t bytesRead);
 
   void parseOctet(u_int8_t const& octet);
   void parseRequestLine(u_int8_t const& octet);
@@ -80,10 +82,6 @@ class RequestParser {
   std::vector<std::string> processHeaderField(void);
   std::string processBody(void);
   void processBodyChunkSize(void);
-
-  void splitRequestLine(std::vector<std::string>& result);
-  void splitHeaderField(std::vector<std::string>& result);
-  void splitBodyChunkSize(std::vector<std::string>& result);
 
   EParsingStatus checkBodyParsingStatus(void);
   bool isInvalidFormatSize(std::vector<std::string> const& result, size_t size);
