@@ -333,6 +333,8 @@ void RequestParser::setupBodyParse(void) {
     std::vector<std::string> const& contentLengthValues =
         _request.getHeaderFieldValues("content-length");
     setBodyLength(contentLengthValues[0]);
+
+    if (_bodyLength == 0) _status = DONE;
   }
 }
 
