@@ -131,6 +131,12 @@ void Connection::selectResponseBuilder(void) {
   std::string const& path = request.getPath();
   Location const& location = request.getLocation();
 
+  if (location.isRedirectBlock()) {
+    _responseBuilder = new RedirectBuilder(request, location.getRedirectUri());
+    setStatus(ON_BUILD);
+    return;
+  }
+
   if (path.back() == '/') {
     if (location.isAutoIndex()) {
       _responseBuilder = new AutoindexBuilder(request);
