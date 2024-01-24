@@ -26,6 +26,7 @@ class Config {
   static std::string const& findStatusMessage(int code);
   static std::string const defaultErrorPageBody(int code);
 
+  static std::string const findFileExtension(std::string const& path);
   static std::string const findMimeType(std::string const& path);
 
  private:
