@@ -131,9 +131,11 @@ void Connection::selectResponseBuilder(void) {
   Location const& location = request.getLocation();
   std::string fullPath = request.getFullPath();
 
+  setStatus(ON_BUILD);
+
   if (location.isRedirectBlock()) {
     _responseBuilder = new RedirectBuilder(request, location.getRedirectUri());
-    setStatus(ON_BUILD);
+
     return;
   }
 
@@ -143,7 +145,6 @@ void Connection::selectResponseBuilder(void) {
     // index 붙인 파일 경로가 존재하지 않는 경우
     if (access(fullPath.c_str(), F_OK) == -1) {
       _responseBuilder = new AutoindexBuilder(request);
-      setStatus(ON_BUILD);
       return;
     }
   }
@@ -166,14 +167,12 @@ void Connection::selectResponseBuilder(void) {
   // 파일이 디렉토리 경로라면
   if (S_ISDIR(statbuf.st_mode)) {
     _responseBuilder = new RedirectBuilder(request, request.getPath() + '/');
-    setStatus(ON_BUILD);
     return;
   }
 
   // 5. uri에 location에 포함된 cgi 확장자가 붙어있는 경우 cgi build
 
   _responseBuilder = new StaticFileBuilder(request);
-  setStatus(ON_BUILD);
 }
 
 // HTTP 응답 만들기
