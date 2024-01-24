@@ -130,6 +130,12 @@ void Connection::selectResponseBuilder(void) {
   std::string const& path = request.getPath();
   Location const& location = request.getLocation();
 
+  if (location.isRedirectBlock()) {
+    _responseBuilder = new RedirectBuilder(request, location.getRedirectUri());
+    setStatus(ON_BUILD);
+    return;
+  }
+
   if (path.back() == '/') {
     if (location.isAutoIndex()) {
       _responseBuilder = new AutoindexBuilder(request);
@@ -271,6 +277,9 @@ long Connection::getElapsedTime(void) const {
   return std::time(0) - _lastCallTime;
 }
 
+// Connection의 현재 상태가 파라미터 상태와 동일한지 확인
+bool Connection::isSameState(EStatus status) { return (_status == status); }
+
 /**
  * Private method
  */
@@ -281,7 +290,7 @@ void Connection::setRequestParserLocation(Request const& request) {
   std::string const& host = request.getHeaderFieldValues("host").front();
 
   Location const& location = _manager.getLocation(path, host);
-  _requestParser.setRequestLocation(location);
+  _requestParser.initRequestLocationAndFullPath(location);
 }
 
 // builder에서 사용하는 모든 fd 정보를 제거

@@ -299,27 +299,27 @@ void ServerManager::handleServerEvent(void) {
 // - 이벤트 처리 과정 중 예외 발생 가능
 void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
   try {
-    if (connection.getConnectionStatus() == Connection::ON_WAIT or
-        connection.getConnectionStatus() == Connection::ON_RECV) {
+    if (connection.isSameState(Connection::ON_WAIT) or
+        connection.isSameState(Connection::ON_RECV)) {
       connection.readSocket();
     }
 
-    if (connection.getConnectionStatus() == Connection::TO_SEND) {
+    if (connection.isSameState(Connection::TO_SEND)) {
       Kqueue::removeReadEvent(eventFd);
 
       connection.selectResponseBuilder();
     }
 
-    if (connection.getConnectionStatus() == Connection::ON_BUILD) {
+    if (connection.isSameState(Connection::ON_BUILD)) {
       connection.buildResponse(Event::READ);
 
-      if (connection.getConnectionStatus() == Connection::ON_SEND) {
+      if (connection.isSameState(Connection::ON_SEND)) {
         int clientFd = connection.getFd();
         Kqueue::addWriteEvent(clientFd);
       }
     }
 
-    if (connection.getConnectionStatus() == Connection::CLOSE) {
+    if (connection.isSameState(Connection::CLOSE)) {
       removeConnection(eventFd);
     }
 
@@ -339,26 +339,26 @@ void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
 // - 이벤트 처리 과정 중 예외 발생 가능
 void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
   try {
-    if (connection.getConnectionStatus() == Connection::ON_SEND) {
+    if (connection.isSameState(Connection::ON_SEND)) {
       connection.sendResponse();
     }
 
-    if (connection.getConnectionStatus() == Connection::CLOSE) {
+    if (connection.isSameState(Connection::CLOSE)) {
       removeConnection(eventFd);
       return;
     }
 
-    if (connection.getConnectionStatus() == Connection::ON_WAIT) {
+    if (connection.isSameState(Connection::ON_WAIT)) {
       connection.clear();
       Kqueue::removeWriteEvent(eventFd);
       Kqueue::addReadEvent(eventFd);
     }
 
-    if (connection.getConnectionStatus() == Connection::ON_WAIT and
+    if (connection.isSameState(Connection::ON_WAIT) and
         connection.isReadStorageRequired()) {
       Kqueue::removeReadEvent(eventFd);
       connection.readStorage();
-      if (connection.getConnectionStatus() == Connection::TO_SEND) {
+      if (connection.isSameState(Connection::TO_SEND)) {
         Kqueue::addWriteEvent(eventFd);
       } else {
         Kqueue::addReadEvent(eventFd);

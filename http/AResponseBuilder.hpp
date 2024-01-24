@@ -10,7 +10,7 @@
 
 class AResponseBuilder {
  public:
-  enum EBuilderType { AUTOINDEX, STATIC, ERROR };
+  enum EBuilderType { AUTOINDEX, REDIRECT, STATIC, ERROR };
 
  protected:
   Response _response;

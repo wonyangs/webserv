@@ -35,7 +35,6 @@ class StaticFileBuilder : public AResponseBuilder {
 
   void openStaticFile(void);
   void readStaticFile(void);
-  std::string const makeFullPath(void);
 
   virtual void buildResponseContent(std::string const& body);
 

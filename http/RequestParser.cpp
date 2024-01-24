@@ -35,13 +35,12 @@ enum EParsingStatus RequestParser::getParsingStatus() const { return _status; }
 
 Request const& RequestParser::getRequest() const { return _request; }
 
-// Public Method - setter
-
-void RequestParser::setRequestLocation(Location const& location) {
-  _request.setLocation(location);
-}
-
 // Public Method
+
+void RequestParser::initRequestLocationAndFullPath(Location const& location) {
+  _request.setLocation(location);
+  _request.storeFullPath();
+}
 
 #include <iostream>
 
@@ -333,6 +332,8 @@ void RequestParser::setupBodyParse(void) {
     std::vector<std::string> const& contentLengthValues =
         _request.getHeaderFieldValues("content-length");
     setBodyLength(contentLengthValues[0]);
+
+    if (_bodyLength == 0) _status = DONE;
   }
 }
 

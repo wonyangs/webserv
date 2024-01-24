@@ -22,6 +22,7 @@ class Request {
 
   bool _locationFlag;
   Location _location;
+  std::string _fullPath;
 
  public:
   Request(void);
@@ -38,6 +39,7 @@ class Request {
   std::string const& getBody(void) const;
   Location const& getLocation(void) const;
   bool getLocationFlag(void) const;
+  std::string const& getFullPath(void) const;
 
   std::vector<std::string> const& getHeaderFieldValues(
       std::string const& fieldName) const;
@@ -49,6 +51,7 @@ class Request {
   void storeRequestLine(std::vector<std::string> const& result);
   void storeHeaderField(std::vector<std::string> const& result);
   void storeBody(std::string const& result);
+  void storeFullPath(void);
 
   bool isHeaderFieldNameExists(std::string const& fieldName) const;
   bool isHeaderFieldValueExists(std::string const& fieldName,
@@ -61,6 +64,7 @@ class Request {
   void setPath(std::string const& path);
   void setQuery(std::string const& query);
   void setHttpVersion(std::string const& httpVersion);
+  void setFullPath(std::string const& fullPath);
 
   EHttpMethod matchEHttpMethod(std::string method);
   void splitRequestTarget(std::string& path, std::string& query,

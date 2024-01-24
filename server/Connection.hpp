@@ -8,6 +8,7 @@
 #include "../http/AResponseBuilder.hpp"
 #include "../http/AutoindexBuilder.hpp"
 #include "../http/ErrorBuilder.hpp"
+#include "../http/RedirectBuilder.hpp"
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
 #include "../http/StaticFileBuilder.hpp"
@@ -53,6 +54,8 @@ class Connection {
   int getFd(void) const;
   EStatus getConnectionStatus(void) const;
   long getElapsedTime(void) const;
+
+  bool isSameState(EStatus status);
 
  private:
   static int const BUFFER_SIZE = 1024;
