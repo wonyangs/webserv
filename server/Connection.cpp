@@ -131,6 +131,12 @@ void Connection::selectResponseBuilder(void) {
   Location const& location = request.getLocation();
   std::string fullPath = request.getFullPath();
 
+  if (location.isAllowMethod(request.getMethod()) == false) {
+    throw StatusException(
+        HTTP_NOT_ALLOWED,
+        "[4005] Connection: selectResponseBuilder - method not allowed");
+  }
+
   setStatus(ON_BUILD);
 
   if (location.isRedirectBlock()) {
