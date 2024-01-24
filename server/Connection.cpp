@@ -234,14 +234,8 @@ void Connection::sendResponse(void) {
               << "-------------\n"
               << responseContent << "\n-------------" << std::endl;
 
-    // ERROR BUILDER or Request -> Connection: close
-    Request const& request = _requestParser.getRequest();
-    if (_responseBuilder->getType() == AResponseBuilder::ERROR or
-        request.isHeaderFieldValueExists("connection", "Close")) {
-      setStatus(CLOSE);
-    } else {
-      setStatus(ON_WAIT);
-    }
+    _responseBuilder->isConnectionClose() ? setStatus(CLOSE)
+                                          : setStatus(ON_WAIT);
   }
 }
 
@@ -322,7 +316,7 @@ bool Connection::isSameState(EStatus status) { return (_status == status); }
 // path와 host 정보를 가지고 알맞은 location 블럭을 할당
 void Connection::setRequestParserLocation(Request const& request) {
   std::string const& path = request.getPath();
-  std::string const& host = request.getHeaderFieldValues("host").front();
+  std::string const& host = request.getHeaderFieldValues("host");
 
   Location const& location = _manager.getLocation(path, host);
   _requestParser.initRequestLocationAndFullPath(location);
