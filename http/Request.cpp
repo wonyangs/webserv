@@ -2,7 +2,8 @@
 
 // Constructor & Destructor
 
-Request::Request(void) : _method(HTTP_NONE), _locationFlag(false) {}
+Request::Request(void)
+    : _method(HTTP_NONE), _locationFlag(false), _isConnectionClose(false) {}
 
 Request::Request(Request const& request) { *this = request; }
 
@@ -22,6 +23,7 @@ Request& Request::operator=(Request const& request) {
     _location = request._location;
     _locationFlag = request._locationFlag;
     _fullPath = request._fullPath;
+    _isConnectionClose = request._isConnectionClose;
   }
   return *this;
 }
@@ -37,20 +39,16 @@ void Request::print() const {
   std::cout << "Query: " << _query << std::endl;
   std::cout << "HTTP Version: " << _httpVersion << std::endl;
 
-  std::cout << "Headers:" << std::endl;
-  for (std::map<std::string, std::vector<std::string> >::const_iterator it =
-           _header.begin();
+  std::cout << "[Header]" << std::endl;
+  for (std::map<std::string, std::string>::const_iterator it = _header.begin();
        it != _header.end(); ++it) {
-    std::cout << "header-field: [" << it->first << "] ";
-    for (std::vector<std::string>::const_iterator vit = it->second.begin();
-         vit != it->second.end(); ++vit) {
-      std::cout << "[" << *vit << "]" << std::endl;
-    }
+    std::cout << "[" << it->first << "]: " << it->second << std::endl;
   }
 
   std::cout << "Body: " << _body << std::endl;
   std::cout << "Location uri: " << _location.getUri() << std::endl;
   std::cout << "fullPath: " << _fullPath << std::endl;
+  std::cout << "isConnectionClose: " << _isConnectionClose << std::endl;
 }
 
 // Public Method - getter
@@ -63,8 +61,7 @@ std::string const& Request::getQuery(void) const { return _query; }
 
 std::string const& Request::getHttpVersion(void) const { return _httpVersion; }
 
-std::map<std::string, std::vector<std::string> > const& Request::getHeader(
-    void) const {
+std::map<std::string, std::string> const& Request::getHeader(void) const {
   return _header;
 }
 
@@ -82,14 +79,14 @@ bool Request::getLocationFlag(void) const { return _locationFlag; }
 
 std::string const& Request::getFullPath(void) const { return _fullPath; }
 
-std::vector<std::string> const& Request::getHeaderFieldValues(
+std::string const& Request::getHeaderFieldValues(
     std::string const& fieldName) const {
   if (isHeaderFieldNameExists(fieldName) == false) {
     throw std::runtime_error(
         "[2203] Request: getHeaderFieldValues - field-name does not exist");
   }
 
-  std::map<std::string, std::vector<std::string> >::const_iterator it =
+  std::map<std::string, std::string>::const_iterator it =
       _header.find(fieldName);
   return it->second;
 }
@@ -102,6 +99,17 @@ void Request::setLocation(Location const& location) {
 }
 
 // Public Method
+
+std::string const Request::generateIndexPath(void) const {
+  Location const& location = getLocation();
+  std::string const& indexFile = location.getIndexFile();
+  std::string fullPath = getFullPath();
+
+  if (indexFile.front() == '/') fullPath.pop_back();
+  fullPath += indexFile;
+
+  return fullPath;
+}
 
 // Request Line에 해당하는 method, request-target, http version 저장
 // - result 배열에는 method, request-target, httpVersion이 순서대로 저장되어
@@ -130,12 +138,12 @@ void Request::storeRequestLine(std::vector<std::string> const& result) {
 void Request::storeHeaderField(std::vector<std::string> const& result) {
   int const fieldNameIndex = 0, fieldValueIndex = 1;
 
-  std::string fieldName = result[fieldNameIndex];
-  std::vector<std::string> fieldValue;
-  fieldValue.push_back(result[fieldValueIndex]);
-  // - TODO:: , 로 구분될 수 있는 값 처리 필요
-  _header.insert(
-      std::pair<std::string, std::vector<std::string> >(fieldName, fieldValue));
+  std::string const& fieldName = result[fieldNameIndex];
+  std::string const& fieldValue = result[fieldValueIndex];
+  _header.insert(std::pair<std::string, std::string>(fieldName, fieldValue));
+
+  if (fieldName == "connection" and fieldValue == "close")
+    _isConnectionClose = true;
 }
 
 // body 저장
@@ -165,20 +173,7 @@ bool Request::isHeaderFieldNameExists(std::string const& fieldName) const {
   return (_header.find(fieldName) != _header.end());
 }
 
-// 해당 헤더 field-value의 존재를 확인하는 함수
-// - 해당 헤더 field-name이 없다면 false 반환
-bool Request::isHeaderFieldValueExists(std::string const& fieldName,
-                                       std::string const& fieldValue) const {
-  std::map<std::string, std::vector<std::string> >::const_iterator found =
-      _header.find(fieldName);
-
-  if (found == _header.end()) return false;
-
-  std::vector<std::string> const& fieldValues = found->second;
-  std::vector<std::string>::const_iterator it =
-      std::find(fieldValues.begin(), fieldValues.end(), fieldValue);
-  return (it != fieldValues.end());
-}
+bool Request::isConnectionClose(void) const { return _isConnectionClose; }
 
 // 멤버 변수를 비어있는 상태로 초기화
 void Request::clear() {
@@ -190,6 +185,7 @@ void Request::clear() {
   _body.clear();
   _locationFlag = false;
   _fullPath.clear();
+  _isConnectionClose = false;
 }
 
 // Private Method - setter
@@ -204,6 +200,7 @@ void Request::setQuery(std::string const& query) { _query = query; }
 
 void Request::setHttpVersion(std::string const& httpVersion) {
   _httpVersion = httpVersion;
+  if (_httpVersion == "HTTP/1.0") _isConnectionClose = true;
 }
 
 void Request::setFullPath(std::string const& fullPath) { _fullPath = fullPath; }

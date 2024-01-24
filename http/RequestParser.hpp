@@ -88,6 +88,7 @@ class RequestParser {
   void splitHeaderField(std::vector<std::string>& result);
   void splitBodyChunkSize(std::vector<std::string>& result);
 
+  bool isBodyChunk(void);
   EParsingStatus checkBodyParsingStatus(void);
   bool isInvalidFormatSize(std::vector<std::string> const& result, size_t size);
   bool isEndWithCRLF(std::vector<u_int8_t> const& vec);

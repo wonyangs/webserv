@@ -122,18 +122,23 @@ std::string const Config::defaultErrorPageBody(int code) {
   return ss.str();
 }
 
+// path에 포함된 확장자 반환
+// - 마지막 '.' 이후의 모든 문자열 반환
+// - '.'이 포함되지 않은 경우 빈 문자열 반환
+std::string const Config::findFileExtension(std::string const& path) {
+  size_t dotPos = path.find_last_of('.');
+
+  if (dotPos == std::string::npos) return "";
+  return path.substr(dotPos);
+}
+
 // path에 포함된 확장자에 맞는 MIME 타입 반환
 // - 알 수 없는 확장자의 경우 기본 설정된 MIME 타입 반환
-std::string const Config::findMimeType(const std::string& path) {
-  // 마지막 '.' 위치를 찾음
-  size_t dotPos = path.find_last_of('.');
-  std::string extension;
+std::string const Config::findMimeType(std::string const& path) {
+  std::string const extension = Config::findFileExtension(path);
 
   // 확장자가 없는 경우 기본 MIME 타입 반환
-  if (dotPos == std::string::npos) return "application/octet-stream";
-
-  // 확장자 추출 (마지막 '.' 이후의 모든 문자)
-  extension = path.substr(dotPos);
+  if (extension == "") return "application/octet-stream";
 
   // 확장자에 맞는 MIME 타입 반환
   std::map<std::string, std::string>::const_iterator it =

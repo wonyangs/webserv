@@ -60,10 +60,10 @@ std::vector<int> const AutoindexBuilder::build(Event::EventType type) {
             fullPath);
   }
 
-  if (method == HTTP_POST || location.isAutoIndex() == false) {
+  if (method == HTTP_POST or location.isAutoIndex() == false) {
     throw StatusException(
-        HTTP_FORBIDDEN,
-        "[5203] AutoindexBuilder: build - autoindex is forbidden");
+        HTTP_NOT_FOUND,
+        "[5203] AutoindexBuilder: build - autoindex is not found");
   }
 
   DIR* directory;
@@ -71,6 +71,12 @@ std::vector<int> const AutoindexBuilder::build(Event::EventType type) {
     throw std::runtime_error("[5204] AutoindexBuilder: build - opendir failed");
 
   generateAutoindexPage(fullPath, path, directory);
+
+  if (closedir(directory) == -1) {
+    throw std::runtime_error(
+        "[5205] AutoindexBuilder: build - closedir failed");
+  }
+
   return std::vector<int>();
 }
 
@@ -105,7 +111,7 @@ void AutoindexBuilder::generateAutoindexPage(std::string const& fullPath,
 
     if (stat(filePath.c_str(), &fileStat) == -1) {
       throw std::runtime_error(
-          "[5205] AutoindexBuilder: generateAutoindexPage - stat failed: " +
+          "[5206] AutoindexBuilder: generateAutoindexPage - stat failed: " +
           filePath);
     }
 
@@ -126,7 +132,6 @@ void AutoindexBuilder::generateAutoindexPage(std::string const& fullPath,
   buildResponseContent(ss.str());
 }
 
-// Connection은 request Header 정보 보고 변경되어야 함
 void AutoindexBuilder::buildResponseContent(std::string const& body) {
   // HTTP 응답 생성
   _response.setHttpVersion("HTTP/1.1");
@@ -134,8 +139,9 @@ void AutoindexBuilder::buildResponseContent(std::string const& body) {
 
   _response.addHeader("Content-Type", "text/html");
   _response.addHeader("Content-Length", Util::itos(body.size()));
-  _response.addHeader("Connection", "keep-alive");
 
+  isConnectionClose() ? _response.addHeader("Connection", "close")
+                      : _response.addHeader("Connection", "keep-alive");
   _response.appendBody(body);
 
   _response.makeResponseContent();
