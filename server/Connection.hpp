@@ -1,6 +1,9 @@
 #ifndef __CONNECTION_HPP__
 #define __CONNECTION_HPP__
 
+#include <sys/stat.h>
+#include <unistd.h>
+
 #include <ctime>
 #include <string>
 
@@ -11,6 +14,7 @@
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
 #include "../http/StaticFileBuilder.hpp"
+#include "../utils/Util.hpp"
 #include "ServerManager.hpp"
 
 class ServerManager;
