@@ -56,6 +56,20 @@ void Kqueue::addWriteEvent(int fd) {
   updateEventStatus(fd, WRITE_EVENT, ADD);
 }
 
+// PROC 이벤트 추가
+// - 이벤트 추가에 실패한 경우 예외 발생
+void Kqueue::addProcessEvent(int pid) {
+  struct kevent event;
+  EV_SET(&event, pid, Event::PROC, EV_ADD, 0, 0, NULL);
+
+  if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
+    throw std::runtime_error(
+        "[3008] Kqueue: addProcessEvent - event add failed");
+  }
+
+  updateEventStatus(-pid, PROC_EVENT, ADD);
+}
+
 // READ 이벤트 제거
 // - 이벤트 제거에 실패한 경우 예외 발생
 void Kqueue::removeReadEvent(int fd) {
@@ -82,6 +96,20 @@ void Kqueue::removeWriteEvent(int fd) {
   }
 
   updateEventStatus(fd, WRITE_EVENT, REMOVE);
+}
+
+// WRITE 이벤트 제거
+// - 이벤트 제거에 실패한 경우 예외 발생
+void Kqueue::removeProcessEvent(int pid) {
+  struct kevent event;
+  EV_SET(&event, pid, Event::PROC, EV_DELETE, 0, 0, NULL);
+
+  if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
+    throw std::runtime_error(
+        "[3009] Kqueue: removeProcessEvent - event remove failed");
+  }
+
+  updateEventStatus(-pid, PROC_EVENT, REMOVE);
 }
 
 // 발생한 이벤트 반환
@@ -123,6 +151,16 @@ void Kqueue::removeAllEvents(int fd) {
     if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
       throw std::runtime_error(
           "[3007] Kqueue: removeAllEvents - remove write event failed");
+    }
+  }
+
+  // WRITE 이벤트 제거
+  if (events & PROC_EVENT) {
+    struct kevent event;
+    EV_SET(&event, fd, Event::PROC, EV_DELETE, 0, 0, NULL);
+    if (kevent(_fd, &event, 1, NULL, 0, NULL) == -1) {
+      throw std::runtime_error(
+          "[3010] Kqueue: removeAllEvents - remove process event failed");
     }
   }
 
