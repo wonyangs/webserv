@@ -17,12 +17,14 @@ class Request {
   std::string _path;
   std::string _query;
   std::string _httpVersion;
-  std::map<std::string, std::vector<std::string> > _header;
+  std::map<std::string, std::string> _header;
   std::string _body;
 
   bool _locationFlag;
   Location _location;
   std::string _fullPath;
+
+  bool _isConnectionClose;
 
  public:
   Request(void);
@@ -35,14 +37,13 @@ class Request {
   std::string const& getPath(void) const;
   std::string const& getQuery(void) const;
   std::string const& getHttpVersion(void) const;
-  std::map<std::string, std::vector<std::string> > const& getHeader(void) const;
+  std::map<std::string, std::string> const& getHeader(void) const;
   std::string const& getBody(void) const;
   Location const& getLocation(void) const;
   bool getLocationFlag(void) const;
   std::string const& getFullPath(void) const;
 
-  std::vector<std::string> const& getHeaderFieldValues(
-      std::string const& fieldName) const;
+  std::string const& getHeaderFieldValues(std::string const& fieldName) const;
 
   void setLocation(Location const& location);
 
@@ -56,8 +57,7 @@ class Request {
   void storeFullPath(void);
 
   bool isHeaderFieldNameExists(std::string const& fieldName) const;
-  bool isHeaderFieldValueExists(std::string const& fieldName,
-                                std::string const& fieldValue) const;
+  bool isConnectionClose(void) const;
 
   void clear(void);
 
