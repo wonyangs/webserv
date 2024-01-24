@@ -59,10 +59,10 @@ int AutoindexBuilder::build(void) {
             fullPath);
   }
 
-  if (method == HTTP_POST || location.isAutoIndex() == false) {
+  if (method == HTTP_POST or location.isAutoIndex() == false) {
     throw StatusException(
-        HTTP_FORBIDDEN,
-        "[5203] AutoindexBuilder: build - autoindex is forbidden");
+        HTTP_NOT_FOUND,
+        "[5203] AutoindexBuilder: build - autoindex is not found");
   }
 
   DIR* directory;
