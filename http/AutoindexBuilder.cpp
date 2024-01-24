@@ -70,6 +70,11 @@ int AutoindexBuilder::build(void) {
     throw std::runtime_error("[5204] AutoindexBuilder: build - opendir failed");
 
   generateAutoindexPage(fullPath, path, directory);
+
+  if (closedir(directory) == -1) {
+    throw std::runtime_error(
+        "[5205] AutoindexBuilder: build - closedir failed");
+  }
   return -1;
 }
 
@@ -104,7 +109,7 @@ void AutoindexBuilder::generateAutoindexPage(std::string const& fullPath,
 
     if (stat(filePath.c_str(), &fileStat) == -1) {
       throw std::runtime_error(
-          "[5205] AutoindexBuilder: generateAutoindexPage - stat failed: " +
+          "[5206] AutoindexBuilder: generateAutoindexPage - stat failed: " +
           filePath);
     }
 
