@@ -151,7 +151,8 @@ void Connection::selectResponseBuilder(void) {
   if (access(fullPath.c_str(), F_OK) == -1) {
     throw StatusException(
         HTTP_NOT_FOUND,
-        "[] Connection: selectResponseBuilder - can't find file");
+        "[4003] Connection: selectResponseBuilder - can't find file: " +
+            fullPath);
   }
 
   // 파일 정보 확인
@@ -159,7 +160,7 @@ void Connection::selectResponseBuilder(void) {
 
   if (stat(fullPath.c_str(), &statbuf) == -1) {
     throw std::runtime_error(
-        "[] Connection: selectResponseBuilder - stat failed");
+        "[4004] Connection: selectResponseBuilder - stat failed: " + fullPath);
   }
 
   // 파일이 디렉토리 경로라면
