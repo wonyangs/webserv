@@ -70,7 +70,13 @@ void StaticFileBuilder::close(void) {
 // 파일 존재 여부를 확인 후 파일 열기
 void StaticFileBuilder::openStaticFile(void) {
   // 파일 경로 제작
-  std::string const& fullPath = getRequest().getFullPath();
+  Request const& request = getRequest();
+  std::string fullPath = request.getFullPath();
+
+  // 파일이 디렉토리라면 index 파일 붙이기
+  if (fullPath.back() == '/') {
+    fullPath = request.generateIndexPath();
+  }
 
   // 파일 존재 여부 확인
   if (access(fullPath.c_str(), F_OK) == -1) {
@@ -92,12 +98,6 @@ void StaticFileBuilder::openStaticFile(void) {
   if (stat(fullPath.c_str(), &statbuf) == -1) {
     throw std::runtime_error(
         "[5302] StaticFileBuilder: openStaticFile - stat failed");
-  }
-
-  // 파일이 디렉토리인지 확인
-  if (S_ISDIR(statbuf.st_mode)) {
-    throw std::runtime_error(
-        "[5303] StaticFileBuilder: openStaticFile - path is a directory");
   }
 
   // 파일 크기 측정
@@ -144,7 +144,13 @@ void StaticFileBuilder::buildResponseContent(std::string const& body) {
   _response.setHttpVersion("HTTP/1.1");
   _response.setStatusCode(200);
 
-  std::string const& fullPath = getRequest().getFullPath();
+  Request const& request = getRequest();
+  std::string fullPath = request.getFullPath();
+
+  if (fullPath.back() == '/') {
+    fullPath = request.generateIndexPath();
+  }
+
   std::string const& mime = Config::findMimeType(fullPath);
   _response.addHeader("Content-Type", mime);
 
