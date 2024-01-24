@@ -63,7 +63,8 @@ void RedirectBuilder::buildResponseContent(std::string const& body) {
   _response.addHeader("Content-Length", Util::itos(body.size()));
   _response.addHeader("Location", _redirectUri);
 
-  _response.addHeader("Connection", "keep-alive");
+  isConnectionClose() ? _response.addHeader("Connection", "close")
+                      : _response.addHeader("Connection", "keep-alive");
 
   _response.appendBody(body);
 

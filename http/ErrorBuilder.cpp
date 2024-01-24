@@ -172,14 +172,14 @@ void ErrorBuilder::generateDefaultPage(void) {
 
 // body 정보를 받아 response 제작
 void ErrorBuilder::buildResponseContent(std::string const& body) {
-  // Todo: Connection은 request Header 정보 보고 변경되어야 함
-
   _response.setHttpVersion("HTTP/1.1");
   _response.setStatusCode(_statusCode);
 
   _response.addHeader("Content-Type", "text/html");
   _response.addHeader("Content-Length", Util::itos(body.size()));
-  _response.addHeader("Connection", "keep-alive");
+
+  isConnectionClose() ? _response.addHeader("Connection", "close")
+                      : _response.addHeader("Connection", "keep-alive");
 
   _response.appendBody(body);
 

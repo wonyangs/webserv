@@ -132,7 +132,6 @@ void AutoindexBuilder::generateAutoindexPage(std::string const& fullPath,
   buildResponseContent(ss.str());
 }
 
-// Connection은 request Header 정보 보고 변경되어야 함
 void AutoindexBuilder::buildResponseContent(std::string const& body) {
   // HTTP 응답 생성
   _response.setHttpVersion("HTTP/1.1");
@@ -140,8 +139,9 @@ void AutoindexBuilder::buildResponseContent(std::string const& body) {
 
   _response.addHeader("Content-Type", "text/html");
   _response.addHeader("Content-Length", Util::itos(body.size()));
-  _response.addHeader("Connection", "keep-alive");
 
+  isConnectionClose() ? _response.addHeader("Connection", "close")
+                      : _response.addHeader("Connection", "keep-alive");
   _response.appendBody(body);
 
   _response.makeResponseContent();
