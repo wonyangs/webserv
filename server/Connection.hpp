@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <string>
+#include <vector>
 
 #include "../http/AResponseBuilder.hpp"
 #include "../http/AutoindexBuilder.hpp"
@@ -26,7 +27,7 @@ class Connection {
 
   RequestParser _requestParser;
   AResponseBuilder* _responseBuilder;
-  int _builderFd;
+  std::vector<int> _builderFds;
 
  public:
   Connection(int fd, ServerManager& manager);
@@ -40,7 +41,7 @@ class Connection {
   bool isReadStorageRequired(void);
 
   void selectResponseBuilder(void);
-  void buildResponse(void);
+  void buildResponse(Event::EventType eventType);
   void sendResponse(void);
 
   void resetResponseBuilder(int code);
@@ -59,6 +60,7 @@ class Connection {
 
   void parseRequest(u_int8_t const* buffer, ssize_t bytesRead);
   void setRequestParserLocation(Request const& request);
+  void removeAllBuilderFd(void);
 
   void updateLastCallTime(void);
   void setStatus(EStatus status);

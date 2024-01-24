@@ -122,6 +122,10 @@ void ServerManager::handleEvent(Event event) {
         handleWriteEvent(eventFd, connection);
         break;
 
+      case Event::PROC:
+        handleProcessEvent(connection);
+        break;
+
       default:
         throw std::runtime_error(
             "[4103] ServerManager: handleEvent - unknown event type");
@@ -307,7 +311,7 @@ void ServerManager::handleReadEvent(int eventFd, Connection& connection) {
     }
 
     if (connection.getConnectionStatus() == Connection::ON_BUILD) {
-      connection.buildResponse();
+      connection.buildResponse(Event::READ);
 
       if (connection.getConnectionStatus() == Connection::ON_SEND) {
         int clientFd = connection.getFd();
@@ -361,6 +365,15 @@ void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
       }
       return;
     }
+
+    if (connection.getConnectionStatus() == Connection::ON_BUILD) {
+      connection.buildResponse(Event::WRITE);
+
+      if (connection.getConnectionStatus() == Connection::ON_SEND) {
+        int clientFd = connection.getFd();
+        Kqueue::addWriteEvent(clientFd);
+      }
+    }
   } catch (StatusException const& e) {
     std::cout << e.what() << std::endl;
 
@@ -370,6 +383,18 @@ void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
     std::cout << e.what() << std::endl;
 
     connection.resetResponseBuilder(500);
+  }
+}
+
+// PROC 이벤트 처리
+void ServerManager::handleProcessEvent(Connection& connection) {
+  if (connection.getConnectionStatus() == Connection::ON_BUILD) {
+    connection.buildResponse(Event::PROC);
+
+    if (connection.getConnectionStatus() == Connection::ON_SEND) {
+      int clientFd = connection.getFd();
+      Kqueue::addWriteEvent(clientFd);
+    }
   }
 }
 

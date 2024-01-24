@@ -54,11 +54,13 @@ class ServerManager {
   bool hasConnectionFd(int fd) const;
 
   bool hasManagedFd(int fd) const;
-  void removeAllManagedFd(int managedFd);
+  void removeAllManagedFd(int ownerFd);
 
   void handleServerEvent(void);
   void handleReadEvent(int eventFd, Connection& connection);
   void handleWriteEvent(int eventFd, Connection& connection);
+  void handleProcessEvent(Connection& connection);
+
   Connection& findConnection(int eventFd);
 
   ServerManager(void);
