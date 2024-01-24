@@ -127,25 +127,60 @@ bool Connection::isReadStorageRequired() {
 // - 적절한 ResponseBuilder 선택
 void Connection::selectResponseBuilder(void) {
   Request const& request = _requestParser.getRequest();
-  std::string const& path = request.getPath();
   Location const& location = request.getLocation();
+  std::string fullPath = request.getFullPath();
+
+  if (location.isAllowMethod(request.getMethod()) == false) {
+    throw StatusException(
+        HTTP_NOT_ALLOWED,
+        "[4005] Connection: selectResponseBuilder - method not allowed");
+  }
+
+  setStatus(ON_BUILD);
 
   if (location.isRedirectBlock()) {
     _responseBuilder = new RedirectBuilder(request, location.getRedirectUri());
-    setStatus(ON_BUILD);
     return;
   }
 
-  if (path.back() == '/') {
-    if (location.isAutoIndex()) {
+  if (fullPath.back() == '/') {
+    fullPath = request.generateIndexPath();
+
+    // index 붙인 파일 경로가 존재하지 않는 경우
+    if (access(fullPath.c_str(), F_OK) == -1) {
       _responseBuilder = new AutoindexBuilder(request);
-    } else {
-      _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), 404);
+      return;
     }
-  } else {
-    _responseBuilder = new StaticFileBuilder(request);
   }
-  setStatus(ON_BUILD);
+
+  if (access(fullPath.c_str(), F_OK) == -1) {
+    throw StatusException(
+        HTTP_NOT_FOUND,
+        "[4003] Connection: selectResponseBuilder - can't find file: " +
+            fullPath);
+  }
+
+  // 파일 정보 확인
+  struct stat statbuf;
+
+  if (stat(fullPath.c_str(), &statbuf) == -1) {
+    throw std::runtime_error(
+        "[4004] Connection: selectResponseBuilder - stat failed: " + fullPath);
+  }
+
+  // 파일이 디렉토리 경로라면
+  if (S_ISDIR(statbuf.st_mode)) {
+    _responseBuilder = new RedirectBuilder(request, request.getPath() + '/');
+    return;
+  }
+
+  // uri에 location에 포함된 cgi 확장자가 붙어있는 경우 cgi build
+  if (Config::findFileExtension(fullPath) == location.getCgiExtention()) {
+    // cgi builder
+    return;
+  }
+
+  _responseBuilder = new StaticFileBuilder(request);
 }
 
 // HTTP 응답 만들기
@@ -199,14 +234,8 @@ void Connection::sendResponse(void) {
               << "-------------\n"
               << responseContent << "\n-------------" << std::endl;
 
-    // ERROR BUILDER or Request -> Connection: close
-    Request const& request = _requestParser.getRequest();
-    if (_responseBuilder->getType() == AResponseBuilder::ERROR or
-        request.isHeaderFieldValueExists("connection", "Close")) {
-      setStatus(CLOSE);
-    } else {
-      setStatus(ON_WAIT);
-    }
+    _responseBuilder->isConnectionClose() ? setStatus(CLOSE)
+                                          : setStatus(ON_WAIT);
   }
 }
 
@@ -287,7 +316,7 @@ bool Connection::isSameState(EStatus status) { return (_status == status); }
 // path와 host 정보를 가지고 알맞은 location 블럭을 할당
 void Connection::setRequestParserLocation(Request const& request) {
   std::string const& path = request.getPath();
-  std::string const& host = request.getHeaderFieldValues("host").front();
+  std::string const& host = request.getHeaderFieldValues("host");
 
   Location const& location = _manager.getLocation(path, host);
   _requestParser.initRequestLocationAndFullPath(location);

@@ -366,10 +366,10 @@ void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
       return;
     }
 
-    if (connection.getConnectionStatus() == Connection::ON_BUILD) {
+    if (connection.isSameState(Connection::ON_BUILD)) {
       connection.buildResponse(Event::WRITE);
 
-      if (connection.getConnectionStatus() == Connection::ON_SEND) {
+      if (connection.isSameState(Connection::ON_SEND)) {
         int clientFd = connection.getFd();
         Kqueue::addWriteEvent(clientFd);
       }
@@ -388,10 +388,10 @@ void ServerManager::handleWriteEvent(int eventFd, Connection& connection) {
 
 // PROC 이벤트 처리
 void ServerManager::handleProcessEvent(Connection& connection) {
-  if (connection.getConnectionStatus() == Connection::ON_BUILD) {
+  if (connection.isSameState(Connection::ON_BUILD)) {
     connection.buildResponse(Event::PROC);
 
-    if (connection.getConnectionStatus() == Connection::ON_SEND) {
+    if (connection.isSameState(Connection::ON_SEND)) {
       int clientFd = connection.getFd();
       Kqueue::addWriteEvent(clientFd);
     }

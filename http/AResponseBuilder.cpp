@@ -42,6 +42,10 @@ Response& AResponseBuilder::getResponse(void) { return _response; }
 
 bool AResponseBuilder::isDone(void) const { return _isDone; }
 
+bool AResponseBuilder::isConnectionClose(void) const {
+  return _request.isConnectionClose();
+}
+
 /**
  * Protected method - setter
  */

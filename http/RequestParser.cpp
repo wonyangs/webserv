@@ -329,9 +329,9 @@ void RequestParser::setupBodyParse(void) {
   _status = checkBodyParsingStatus();
 
   if (_status == BODY_CONTENT_LENGTH) {
-    std::vector<std::string> const& contentLengthValues =
+    std::string const& contentLengthValue =
         _request.getHeaderFieldValues("content-length");
-    setBodyLength(contentLengthValues[0]);
+    setBodyLength(contentLengthValue);
 
     if (_bodyLength == 0) _status = DONE;
   }
@@ -449,13 +449,26 @@ void RequestParser::splitBodyChunkSize(std::vector<std::string>& result) {
   }
 }
 
+bool RequestParser::isBodyChunk(void) {
+  if (_request.isHeaderFieldNameExists("transfer-encoding") == false)
+    return false;
+
+  std::stringstream ss(_request.getHeaderFieldValues("transfer-encoding"));
+  std::string item;
+  while (getline(ss, item, ',')) {
+    if (trim(item) == "chunked") return true;
+  }
+  return false;
+}
+
 // _request 객체의 현재 Body Parsing Status 검사 후 enum EParsingStatus 반환
 // - transfer-encoding 헤더 필드에 chunked라는 값이 존재하는 경우 BODY_CHUNKED
 // - content-length 헤더 필드가 존재하는 경우 BODY_CONTENT_LENGTH
 // - 이 외의 경우 DONE
 EParsingStatus RequestParser::checkBodyParsingStatus() {
-  if (_request.isHeaderFieldValueExists("transfer-encoding", "chunked"))
+  if (isBodyChunk()) {
     return BODY_CHUNKED;
+  }
 
   if (_request.isHeaderFieldNameExists("content-length"))
     return BODY_CONTENT_LENGTH;
