@@ -103,6 +103,17 @@ void Request::setLocation(Location const& location) {
 
 // Public Method
 
+std::string const Request::generateIndexPath(void) const {
+  Location const& location = getLocation();
+  std::string const& indexFile = location.getIndexFile();
+  std::string fullPath = getFullPath();
+
+  if (indexFile.front() == '/') fullPath.pop_back();
+  fullPath += indexFile;
+
+  return fullPath;
+}
+
 // Request Line에 해당하는 method, request-target, http version 저장
 // - result 배열에는 method, request-target, httpVersion이 순서대로 저장되어
 // 있다고 가정

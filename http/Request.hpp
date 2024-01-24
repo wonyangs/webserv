@@ -46,6 +46,8 @@ class Request {
 
   void setLocation(Location const& location);
 
+  std::string const generateIndexPath(void) const;
+
   void print(void) const;  // debug
 
   void storeRequestLine(std::vector<std::string> const& result);
