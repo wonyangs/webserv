@@ -43,16 +43,17 @@ StaticFileBuilder& StaticFileBuilder::operator=(
  * Public method
  */
 
-int StaticFileBuilder::build(void) {
+std::vector<int> const StaticFileBuilder::build(Event::EventType type) {
+  (void)type;
   // 첫 번째 호출 시 파일을 열음
   if (_fileFd == -1) {
     openStaticFile();
-    return _fileFd;
+    return std::vector<int>(1, _fileFd);
   }
 
   // 두 번째 호출부터는 파일을 읽음
   readStaticFile();
-  return -1;
+  return std::vector<int>();
 }
 
 void StaticFileBuilder::close(void) {

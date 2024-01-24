@@ -32,7 +32,8 @@ AutoindexBuilder& AutoindexBuilder::operator=(AutoindexBuilder const& builder) {
 
 // autoindex page 제작이 가능한지 확인 후 가능하다면 제작
 // - 가능한 경우가 아니라면 예외 발생
-int AutoindexBuilder::build(void) {
+std::vector<int> const AutoindexBuilder::build(Event::EventType type) {
+  (void)type;
   Request const& request = getRequest();
   EHttpMethod const& method = request.getMethod();
 
@@ -75,7 +76,8 @@ int AutoindexBuilder::build(void) {
     throw std::runtime_error(
         "[5205] AutoindexBuilder: build - closedir failed");
   }
-  return -1;
+
+  return std::vector<int>();
 }
 
 void AutoindexBuilder::close(void) {}

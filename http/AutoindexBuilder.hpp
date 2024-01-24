@@ -20,7 +20,7 @@ class AutoindexBuilder : public AResponseBuilder {
 
   AutoindexBuilder& operator=(AutoindexBuilder const& builder);
 
-  virtual int build(void);
+  virtual std::vector<int> const build(Event::EventType type);
   virtual void close(void);
 
  private:

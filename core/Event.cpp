@@ -16,6 +16,9 @@ Event::Event(struct kevent const& event) {
     _type = READ;
   } else if (event.filter == EVFILT_WRITE) {
     _type = WRITE;
+  } else if (event.filter == EVFILT_PROC) {
+    _type = PROC;
+    _fd = -_fd;
   } else {
     throw std::runtime_error("[3101] Event: Event - undefine event type");
   }
@@ -51,6 +54,4 @@ Event::EventType Event::getType(void) const {
 
 // 잘못된 이벤트인지 여부 반환
 // - kevent에서 반환된 이벤트가 없을 경우 올바르지 않은 이벤트가 반환될 수 있음
-bool Event::isInvalid(void) const {
-  return (_fd < 0);
-}
+bool Event::isInvalid(void) const { return (_fd < 0); }

@@ -21,8 +21,11 @@ class Kqueue {
 
   static void addReadEvent(int fd);
   static void addWriteEvent(int fd);
+  static void addProcessEvent(int pid);
+
   static void removeReadEvent(int fd);
   static void removeWriteEvent(int fd);
+  static void removeProcessEvent(int pid);
 
   static void removeAllEvents(int fd);
 
@@ -30,7 +33,12 @@ class Kqueue {
 
  private:
   enum EEventAction { ADD, REMOVE };
-  enum EEventType { NO_EVENT = 0, READ_EVENT = 1 << 0, WRITE_EVENT = 1 << 1 };
+  enum EEventType {
+    NO_EVENT = 0,
+    READ_EVENT = 1 << 0,
+    WRITE_EVENT = 1 << 1,
+    PROC_EVENT = 1 << 2
+  };
 
   static void updateEventStatus(int fd, EEventType event, EEventAction action);
 

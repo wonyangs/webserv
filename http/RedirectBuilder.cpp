@@ -32,9 +32,10 @@ RedirectBuilder& RedirectBuilder::operator=(RedirectBuilder const& builder) {
  * Public method
  */
 
-int RedirectBuilder::build(void) {
+std::vector<int> const RedirectBuilder::build(Event::EventType type) {
+  (void)type;
   generateRedirectPage();
-  return -1;
+  return std::vector<int>();
 }
 
 void RedirectBuilder::close(void) {}
