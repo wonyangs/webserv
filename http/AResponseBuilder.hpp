@@ -2,7 +2,9 @@
 #define __A_RESPONSE_BUILDER_HPP__
 
 #include <string>
+#include <vector>
 
+#include "../core/Event.hpp"
 #include "Request.hpp"
 #include "Response.hpp"
 
@@ -29,7 +31,7 @@ class AResponseBuilder {
   Response& getResponse(void);
   bool isDone(void) const;
 
-  virtual int build(void) = 0;
+  virtual std::vector<int> const build(Event::EventType type) = 0;
   virtual void close(void) = 0;
 
  protected:

@@ -8,7 +8,12 @@
 // kevent 구조체 정보를 관리하는 클래스
 class Event {
  public:
-  enum EventType { READ = EVFILT_READ, WRITE = EVFILT_WRITE };
+  enum EventType {
+    READ = EVFILT_READ,
+    WRITE = EVFILT_WRITE,
+    PROC = EVFILT_PROC,
+    NONE
+  };
 
  private:
   int _fd;

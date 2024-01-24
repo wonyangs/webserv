@@ -13,6 +13,7 @@ Location::Location(std::string const& uri, std::string const& rootPath,
       _indexFile(indexFile),
       _maxBodySize(DEFAULT_MAX_BODY_SIZE),
       _autoIndex(false),
+      _cgiFlag(false),
       _hasAllowMethodField(false),
       _hasRedirectField(false) {}
 
@@ -33,6 +34,12 @@ Location& Location::operator=(Location const& location) {
     this->_allowMethods = location._allowMethods;
     this->_autoIndex = location._autoIndex;
     this->_redirectUri = location._redirectUri;
+
+    this->_cgiFlag = location._cgiFlag;
+    this->_cgiExtention = location._cgiExtention;
+    this->_cgiPath = location._cgiPath;
+    this->_uploadPath = location._uploadPath;
+
     this->_hasAllowMethodField = location._hasAllowMethodField;
     this->_hasRedirectField = location._hasRedirectField;
   }
@@ -88,6 +95,27 @@ void Location::setRedirectUri(std::string const& path) {
   _redirectUri = path;
 }
 
+// CGI extention 설정
+// - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
+void Location::setCgiExtention(std::string const& extention) {
+  _cgiExtention = extention;
+  _cgiFlag = true;
+}
+
+// CGI path 설정
+// - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
+void Location::setCgiPath(std::string const& cgiPath) {
+  _cgiPath = cgiPath;
+  _cgiFlag = true;
+}
+
+// 파일 upload 디렉토리 설정
+// - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
+void Location::setUploadDir(std::string const& dirPath) {
+  _uploadPath = dirPath;
+  _cgiFlag = true;
+}
+
 // Public Method - getter
 
 std::string const& Location::getUri(void) const { return _uri; }
@@ -141,4 +169,34 @@ std::string const& Location::getRedirectUri(void) const {
         "[1104] Location: getRedirectUri - doesn't have a uri");
   }
   return _redirectUri;
+}
+
+// CGI 정보를 가지고 있는지 여부 반환
+bool Location::hasCgiInfo(void) const { return _cgiFlag; }
+
+// CGI extention 반환
+// - CGI 정보가 설정되어 있지 않은데 호출된 경우 예외 발생
+std::string const& Location::getCgiExtention(void) const {
+  if (_cgiFlag == false) {
+    throw std::runtime_error("[1105] Location: getCgiExtention - no cgi info");
+  }
+  return _cgiExtention;
+}
+
+// CGI 경로 반환
+// - CGI 정보가 설정되어 있지 않은데 호출된 경우 예외 발생
+std::string const& Location::getCgiPath(void) const {
+  if (_cgiFlag == false) {
+    throw std::runtime_error("[1106] Location: getCgiPath - no cgi info");
+  }
+  return _cgiPath;
+}
+
+// 파일 업로드 디렉토리 경로 반환
+// - CGI 정보가 설정되어 있지 않은데 호출된 경우 예외 발생
+std::string const& Location::getUploadDirPath(void) const {
+  if (_cgiFlag == false) {
+    throw std::runtime_error("[1107] Location: getUploadDirPath - no cgi info");
+  }
+  return _uploadPath;
 }

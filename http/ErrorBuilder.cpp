@@ -58,17 +58,19 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  */
 
 // 새로운 이벤트가 등록되었다면 해당 fd 반환, 아니라면 -1 반환
-int ErrorBuilder::build(void) {
+std::vector<int> const ErrorBuilder::build(Event::EventType type) {
+  (void)type;
   Request const& request = getRequest();
 
   if (_recursiveFlag == false and request.getLocationFlag()) {
     Location const& location = request.getLocation();
     if (location.hasErrorPage(_statusCode)) {
-      return readStatusCodeFile(location);
+      int fd = readStatusCodeFile(location);
+      return std::vector<int>(1, fd);
     }
   }
   generateDefaultPage();
-  return -1;
+  return std::vector<int>();
 }
 
 void ErrorBuilder::close(void) {

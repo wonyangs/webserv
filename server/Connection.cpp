@@ -19,7 +19,6 @@ Connection::Connection(int fd, ServerManager& manager)
       _status(ON_WAIT),
       _requestParser(),
       _responseBuilder(NULL),
-      _builderFd(-1),
       _manager(manager) {}
 
 Connection::Connection(Connection const& connection)
@@ -40,7 +39,7 @@ Connection& Connection::operator=(Connection const& connection) {
     _status = connection._status;
     _requestParser = connection._requestParser;
     _responseBuilder = connection._responseBuilder;
-    _builderFd = connection._builderFd;
+    _builderFds = connection._builderFds;
     _manager = connection._manager;
   }
   return *this;
@@ -150,21 +149,21 @@ void Connection::selectResponseBuilder(void) {
 }
 
 // HTTP 응답 만들기
-void Connection::buildResponse() {
-  int builderFd = _responseBuilder->build();
+void Connection::buildResponse(Event::EventType eventType) {
+  std::vector<int> const& builderFds = _responseBuilder->build(eventType);
 
-  if (builderFd != -1) {
-    _manager.addManagedFd(builderFd, _fd);
-    _builderFd = builderFd;
+  if (builderFds.size() != 0) {
+    for (std::vector<int>::const_iterator it = builderFds.begin();
+         it != builderFds.end(); ++it) {
+      _manager.addManagedFd(*it, _fd);
+    }
+    _builderFds = builderFds;
   }
 
   if (_responseBuilder->isDone()) {
     setStatus(ON_SEND);
     _responseBuilder->close();
-    if (_builderFd != -1) {
-      _manager.removeManagedFd(_builderFd);
-      _builderFd = -1;
-    }
+    removeAllBuilderFd();
   }
 }
 
@@ -214,6 +213,8 @@ void Connection::sendResponse(void) {
 void Connection::resetResponseBuilder(int code) {
   Kqueue::removeAllEvents(_fd);
 
+  removeAllBuilderFd();
+
   if (_responseBuilder != NULL) {
     delete _responseBuilder;
     _responseBuilder = NULL;
@@ -222,7 +223,7 @@ void Connection::resetResponseBuilder(int code) {
   _responseBuilder = new ErrorBuilder(_requestParser.getRequest(), code);
   setStatus(ON_BUILD);
 
-  buildResponse();
+  buildResponse(Event::NONE);
   if (_status == Connection::ON_SEND) {
     Kqueue::addWriteEvent(_fd);
   }
@@ -230,6 +231,8 @@ void Connection::resetResponseBuilder(int code) {
 
 void Connection::resetResponseBuilder(void) {
   Kqueue::removeAllEvents(_fd);
+
+  removeAllBuilderFd();
 
   if (_responseBuilder != NULL) {
     delete _responseBuilder;
@@ -239,7 +242,7 @@ void Connection::resetResponseBuilder(void) {
   _responseBuilder = new ErrorBuilder();
   setStatus(ON_BUILD);
 
-  buildResponse();
+  buildResponse(Event::NONE);
   if (_status == Connection::ON_SEND) {
     Kqueue::addWriteEvent(_fd);
   }
@@ -288,6 +291,17 @@ void Connection::setRequestParserLocation(Request const& request) {
 
   Location const& location = _manager.getLocation(path, host);
   _requestParser.initRequestLocationAndFullPath(location);
+}
+
+// builder에서 사용하는 모든 fd 정보를 제거
+void Connection::removeAllBuilderFd(void) {
+  if (_builderFds.size() != 0) {
+    for (std::vector<int>::const_iterator it = _builderFds.begin();
+         it != _builderFds.end(); ++it) {
+      _manager.removeManagedFd(*it);
+    }
+    _builderFds.clear();
+  }
 }
 
 // 마지막으로 호출된 시간 업데이트

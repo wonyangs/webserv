@@ -27,7 +27,7 @@ class StaticFileBuilder : public AResponseBuilder {
 
   StaticFileBuilder& operator=(StaticFileBuilder const& builder);
 
-  virtual int build(void);
+  virtual std::vector<int> const build(Event::EventType type);
   virtual void close(void);
 
  private:
