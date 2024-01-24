@@ -174,7 +174,7 @@ void Connection::selectResponseBuilder(void) {
     return;
   }
 
-  // 5. uri에 location에 포함된 cgi 확장자가 붙어있는 경우 cgi build
+  // uri에 location에 포함된 cgi 확장자가 붙어있는 경우 cgi build
   if (Config::findFileExtension(fullPath) == location.getCgiExtention()) {
     // cgi builder
     return;
