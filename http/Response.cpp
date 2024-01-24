@@ -122,8 +122,6 @@ void Response::clear(void) {
   _body.clear();
 }
 
-// Private Method
-
 // 해당 헤더 field-name의 존재를 확인하는 함수
 bool Response::isHeaderFieldNameExists(std::string const& fieldName) const {
   return (_header.find(fieldName) != _header.end());
