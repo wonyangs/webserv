@@ -32,6 +32,8 @@ class ErrorBuilder : public AResponseBuilder {
 
   ErrorBuilder& operator=(ErrorBuilder const& builder);
 
+  virtual bool isConnectionClose(void) const;
+
   virtual std::vector<int> const build(Event::EventType type);
   virtual void close(void);
 

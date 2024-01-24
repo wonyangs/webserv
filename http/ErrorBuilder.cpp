@@ -57,6 +57,13 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  * Public method
  */
 
+bool ErrorBuilder::isConnectionClose(void) const {
+  if (_statusCode / 100 == 5 or _statusCode == 400) return true;
+
+  Request const& request = getRequest();
+  return request.isConnectionClose();
+}
+
 // 새로운 이벤트가 등록되었다면 해당 fd 반환, 아니라면 -1 반환
 std::vector<int> const ErrorBuilder::build(Event::EventType type) {
   (void)type;

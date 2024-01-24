@@ -31,6 +31,8 @@ class AResponseBuilder {
   Response& getResponse(void);
   bool isDone(void) const;
 
+  virtual bool isConnectionClose(void) const;
+
   virtual std::vector<int> const build(Event::EventType type) = 0;
   virtual void close(void) = 0;
 
