@@ -118,19 +118,23 @@ std::string const Request::generateIndexPath(void) const {
 void Request::storeRequestLine(std::vector<std::string> const& result) {
   int const methodIndex = 0, requestTargetIndex = 1, httpVersionIndex = 2;
 
-  if (Config::MAX_URI_SIZE < result[requestTargetIndex].size()) {
+  setMethod(result[methodIndex]);
+  storeRequestTarget(result[requestTargetIndex]);
+  setHttpVersion(result[httpVersionIndex]);
+}
+
+void Request::storeRequestTarget(std::string const& requestTarget) {
+  if (Config::MAX_URI_SIZE < requestTarget.size()) {
     throw StatusException(
         HTTP_REQUEST_URI_TOO_LARGE,
-        "[2103] Request: storeRequestLine - path is too long");
+        "[2103] Request: storeRequestTarget - path is too long");
   }
 
   std::string path, query;
-  splitRequestTarget(path, query, result[requestTargetIndex]);
+  splitRequestTarget(path, query, requestTarget);
 
-  setMethod(result[methodIndex]);
-  setPath(path);
-  setQuery(query);
-  setHttpVersion(result[httpVersionIndex]);
+  setPath(pctDecode(path));
+  setQuery(pctDecode(query));
 }
 
 // Header field 저장
@@ -231,4 +235,29 @@ void Request::splitRequestTarget(std::string& path, std::string& query,
 
   path = requestTarget;
   query = "";
+}
+
+// 인자로 받은 16진수를 문자(char)로 변경하여 반환
+char Request::hexToChar(std::string const& hexStr) {
+  int n;
+
+  std::stringstream ss;
+  ss << std::hex << hexStr;
+  ss >> n;
+  return static_cast<char>(n);
+}
+
+// percent-encoding을 디코딩하여 반환
+std::string Request::pctDecode(std::string const& str) {
+  std::stringstream ss;
+
+  for (size_t i = 0; i < str.size(); i++) {
+    if (str[i] == '%' and i + 2 < str.size()) {
+      ss << hexToChar(str.substr(i + 1, 2));
+      i += 2;
+    } else {
+      ss << str[i];
+    }
+  }
+  return ss.str();
 }

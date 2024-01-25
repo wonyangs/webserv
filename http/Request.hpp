@@ -1,6 +1,7 @@
 #ifndef __REQUEST_HPP__
 #define __REQUEST_HPP__
 
+#include <cctype>
 #include <map>
 #include <string>
 #include <vector>
@@ -52,6 +53,7 @@ class Request {
   void print(void) const;  // debug
 
   void storeRequestLine(std::vector<std::string> const& result);
+  void storeRequestTarget(std::string const& requestTarget);
   void storeHeaderField(std::vector<std::string> const& result);
   void storeBody(std::string const& result);
   void storeFullPath(void);
@@ -71,6 +73,9 @@ class Request {
   EHttpMethod matchEHttpMethod(std::string method);
   void splitRequestTarget(std::string& path, std::string& query,
                           const std::string& requestTarget);
+
+  char hexToChar(std::string const& hexStr);
+  std::string pctDecode(std::string const& str);
 };
 
 #endif
