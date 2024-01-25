@@ -470,6 +470,12 @@ bool RequestParser::isBodyChunk(void) {
 // - 이 외의 경우 DONE
 EParsingStatus RequestParser::checkBodyParsingStatus() {
   if (isBodyChunk()) {
+    if (_request.isHeaderFieldNameExists("content-length")) {
+      throw StatusException(
+          HTTP_BAD_REQUEST,
+          "[2205] RequestParser: checkBodyParsingStatus - Content-Length field "
+          "cannot exist when Transfer-Encoding field is included.");
+    }
     return BODY_CHUNKED;
   }
 
