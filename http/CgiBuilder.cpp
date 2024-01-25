@@ -1,4 +1,5 @@
 #include "CgiBuilder.hpp"
+
 /**
  * Constructor & Destructor
  */
@@ -60,25 +61,25 @@ std::vector<int> const CgiBuilder::build(Event::EventType type) {
       break;
     default:
       throw std::runtime_error("[] CgiBuilder: build - unknown event");
-      break
+      break;
   }
   return std::vector<int>();
 }
 
 void CgiBuilder::close(void) {
   if (_pid != -1 and (_readPipeFd != -1 or _writePipeFd != -1)) {
-    kill(pid, SIGKILL);
+    kill(_pid, SIGKILL);
     _pid = -1;
   }
   if (_readPipeFd != -1) {
     Kqueue::removeReadEvent(_readPipeFd);
     ::close(_readPipeFd);
-    _readPipeFd = -1
+    _readPipeFd = -1;
   }
   if (_writePipeFd != -1) {
     Kqueue::removeWriteEvent(_writePipeFd);
     ::close(_writePipeFd);
-    _writePipeFd = -1
+    _writePipeFd = -1;
   }
 }
 
@@ -98,6 +99,15 @@ std::vector<int> const CgiBuilder::forkCgi(void) {
   if ((_pid = fork()) < 0) {
     throw std::runtime_error("[] CgiBuilder: forkCgi - fork fail");
   }
+
+  Socket::setNonBlocking(p_to_c[0]);
+  Socket::setNonBlocking(p_to_c[1]);
+  Socket::setNonBlocking(c_to_p[0]);
+  Socket::setNonBlocking(c_to_p[1]);
+
+  Request const& request = getRequest();
+  std::cout << "CGI content-length" << Util::itos(request.getBody().size())
+            << std::endl;
 
   if (_pid == 0) {
     childProcess(p_to_c, c_to_p);
@@ -141,17 +151,20 @@ void CgiBuilder::childProcess(int* const p_to_c, int* const c_to_p) {
   // cgi 있는지 + 실행권한 확인
   std::string const& cgiPath = getRequest().getLocation().getCgiPath();
 
-  if (access(cgiPath, F_OK) < 0) {
-    throw std::runtime_error("[] CgiBuilder: childProcess - cgi not found");
-  }
-  if (access(cgiPath, X_OK) < 0) {
-    throw std::runtime_error("[] CgiBuilder: childProcess - execve failed");
+  if (access(cgiPath.c_str(), F_OK) < 0 or access(cgiPath.c_str(), X_OK) < 0) {
+    std::cout << "Status: 500 Internal Server Error\r\n";
+    std::cout << "Content-Type: text/html\r\n\r\n";
+    std::cout << Config::defaultErrorPageBody(500);
+    exit(1);
   }
 
   // cgi에 인자 및 환경변수 전송
   if (execve(cgiPath.c_str(), NULL, envp) < 0) {
     freeEnvArray(envp);
-    throw std::runtime_error("[] CgiBuilder: childProcess - execve failed");
+    std::cout << "Status: 500 Internal Server Error\r\n";
+    std::cout << "Content-Type: text/html\r\n\r\n";
+    std::cout << Config::defaultErrorPageBody(500);
+    exit(1);
   }
 }
 
@@ -178,8 +191,8 @@ void CgiBuilder::handleReadEvent(void) {
     Kqueue::removeReadEvent(_readPipeFd);
     _readPipeFd = -1;
 
-    std::string body(_storageBuffer.begin(), _storageBuffer.end());
-    buildResponseContent(body);
+    std::string cgiResponse(_storageBuffer.begin(), _storageBuffer.end());
+    buildResponseContent(cgiResponse);
     _isDone = true;
   }
 }
@@ -207,7 +220,100 @@ void CgiBuilder::handleWriteEvent(void) {
  * Private method - make response
  */
 
-void CgiBuilder::buildResponseContent(std::string const& body) {}
+void CgiBuilder::buildResponseContent(std::string const& cgiResponse) {
+  bool statusCodeFlag = false;
+  int splitDelimiter = 4;
+
+  // 헤더와 본문을 분리하기 위한 위치 찾기
+  std::size_t headerEndPos = cgiResponse.find("\r\n\r\n");
+  if (headerEndPos == std::string::npos) {
+    headerEndPos = cgiResponse.find("\n\n");
+    splitDelimiter = 2;
+  }
+
+  // 헤더 구분자가 없는 경우, 전체 응답을 본문으로 간주
+  if (headerEndPos == std::string::npos) {
+    _response.appendBody(cgiResponse);
+
+    _response.setHttpVersion("HTTP/1.1");
+    _response.setStatusCode(200);
+    _response.addHeader("Content-Length", Util::itos(cgiResponse.size()));
+    _response.addHeader("Connection", "keep-alive");
+
+    // 응답 내용 구성
+    _response.makeResponseContent();
+    return;
+  }
+
+  // 헤더 추출
+  std::string headerPart = cgiResponse.substr(0, headerEndPos);
+
+  // 본문 추출
+  std::string bodyPart = cgiResponse.substr(headerEndPos + splitDelimiter);
+
+  // 헤더 파싱 및 _response 객체에 설정
+  std::istringstream headerStream(headerPart);
+  std::string headerLine;
+  while (std::getline(headerStream, headerLine)) {
+    std::size_t colonPos = headerLine.find(':');
+    if (colonPos != std::string::npos) {
+      std::string headerName = headerLine.substr(0, colonPos);
+      std::string headerValue = headerLine.substr(colonPos + 1);
+
+      // 헤더 이름과 값의 앞뒤 공백 제거
+      trim(headerName);
+      trim(headerValue);
+
+      // "Status" 헤더에서 상태 코드 추출 및 설정 -> todo: 첫줄만 읽기
+      if (headerName == "Status") {
+        std::istringstream iss(headerValue);
+        int statusCode;
+        std::string statusText;
+
+        iss >> statusCode;  // 상태 코드를 정수로 읽어들임
+        std::getline(iss, statusText);  // 상태 텍스트 읽기 (예: "OK")
+
+        if (statusCode > 0) {
+          _response.setStatusCode(statusCode);
+        }
+        statusCodeFlag = true;
+      } else {
+        // 일반 헤더 처리
+        _response.addHeader(headerName, headerValue);
+      }
+    } else {
+      // :이 발견되지 않은 경우
+      _response.addHeader(headerLine, "");
+    }
+  }
+
+  // 본문 설정
+  _response.appendBody(bodyPart);
+
+  _response.setHttpVersion("HTTP/1.1");
+  if (statusCodeFlag == false) {
+    _response.setStatusCode(200);
+  }
+  if (_response.isHeaderFieldNameExists("Content-Length") == false) {
+    _response.addHeader("Content-Length", Util::itos(bodyPart.size()));
+  }
+
+  // 응답 내용 구성
+  _response.makeResponseContent();
+}
+
+void CgiBuilder::trim(std::string& str) {
+  std::size_t start = str.find_first_not_of(" \t\r\n");
+  std::size_t end = str.find_last_not_of(" \t\r\n");
+
+  if (start == std::string::npos) {
+    // 문자열이 전부 공백인 경우
+    str.clear();
+  } else {
+    // 앞뒤 공백을 제거한 부분 문자열을 추출
+    str = str.substr(start, end - start + 1);
+  }
+}
 
 /**
  * Private method - env
@@ -220,51 +326,51 @@ char** CgiBuilder::makeEnv(void) {
   std::map<std::string, std::string> env;
 
   env["ROOT_PATH"] = location.getRootPath();
-  env["CGI_PATH"] = location.getRootPath();
+  env["CGI_PATH"] = location.getCgiPath();
   env["UPLOAD_PATH"] = location.getUploadDirPath();
 
-  if (request.isHeaderFieldNameExists("Authorization")) {
-    env["AUTH_TYPE"] = request.getHeaderFieldValues("Authorization");
+  if (request.isHeaderFieldNameExists("authorization")) {
+    env["AUTH_TYPE"] = request.getHeaderFieldValues("authorization");
   }
-  if (request.isHeaderFieldNameExists("Content-Length")) {
-    env["CONTENT_LENGTH"] = request.getBody().size();
-  }
-  if (request.isHeaderFieldNameExists("Content-Type")) {
-    env["CONTENT_TYPE"] = request.getHeaderFieldValues("Content-Type");
+
+  env["CONTENT_LENGTH"] = Util::itos(request.getBody().size());
+
+  if (request.isHeaderFieldNameExists("content-type")) {
+    env["CONTENT_TYPE"] = request.getHeaderFieldValues("content-type");
   }
 
   env["GATEWAY_INTERFACE"] = "CGI/1.1";
 
-  if (request.isHeaderFieldNameExists("Accept")) {
-    env["HTTP_ACCEPT"] = request.getHeaderFieldValues("Accept");
+  if (request.isHeaderFieldNameExists("accept")) {
+    env["HTTP_ACCEPT"] = request.getHeaderFieldValues("accept");
   }
-  if (request.isHeaderFieldNameExists("Accept-Charset")) {
-    env["HTTP_ACCEPT_CHARSET"] = request.getHeaderFieldValues("Accept-Charset");
+  if (request.isHeaderFieldNameExists("accept-charset")) {
+    env["HTTP_ACCEPT_CHARSET"] = request.getHeaderFieldValues("accept-charset");
   }
-  if (request.isHeaderFieldNameExists("Accept-Encoding")) {
+  if (request.isHeaderFieldNameExists("accept-encoding")) {
     env["HTTP_ACCEPT_ENCODING"] =
-        request.getHeaderFieldValues("Accept-Encoding");
+        request.getHeaderFieldValues("accept-encoding");
   }
-  if (request.isHeaderFieldNameExists("Accept-Language")) {
+  if (request.isHeaderFieldNameExists("accept-language")) {
     env["HTTP_ACCEPT_LANGUAGE"] =
-        request.getHeaderFieldValues("Accept-Language");
+        request.getHeaderFieldValues("accept-language");
   }
-  if (request.isHeaderFieldNameExists("Forwarded")) {
-    env["HTTP_FORWARDED"] = request.getHeaderFieldValues("Forwarded");
+  if (request.isHeaderFieldNameExists("forwarded")) {
+    env["HTTP_FORWARDED"] = request.getHeaderFieldValues("forwarded");
   }
-  if (request.isHeaderFieldNameExists("Host")) {
-    env["HTTP_HOST"] = request.getHeaderFieldValues("Host");
+  if (request.isHeaderFieldNameExists("host")) {
+    env["HTTP_HOST"] = request.getHeaderFieldValues("host");
   }
-  if (request.isHeaderFieldNameExists("Proxy-Authorization")) {
+  if (request.isHeaderFieldNameExists("proxy-authorization")) {
     env["HTTP_PROXY_AUTHORIZATION"] =
-        request.getHeaderFieldValues("Proxy-Authorization");
+        request.getHeaderFieldValues("proxy-authorization");
   }
-  if (request.isHeaderFieldNameExists("User-Agent")) {
-    env["HTTP_USER_AGENT"] = request.getHeaderFieldValues("User-Agent");
+  if (request.isHeaderFieldNameExists("user-agent")) {
+    env["HTTP_USER_AGENT"] = request.getHeaderFieldValues("user-agent");
   }
 
-  env["PATH_INFO"] = "/";                               // ????
-  env["QUERY_STRING"] = urlDecode(request.getQuery());  // Todo: decoding
+  env["PATH_INFO"] = request.getFullPath();  // Todo: PATH_INFO?
+  env["QUERY_STRING"] = urlDecode(request.getQuery());
   // env["REMOTE_ADDR"] = Todo: 클라이언트 IP 주소
   // env["REMOTE_HOST"] = Todo: 클라이언트 IP 주소
   // env["REMOTE_USER"] = "null"
@@ -278,6 +384,8 @@ char** CgiBuilder::makeEnv(void) {
     case HTTP_DELETE:
       env["REQUEST_METHOD"] = "DELETE";
       break;
+    default:
+      break;
       // case HTTP_HEAD:
       //   env["REQUEST_METHOD"] = "HEAD";
       //   break;
@@ -288,8 +396,18 @@ char** CgiBuilder::makeEnv(void) {
   env["SERVER_PROTOCOL"] = "HTTP/1.1";
   env["SERVER_SOFTWARE"] = "webserv/1.0";
 
-  if (request.isHeaderFieldNameExists("Cookie")) {
-    env["HTTP_COOKIE"] = request.getHeaderFieldValues("Cookie");
+  if (request.isHeaderFieldNameExists("cookie")) {
+    env["HTTP_COOKIE"] = request.getHeaderFieldValues("cookie");
+  }
+
+  std::map<std::string, std::string> headers = getRequest().getHeader();
+  std::map<std::string, std::string>::const_iterator it = headers.begin();
+  for (; it != headers.end(); ++it) {
+    std::string const& key = it->first;
+
+    if (key.length() >= 2 and key.substr(0, 2) == "x-") {
+      env[key] = request.getHeaderFieldValues(it->second);
+    }
   }
 
   return createEnvArray(env);

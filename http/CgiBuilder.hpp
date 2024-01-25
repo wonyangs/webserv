@@ -4,12 +4,14 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <iostream>
 #include <map>
 #include <stdexcept>
 #include <string>
 
-#include "../config/Location.hpp";
+#include "../config/Location.hpp"
 #include "../core/Kqueue.hpp"
+#include "../core/Socket.hpp"
 #include "AResponseBuilder.hpp"
 
 class CgiBuilder : public AResponseBuilder {
@@ -22,6 +24,7 @@ class CgiBuilder : public AResponseBuilder {
   std::vector<u_int8_t> _storageBuffer;
 
  public:
+  CgiBuilder(Request const& request);
   CgiBuilder(CgiBuilder const& builder);
   virtual ~CgiBuilder(void);
 
@@ -36,16 +39,17 @@ class CgiBuilder : public AResponseBuilder {
   std::vector<int> const forkCgi(void);
   void parentProcess(int* const p_to_c, int* const c_to_p);
   void childProcess(int* const p_to_c, int* const c_to_p);
-  void makeEnv(void);
 
   void handleReadEvent(void);
   void handleWriteEvent(void);
 
-  virtual void buildResponseContent(std::string const& body);
+  virtual void buildResponseContent(std::string const& cgiResponse);
+  void trim(std::string& str);
 
   char** makeEnv(void);
   char** createEnvArray(std::map<std::string, std::string> const& env);
   void freeEnvArray(char** envp);
+  std::string const urlDecode(std::string const& encoded);
 
   CgiBuilder(void);
 };
