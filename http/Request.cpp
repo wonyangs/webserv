@@ -2,8 +2,7 @@
 
 // Constructor & Destructor
 
-Request::Request(void)
-    : _method(HTTP_NONE), _locationFlag(false), _isConnectionClose(false) {}
+Request::Request(void) : _method(HTTP_NONE), _locationFlag(false) {}
 
 Request::Request(Request const& request) { *this = request; }
 
@@ -23,7 +22,6 @@ Request& Request::operator=(Request const& request) {
     _location = request._location;
     _locationFlag = request._locationFlag;
     _fullPath = request._fullPath;
-    _isConnectionClose = request._isConnectionClose;
   }
   return *this;
 }
@@ -48,7 +46,6 @@ void Request::print() const {
   std::cout << "Body: " << _body << std::endl;
   std::cout << "Location uri: " << _location.getUri() << std::endl;
   std::cout << "fullPath: " << _fullPath << std::endl;
-  std::cout << "isConnectionClose: " << _isConnectionClose << std::endl;
 }
 
 // Public Method - getter
@@ -90,6 +87,30 @@ std::string const& Request::getHeaderFieldValues(
   std::map<std::string, std::string>::const_iterator it =
       _header.find(fieldName);
   return it->second;
+}
+
+// 요청에 알맞는 host 반환
+// - 멤버 변수가 아님
+// - host 문자열에 처음 나오는 : 을 기준으로 앞만 host로 판단
+// - HTTP/1.1 요청일 때 host가 존재하지 않는 경우 예외 발생
+std::string const Request::getHost(void) const {
+  if (isHeaderFieldNameExists("host") == false) {
+    if (_httpVersion == "HTTP/1.1") {
+      throw StatusException(
+          HTTP_BAD_REQUEST,
+          "[2401] Request: getHost - Host header is required on HTTP/1.1");
+    }
+    return "";
+  }
+
+  std::string const& fieldValue = getHeaderFieldValues("host");
+  size_t pos = fieldValue.find(":");
+
+  if (pos != std::string::npos) {
+    return fieldValue.substr(0, pos);
+  }
+
+  return fieldValue;
 }
 
 // Public Method - setter
@@ -160,9 +181,6 @@ void Request::storeHeaderField(std::vector<std::string> const& result) {
   }
 
   _header.insert(std::pair<std::string, std::string>(fieldName, fieldValue));
-
-  if (fieldName == "connection" and fieldValue == "close")
-    _isConnectionClose = true;
 }
 
 // body 저장
@@ -193,7 +211,15 @@ bool Request::isHeaderFieldNameExists(std::string const& fieldName) const {
   return (_header.find(fieldName) != _header.end());
 }
 
-bool Request::isConnectionClose(void) const { return _isConnectionClose; }
+bool Request::isConnectionClose(void) const {
+  if (_httpVersion == "HTTP/1.0") return true;
+
+  if (isHeaderFieldNameExists("connection") and
+      getHeaderFieldValues("connection") == "close")
+    return true;
+
+  return false;
+}
 
 // 멤버 변수를 비어있는 상태로 초기화
 void Request::clear() {
@@ -205,7 +231,6 @@ void Request::clear() {
   _body.clear();
   _locationFlag = false;
   _fullPath.clear();
-  _isConnectionClose = false;
 }
 
 // Private Method - setter
@@ -233,7 +258,6 @@ void Request::setHttpVersion(std::string const& httpVersion) {
   }
 
   _httpVersion = httpVersion;
-  if (_httpVersion == "HTTP/1.0") _isConnectionClose = true;
 }
 
 void Request::setFullPath(std::string const& fullPath) { _fullPath = fullPath; }

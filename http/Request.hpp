@@ -25,8 +25,6 @@ class Request {
   Location _location;
   std::string _fullPath;
 
-  bool _isConnectionClose;
-
  public:
   Request(void);
   Request(Request const& request);
@@ -43,8 +41,8 @@ class Request {
   Location const& getLocation(void) const;
   bool getLocationFlag(void) const;
   std::string const& getFullPath(void) const;
-
   std::string const& getHeaderFieldValues(std::string const& fieldName) const;
+  std::string const getHost(void) const;
 
   void setLocation(Location const& location);
 
