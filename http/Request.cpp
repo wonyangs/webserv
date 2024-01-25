@@ -79,6 +79,7 @@ bool Request::getLocationFlag(void) const { return _locationFlag; }
 
 std::string const& Request::getFullPath(void) const { return _fullPath; }
 
+// host, connection의 field-value는 소문자로 저장되어 있음
 std::string const& Request::getHeaderFieldValues(
     std::string const& fieldName) const {
   if (isHeaderFieldNameExists(fieldName) == false) {
@@ -145,11 +146,19 @@ void Request::storeRequestTarget(std::string const& requestTarget) {
 
 // Header field 저장
 // - result 배열에는 fieldName과 fieldValue가 순서대로 저장되어 있다고 가정
+// - Request 객체에 이미 존재하는 field-name일 경우 예외 발생
 void Request::storeHeaderField(std::vector<std::string> const& result) {
   int const fieldNameIndex = 0, fieldValueIndex = 1;
 
   std::string const& fieldName = result[fieldNameIndex];
   std::string const& fieldValue = result[fieldValueIndex];
+
+  if (isHeaderFieldNameExists(fieldName)) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2202] Request: storeHeaderField - duplicate field-name");
+  }
+
   _header.insert(std::pair<std::string, std::string>(fieldName, fieldValue));
 
   if (fieldName == "connection" and fieldValue == "close")
@@ -179,6 +188,7 @@ void Request::storeFullPath(void) {
 }
 
 // 해당 헤더 field-name의 존재를 확인하는 함수
+// - field-name은 소문자로 저장되어 있음
 bool Request::isHeaderFieldNameExists(std::string const& fieldName) const {
   return (_header.find(fieldName) != _header.end());
 }

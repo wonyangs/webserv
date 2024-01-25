@@ -341,7 +341,7 @@ void RequestParser::setupBodyParse(void) {
 // - 한 줄의 입력을 처리
 // - size가 2가 아닌 경우 예외 발생
 // - field-name의 길이가 1 미만이거나 Whitespace로 끝나는 경우 예외 발생
-// - Request 객체에 이미 존재하는 field-name일 경우 예외 발생
+// - host 또는 connection인 경우 fieldValue를 소문자로 저장
 std::vector<std::string> RequestParser::processHeaderField() {
   removeCRLF(_header);
 
@@ -363,14 +363,12 @@ std::vector<std::string> RequestParser::processHeaderField() {
         "allowed between the header field-name and colon");
   }
 
-  if (_request.isHeaderFieldNameExists(result[fieldNameIndex])) {
-    throw StatusException(
-        HTTP_BAD_REQUEST,
-        "[2202] RequestParser: processHeaderField - duplicate field-name");
-  }
-
-  toLowerCase(result[fieldNameIndex]);
   result[fieldValueIndex] = trim(result[fieldValueIndex]);
+  toLowerCase(result[fieldNameIndex]);
+  if (result[fieldNameIndex] == "host" or
+      result[fieldNameIndex] == "connection")
+    toLowerCase(result[fieldValueIndex]);
+
   return result;
 }
 
