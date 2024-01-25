@@ -54,6 +54,11 @@ void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
     setupBodyParse();
 
     if (_status == DONE) return;
+    if (_request.getMethod() != HTTP_POST) {
+      throw StatusException(
+          HTTP_BAD_REQUEST,
+          "[2008] RequestParser: parse - only post methods can handle payload");
+    }
   }
 
   for (size_t i = 0; i < _storageBuffer.size(); i++) {
