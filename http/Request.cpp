@@ -213,7 +213,7 @@ EHttpMethod Request::matchEHttpMethod(std::string method) {
   if (method == "GET") return HTTP_GET;
   if (method == "POST") return HTTP_POST;
   if (method == "DELETE") return HTTP_DELETE;
-  throw StatusException(HTTP_NOT_ALLOWED,
+  throw StatusException(HTTP_NOT_IMPLEMENTED,
                         "[2101] Request: matchEHttpMethod - invalid method");
 }
 
