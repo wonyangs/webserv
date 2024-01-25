@@ -76,6 +76,7 @@ class Request {
 
   bool isHex(char ch);
   bool isValidRequestTarget(std::string const& requestTarget);
+  bool isValidHTTPVersionFormat(std::string const& httpVersion);
   char hexToChar(std::string const& hexStr);
   std::string pctDecode(std::string const& str);
 };

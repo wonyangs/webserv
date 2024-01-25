@@ -209,6 +209,19 @@ void Request::setPath(std::string const& path) { _path = path; }
 void Request::setQuery(std::string const& query) { _query = query; }
 
 void Request::setHttpVersion(std::string const& httpVersion) {
+  if (isValidHTTPVersionFormat(httpVersion) == false) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2006] Request: setHttpVersion - invalid format: " + httpVersion);
+  }
+
+  if (httpVersion != "HTTP/1.0" and httpVersion != "HTTP/1.1") {
+    throw StatusException(
+        HTTP_VERSION_NOT_SUPPORTED,
+        "[2007] Request: setHttpVersion - version not supported: " +
+            httpVersion);
+  }
+
   _httpVersion = httpVersion;
   if (_httpVersion == "HTTP/1.0") _isConnectionClose = true;
 }
@@ -265,6 +278,16 @@ bool Request::isValidRequestTarget(std::string const& requestTarget) {
 
     return false;
   }
+  return true;
+}
+
+bool Request::isValidHTTPVersionFormat(std::string const& httpVersion) {
+  if (httpVersion.size() != 8) return false;
+  if (httpVersion.substr(0, 5) != "HTTP/") return false;
+  if (isdigit(httpVersion[5]) == false or httpVersion[6] != '.' or
+      isdigit(httpVersion[7]) == false)
+    return false;
+
   return true;
 }
 
