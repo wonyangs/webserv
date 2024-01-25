@@ -130,6 +130,12 @@ void Request::storeRequestTarget(std::string const& requestTarget) {
         "[2103] Request: storeRequestTarget - path is too long");
   }
 
+  if (isValidRequestTarget(requestTarget) == false) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2104] Request: storeRequestTarget - request Target is invalid");
+  }
+
   std::string path, query;
   splitRequestTarget(path, query, requestTarget);
 
@@ -235,6 +241,31 @@ void Request::splitRequestTarget(std::string& path, std::string& query,
 
   path = requestTarget;
   query = "";
+}
+
+bool Request::isHex(char ch) {
+  return ('0' <= ch and ch <= '9') or ('a' <= ch and ch <= 'f') or
+         ('A' <= ch and ch <= 'F');
+}
+
+bool Request::isValidRequestTarget(std::string const& requestTarget) {
+  size_t size = requestTarget.size();
+  if (requestTarget.size() < 1 or requestTarget.front() != '/') return false;
+
+  std::string const& others = "-._~!$&'()*+,;=:@/";
+  for (size_t i = 0; i < size; i++) {
+    char ch = requestTarget[i];
+
+    if (isalpha(ch) or isdigit(ch) or others.find(ch) != std::string::npos)
+      continue;
+
+    if (ch == '%' and i + 2 < size) {
+      if (isHex(requestTarget[i + 1]) and isHex(requestTarget[i + 2])) continue;
+    }
+
+    return false;
+  }
+  return true;
 }
 
 // 인자로 받은 16진수를 문자(char)로 변경하여 반환

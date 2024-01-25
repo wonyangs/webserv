@@ -74,6 +74,8 @@ class Request {
   void splitRequestTarget(std::string& path, std::string& query,
                           const std::string& requestTarget);
 
+  bool isHex(char ch);
+  bool isValidRequestTarget(std::string const& requestTarget);
   char hexToChar(std::string const& hexStr);
   std::string pctDecode(std::string const& str);
 };
