@@ -46,6 +46,7 @@ class ErrorBuilder : public AResponseBuilder {
   void generateDefaultPage(void);
 
   virtual void buildResponseContent(std::string const& body);
+  std::string makeAllowHeaderValue(void);
 };
 
 #endif

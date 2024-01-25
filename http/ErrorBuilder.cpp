@@ -181,7 +181,31 @@ void ErrorBuilder::buildResponseContent(std::string const& body) {
   isConnectionClose() ? _response.addHeader("Connection", "close")
                       : _response.addHeader("Connection", "keep-alive");
 
+  if (_statusCode == 405) _response.addHeader("Allow", makeAllowHeaderValue());
+
   _response.appendBody(body);
 
   _response.makeResponseContent();
+}
+
+std::string ErrorBuilder::makeAllowHeaderValue(void) {
+  Location const& location = getRequest().getLocation();
+
+  std::stringstream ss;
+  bool isFirst = true;
+
+  if (location.isAllowMethod(HTTP_GET)) {
+    ss << "GET";
+    isFirst = false;
+  }
+  if (location.isAllowMethod(HTTP_POST)) {
+    ss << (isFirst ? "POST" : ", POST");
+    isFirst = false;
+  }
+  if (location.isAllowMethod(HTTP_DELETE)) {
+    ss << (isFirst ? "DELETE" : ", DELETE");
+    isFirst = false;
+  }
+
+  return ss.str();
 }
