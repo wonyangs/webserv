@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+    <title>파일 업로드</title>
+</head>
+<body>
+    <h2>파일 업로드</h2>
+    <form action="http://localhost:8080/cgi-bin/upload.py" method="post" enctype="multipart/form-data">
+        <label for="fileUpload">파일 선택:</label>
+        <input type="file" id="fileUpload" name="fileUpload"><br><br>
+        <input type="submit" value="업로드">
+    </form>
+</body>
+</html>
