@@ -63,6 +63,7 @@ class RequestParser {
   bool isStorageBufferNotEmpty(void);
 
  private:
+  void setBodyLength(size_t bodyLength);
   void setBodyLength(std::string const& bodyLengthString);
   void setChunkSize(std::string const& chunkSizeString);
   void setStorageBuffer(size_t startIdx, u_int8_t const* buffer,

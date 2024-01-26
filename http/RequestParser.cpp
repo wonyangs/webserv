@@ -97,32 +97,50 @@ bool RequestParser::isStorageBufferNotEmpty() {
 
 // Private Method - setter
 
+void RequestParser::setBodyLength(size_t bodyLength) {
+  size_t maxBodySize = _request.getLocation().getMaxBodySize();
+  if (maxBodySize < bodyLength) {
+    throw StatusException(
+        HTTP_REQUEST_ENTITY_TOO_LARGE,
+        "[2009] RequestParser: setBodyLength - body content too large");
+  }
+
+  _bodyLength = bodyLength;
+}
+
 // bodyLength 저장
 // - 만약 bodyLengthString 을 size_t로 변환 실패할 경우 예외 발생
 // - TODO: config에 있는 client_max_body_size 예외 처리 필요
 void RequestParser::setBodyLength(std::string const& bodyLengthString) {
+  size_t bodyLength;
+
   if (bodyLengthString.size() < 1 or bodyLengthString[0] == '-') {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2001] RequestParser: setBodyLength - invalid type: " +
-        bodyLengthString);
+            bodyLengthString);
   }
 
   std::stringstream ss;
   ss << bodyLengthString;
-  ss >> _bodyLength;
+  ss >> bodyLength;
 
   if (ss.fail() or !ss.eof()) {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2002] RequestParser: setBodyLength - invalid type: " +
-        bodyLengthString);
+            bodyLengthString);
   }
+
+  setBodyLength(bodyLength);
 }
 
 void RequestParser::setChunkSize(std::string const& chunkSizeString) {
   if (chunkSizeString.size() < 1 or chunkSizeString[0] == '-') {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2003] RequestParser: setChunkSize - invalid type: " +
-        chunkSizeString);
+            chunkSizeString);
   }
 
   std::stringstream ss;
@@ -130,9 +148,10 @@ void RequestParser::setChunkSize(std::string const& chunkSizeString) {
   ss >> std::hex >> _chunkSize;
 
   if (ss.fail() or !ss.eof()) {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2004] RequestParser: setChunkSize - invalid type: " +
-        chunkSizeString);
+            chunkSizeString);
   }
 }
 
@@ -387,8 +406,7 @@ void RequestParser::processBodyChunkSize() {
 
   std::string const& chunkSizeString = result[0];
   setChunkSize(chunkSizeString);
-
-  _bodyLength += _chunkSize;
+  setBodyLength(_bodyLength + _chunkSize);
 }
 
 // body 후처리

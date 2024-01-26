@@ -58,7 +58,8 @@ ErrorBuilder& ErrorBuilder::operator=(ErrorBuilder const& builder) {
  */
 
 bool ErrorBuilder::isConnectionClose(void) const {
-  if (_statusCode / 100 == 5 or _statusCode == 400) return true;
+  if (_statusCode / 100 == 5 or _statusCode == 400 or _statusCode == 413)
+    return true;
 
   Request const& request = getRequest();
   return request.isConnectionClose();
