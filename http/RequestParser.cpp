@@ -49,11 +49,16 @@ void RequestParser::initRequestLocationAndFullPath(Location const& location) {
 // - 이후 buffer 값 파싱
 // - 파싱 도중 HEADER_FIELD_END 또는 DONE이 되었을 경우,
 //   남은 octets은 _storageBuffer에 저장
-void RequestParser::parse(u_int8_t const* buffer, ssize_t bytesRead) {
+void RequestParser::parse(octet_t const* buffer, ssize_t bytesRead) {
   if (_status == HEADER_FIELD_END) {
     setupBodyParse();
 
     if (_status == DONE) return;
+    if (_request.getMethod() != HTTP_POST) {
+      throw StatusException(
+          HTTP_BAD_REQUEST,
+          "[2008] RequestParser: parse - only post methods can handle payload");
+    }
   }
 
   for (size_t i = 0; i < _storageBuffer.size(); i++) {
@@ -92,32 +97,50 @@ bool RequestParser::isStorageBufferNotEmpty() {
 
 // Private Method - setter
 
+void RequestParser::setBodyLength(size_t bodyLength) {
+  size_t maxBodySize = _request.getLocation().getMaxBodySize();
+  if (maxBodySize < bodyLength) {
+    throw StatusException(
+        HTTP_REQUEST_ENTITY_TOO_LARGE,
+        "[2009] RequestParser: setBodyLength - body content too large");
+  }
+
+  _bodyLength = bodyLength;
+}
+
 // bodyLength 저장
 // - 만약 bodyLengthString 을 size_t로 변환 실패할 경우 예외 발생
 // - TODO: config에 있는 client_max_body_size 예외 처리 필요
 void RequestParser::setBodyLength(std::string const& bodyLengthString) {
+  size_t bodyLength;
+
   if (bodyLengthString.size() < 1 or bodyLengthString[0] == '-') {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2001] RequestParser: setBodyLength - invalid type: " +
-        bodyLengthString);
+            bodyLengthString);
   }
 
   std::stringstream ss;
   ss << bodyLengthString;
-  ss >> _bodyLength;
+  ss >> bodyLength;
 
   if (ss.fail() or !ss.eof()) {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2002] RequestParser: setBodyLength - invalid type: " +
-        bodyLengthString);
+            bodyLengthString);
   }
+
+  setBodyLength(bodyLength);
 }
 
 void RequestParser::setChunkSize(std::string const& chunkSizeString) {
   if (chunkSizeString.size() < 1 or chunkSizeString[0] == '-') {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2003] RequestParser: setChunkSize - invalid type: " +
-        chunkSizeString);
+            chunkSizeString);
   }
 
   std::stringstream ss;
@@ -125,17 +148,18 @@ void RequestParser::setChunkSize(std::string const& chunkSizeString) {
   ss >> std::hex >> _chunkSize;
 
   if (ss.fail() or !ss.eof()) {
-    throw std::invalid_argument(
+    throw StatusException(
+        HTTP_BAD_REQUEST,
         "[2004] RequestParser: setChunkSize - invalid type: " +
-        chunkSizeString);
+            chunkSizeString);
   }
 }
 
 // storageBuffer 저장
 // - 남아있는 값에서 startIdx 이전 값들 삭제 후 buffer 값 추가
-void RequestParser::setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
+void RequestParser::setStorageBuffer(size_t startIdx, octet_t const* buffer,
                                      ssize_t bytesRead) {
-  std::vector<u_int8_t> tmp;
+  std::vector<octet_t> tmp;
 
   for (size_t i = startIdx; i < _storageBuffer.size(); i++) {
     tmp.push_back(_storageBuffer[i]);
@@ -151,7 +175,7 @@ void RequestParser::setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
 // Private Method
 
 // octet 파싱
-void RequestParser::parseOctet(u_int8_t const& octet) {
+void RequestParser::parseOctet(octet_t const& octet) {
   switch (_status % 10) {
     case READY:
       _status = REQUEST_LINE;
@@ -181,7 +205,7 @@ void RequestParser::parseOctet(u_int8_t const& octet) {
 
 // RequestLine 파싱
 // - CRLF가 입력되었을 경우 입력이 끝났다고 정의
-void RequestParser::parseRequestLine(u_int8_t const& octet) {
+void RequestParser::parseRequestLine(octet_t const& octet) {
   _requestLine.push_back(octet);
 
   if (octet == '\n' and isEndWithCRLF(_requestLine)) {
@@ -199,7 +223,7 @@ void RequestParser::parseRequestLine(u_int8_t const& octet) {
 // HeaderField 파싱
 // - CRLF가 입력되었을 경우 header field 한 줄의 입력이 끝났다고 정의
 // - 단, CRLF만 입력되었을 경우는 header field의 입력 종료로 처리
-void RequestParser::parseHeaderField(u_int8_t const& octet) {
+void RequestParser::parseHeaderField(octet_t const& octet) {
   _header.push_back(octet);
 
   if (octet == '\n' and isEndWithCRLF(_header)) {
@@ -218,7 +242,7 @@ void RequestParser::parseHeaderField(u_int8_t const& octet) {
 
 // body 파싱
 // - bodyLength 만큼 저장되었을 경우 status를 DONE으로 변경
-void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
+void RequestParser::parseBodyContentLength(octet_t const& octet) {
   _body.push_back(octet);
 
   if (_body.size() == _bodyLength) {
@@ -229,7 +253,7 @@ void RequestParser::parseBodyContentLength(u_int8_t const& octet) {
 }
 
 // chunk body 파싱
-void RequestParser::parseBodyChunked(u_int8_t const& octet) {
+void RequestParser::parseBodyChunked(octet_t const& octet) {
   switch (_status) {
     case BODY_CHUNKED:
       _status = BODY_CHUNK_SIZE;
@@ -254,7 +278,7 @@ void RequestParser::parseBodyChunked(u_int8_t const& octet) {
 // - chunk-size가 0인 경우 last-chunk로 처리 후
 //   입력받은 body를 request 객체에 저장
 // - chunk-size가 1 이상인 경우 chunk-data를 읽도록 상태 변경
-void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
+void RequestParser::parseBodyChunkSize(octet_t const& octet) {
   _chunkSizeBuffer.push_back(octet);
 
   if (octet == '\n' and isEndWithCRLF(_chunkSizeBuffer)) {
@@ -271,7 +295,7 @@ void RequestParser::parseBodyChunkSize(u_int8_t const& octet) {
 
 // chunk body에 대한 chunk-data 파싱
 // - chunk-size 만큼 chunk-data를 읽은 후 CRLF가 입력되지 않았을 경우 예외 발생
-void RequestParser::parseBodyChunkData(u_int8_t const& octet) {
+void RequestParser::parseBodyChunkData(octet_t const& octet) {
   size_t const crlfLength = 2;
 
   size_t const bodySize = _body.size();
@@ -293,7 +317,7 @@ void RequestParser::parseBodyChunkData(u_int8_t const& octet) {
 // chunk body에 대한 Trailer 파싱
 // - Trailer는 무시
 // - 형식 검사를 하지 않고 CRLF만 들어올 경우 종료
-void RequestParser::parseBodyChunkTrailer(u_int8_t const& octet) {
+void RequestParser::parseBodyChunkTrailer(octet_t const& octet) {
   _header.push_back(octet);
 
   if (octet == '\n' and isEndWithCRLF(_header)) {
@@ -341,7 +365,7 @@ void RequestParser::setupBodyParse(void) {
 // - 한 줄의 입력을 처리
 // - size가 2가 아닌 경우 예외 발생
 // - field-name의 길이가 1 미만이거나 Whitespace로 끝나는 경우 예외 발생
-// - Request 객체에 이미 존재하는 field-name일 경우 예외 발생
+// - host 또는 connection인 경우 fieldValue를 소문자로 저장
 std::vector<std::string> RequestParser::processHeaderField() {
   removeCRLF(_header);
 
@@ -363,14 +387,12 @@ std::vector<std::string> RequestParser::processHeaderField() {
         "allowed between the header field-name and colon");
   }
 
-  if (_request.isHeaderFieldNameExists(result[fieldNameIndex])) {
-    throw StatusException(
-        HTTP_BAD_REQUEST,
-        "[2202] RequestParser: processHeaderField - duplicate field-name");
-  }
-
-  toLowerCase(result[fieldNameIndex]);
   result[fieldValueIndex] = trim(result[fieldValueIndex]);
+  toLowerCase(result[fieldNameIndex]);
+  if (result[fieldNameIndex] == "host" or
+      result[fieldNameIndex] == "connection")
+    toLowerCase(result[fieldValueIndex]);
+
   return result;
 }
 
@@ -384,8 +406,7 @@ void RequestParser::processBodyChunkSize() {
 
   std::string const& chunkSizeString = result[0];
   setChunkSize(chunkSizeString);
-
-  _bodyLength += _chunkSize;
+  setBodyLength(_bodyLength + _chunkSize);
 }
 
 // body 후처리
@@ -467,6 +488,12 @@ bool RequestParser::isBodyChunk(void) {
 // - 이 외의 경우 DONE
 EParsingStatus RequestParser::checkBodyParsingStatus() {
   if (isBodyChunk()) {
+    if (_request.isHeaderFieldNameExists("content-length")) {
+      throw StatusException(
+          HTTP_BAD_REQUEST,
+          "[2205] RequestParser: checkBodyParsingStatus - Content-Length field "
+          "cannot exist when Transfer-Encoding field is included.");
+    }
     return BODY_CHUNKED;
   }
 
@@ -484,7 +511,7 @@ bool RequestParser::isInvalidFormatSize(std::vector<std::string> const& result,
 
 // 인자로 받은 vec이 CRLF로 끝나는지 여부 반환
 // - vec의 size가 2 미만인 경우 false로 처리
-bool RequestParser::isEndWithCRLF(std::vector<u_int8_t> const& vec) {
+bool RequestParser::isEndWithCRLF(std::vector<octet_t> const& vec) {
   if (vec.size() < 2) {
     return false;
   }
@@ -499,7 +526,7 @@ bool RequestParser::isEndWithCRLF(std::vector<u_int8_t> const& vec) {
 // vec에서 CRLF 제거
 // - 인자로 받은 vec이 CRLF로 끝난다고 가정
 // - vec의 size가 2 미만인 경우 2000 예외 발생
-void RequestParser::removeCRLF(std::vector<u_int8_t>& vec) {
+void RequestParser::removeCRLF(std::vector<octet_t>& vec) {
   if (vec.size() < 2) {
     throw std::runtime_error(
         "[2000] RequestParser: removeCRLF - CRLF does not exist for removal.");

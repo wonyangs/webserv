@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "../utils/Config.hpp"
 #include "../utils/StatusException.hpp"
 #include "Request.hpp"
 
@@ -35,12 +36,12 @@ class RequestParser {
   Request _request;
 
   enum EParsingStatus _status;
-  std::vector<u_int8_t> _requestLine;
-  std::vector<u_int8_t> _header;
-  std::vector<u_int8_t> _body;
+  std::vector<octet_t> _requestLine;
+  std::vector<octet_t> _header;
+  std::vector<octet_t> _body;
 
-  std::vector<u_int8_t> _storageBuffer;
-  std::vector<u_int8_t> _chunkSizeBuffer;
+  std::vector<octet_t> _storageBuffer;
+  std::vector<octet_t> _chunkSizeBuffer;
 
   size_t _chunkSize;
   size_t _bodyLength;
@@ -57,25 +58,26 @@ class RequestParser {
 
   void initRequestLocationAndFullPath(Location const& location);
 
-  void parse(u_int8_t const* buffer, ssize_t bytesRead);
+  void parse(octet_t const* buffer, ssize_t bytesRead);
   void clear();
 
   bool isStorageBufferNotEmpty(void);
 
  private:
+  void setBodyLength(size_t bodyLength);
   void setBodyLength(std::string const& bodyLengthString);
   void setChunkSize(std::string const& chunkSizeString);
-  void setStorageBuffer(size_t startIdx, u_int8_t const* buffer,
+  void setStorageBuffer(size_t startIdx, octet_t const* buffer,
                         ssize_t bytesRead);
 
-  void parseOctet(u_int8_t const& octet);
-  void parseRequestLine(u_int8_t const& octet);
-  void parseHeaderField(u_int8_t const& octet);
-  void parseBodyContentLength(u_int8_t const& octet);
-  void parseBodyChunked(u_int8_t const& octet);
-  void parseBodyChunkSize(u_int8_t const& octet);
-  void parseBodyChunkData(u_int8_t const& octet);
-  void parseBodyChunkTrailer(u_int8_t const& octet);
+  void parseOctet(octet_t const& octet);
+  void parseRequestLine(octet_t const& octet);
+  void parseHeaderField(octet_t const& octet);
+  void parseBodyContentLength(octet_t const& octet);
+  void parseBodyChunked(octet_t const& octet);
+  void parseBodyChunkSize(octet_t const& octet);
+  void parseBodyChunkData(octet_t const& octet);
+  void parseBodyChunkTrailer(octet_t const& octet);
 
   void setupBodyParse(void);
 
@@ -91,8 +93,8 @@ class RequestParser {
   bool isBodyChunk(void);
   EParsingStatus checkBodyParsingStatus(void);
   bool isInvalidFormatSize(std::vector<std::string> const& result, size_t size);
-  bool isEndWithCRLF(std::vector<u_int8_t> const& vec);
-  void removeCRLF(std::vector<u_int8_t>& vec);
+  bool isEndWithCRLF(std::vector<octet_t> const& vec);
+  void removeCRLF(std::vector<octet_t>& vec);
   void toLowerCase(std::string& str);
   std::string trim(std::string const& str);
   bool isWhitespace(int c);

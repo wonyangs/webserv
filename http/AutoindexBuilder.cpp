@@ -38,9 +38,8 @@ std::vector<int> const AutoindexBuilder::build(Event::EventType type) {
   EHttpMethod const& method = request.getMethod();
 
   if (method != HTTP_GET and method != HTTP_POST) {
-    throw StatusException(
-        HTTP_NOT_ALLOWED,
-        "[5200] AutoindexBuilder: build - http method not allowed");
+    throw StatusException(HTTP_FORBIDDEN,
+                          "[5200] AutoindexBuilder: build - forbidden");
   }
 
   Location const& location = request.getLocation();
