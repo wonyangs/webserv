@@ -57,7 +57,7 @@ void Connection::readSocket(void) {
     setStatus(ON_RECV);
   }
 
-  u_int8_t buffer[BUFFER_SIZE];
+  octet_t buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
   ssize_t bytesRead = read(_fd, buffer, sizeof(buffer));
 
@@ -83,7 +83,7 @@ void Connection::readStorage(void) {
     setStatus(ON_RECV);
   }
 
-  u_int8_t tmp[1];
+  octet_t tmp[1];
 
   parseRequest(tmp, 0);
   updateLastCallTime();
@@ -91,7 +91,7 @@ void Connection::readStorage(void) {
 
 // RequestParser에서 요청 읽기
 // - bytesRead를 0으로 하면 storage에 남아있는 내용을 파싱
-void Connection::parseRequest(u_int8_t const* buffer, ssize_t bytesRead) {
+void Connection::parseRequest(octet_t const* buffer, ssize_t bytesRead) {
   _requestParser.parse(buffer, bytesRead);
 
   // 헤더 읽기 완료

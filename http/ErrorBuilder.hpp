@@ -9,6 +9,7 @@
 
 #include "../core/Kqueue.hpp"
 #include "../core/Socket.hpp"
+#include "../utils/Config.hpp"
 #include "../utils/StatusException.hpp"
 #include "../utils/Util.hpp"
 #include "AResponseBuilder.hpp"
@@ -22,7 +23,7 @@ class ErrorBuilder : public AResponseBuilder {
   off_t _fileSize;
   off_t _readIndex;
 
-  std::vector<u_int8_t> _storageBuffer;
+  std::vector<octet_t> _storageBuffer;
 
  public:
   ErrorBuilder(void);

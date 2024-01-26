@@ -104,7 +104,7 @@ int ErrorBuilder::readStatusCodeFile(Location const& location) {
   }
 
   // 파일 읽기
-  u_int8_t buffer[BUFFER_SIZE];
+  octet_t buffer[BUFFER_SIZE];
   memset(buffer, 0, BUFFER_SIZE);
   ssize_t bytesRead = read(_fileFd, buffer, sizeof(buffer));
   _readIndex += bytesRead;
