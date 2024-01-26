@@ -35,6 +35,7 @@ std::map<int, std::string> Config::initializeStatusMessages(void) {
   messages[502] = "Bad Gateway";
   messages[503] = "Service Unavailable";
   messages[504] = "Gateway Timeout";
+  messages[505] = "HTTP Version Not Supported";
   return messages;
 }
 

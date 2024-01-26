@@ -7,6 +7,8 @@
 
 #include "Util.hpp"
 
+typedef unsigned char octet_t;
+
 // 서버가 사용하는 설정들을 정의해 둔 static 클래스
 class Config {
  public:

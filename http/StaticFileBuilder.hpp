@@ -18,7 +18,7 @@ class StaticFileBuilder : public AResponseBuilder {
   off_t _fileSize;
   off_t _readIndex;
 
-  std::vector<u_int8_t> _storageBuffer;
+  std::vector<octet_t> _storageBuffer;
 
  public:
   StaticFileBuilder(Request const& request);

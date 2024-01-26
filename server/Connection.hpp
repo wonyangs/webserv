@@ -16,6 +16,7 @@
 #include "../http/Request.hpp"
 #include "../http/RequestParser.hpp"
 #include "../http/StaticFileBuilder.hpp"
+#include "../utils/Config.hpp"
 #include "../utils/Util.hpp"
 #include "ServerManager.hpp"
 
@@ -66,7 +67,7 @@ class Connection {
   static int const BUFFER_SIZE = 1024;
   ServerManager& _manager;
 
-  void parseRequest(u_int8_t const* buffer, ssize_t bytesRead);
+  void parseRequest(octet_t const* buffer, ssize_t bytesRead);
   void setRequestParserLocation(Request const& request);
   void removeAllBuilderFd(void);
 

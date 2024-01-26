@@ -2,8 +2,7 @@
 
 // Constructor & Destructor
 
-Request::Request(void)
-    : _method(HTTP_NONE), _locationFlag(false), _isConnectionClose(false) {}
+Request::Request(void) : _method(HTTP_NONE), _locationFlag(false) {}
 
 Request::Request(Request const& request) { *this = request; }
 
@@ -23,7 +22,6 @@ Request& Request::operator=(Request const& request) {
     _location = request._location;
     _locationFlag = request._locationFlag;
     _fullPath = request._fullPath;
-    _isConnectionClose = request._isConnectionClose;
   }
   return *this;
 }
@@ -48,7 +46,6 @@ void Request::print() const {
   std::cout << "Body: " << _body << std::endl;
   std::cout << "Location uri: " << _location.getUri() << std::endl;
   std::cout << "fullPath: " << _fullPath << std::endl;
-  std::cout << "isConnectionClose: " << _isConnectionClose << std::endl;
 }
 
 // Public Method - getter
@@ -79,6 +76,7 @@ bool Request::getLocationFlag(void) const { return _locationFlag; }
 
 std::string const& Request::getFullPath(void) const { return _fullPath; }
 
+// host, connection의 field-value는 소문자로 저장되어 있음
 std::string const& Request::getHeaderFieldValues(
     std::string const& fieldName) const {
   if (isHeaderFieldNameExists(fieldName) == false) {
@@ -89,6 +87,30 @@ std::string const& Request::getHeaderFieldValues(
   std::map<std::string, std::string>::const_iterator it =
       _header.find(fieldName);
   return it->second;
+}
+
+// 요청에 알맞는 host 반환
+// - 멤버 변수가 아님
+// - host 문자열에 처음 나오는 : 을 기준으로 앞만 host로 판단
+// - HTTP/1.1 요청일 때 host가 존재하지 않는 경우 예외 발생
+std::string const Request::getHost(void) const {
+  if (isHeaderFieldNameExists("host") == false) {
+    if (_httpVersion == "HTTP/1.1") {
+      throw StatusException(
+          HTTP_BAD_REQUEST,
+          "[2401] Request: getHost - Host header is required on HTTP/1.1");
+    }
+    return "";
+  }
+
+  std::string const& fieldValue = getHeaderFieldValues("host");
+  size_t pos = fieldValue.find(":");
+
+  if (pos != std::string::npos) {
+    return fieldValue.substr(0, pos);
+  }
+
+  return fieldValue;
 }
 
 // Public Method - setter
@@ -118,32 +140,47 @@ std::string const Request::generateIndexPath(void) const {
 void Request::storeRequestLine(std::vector<std::string> const& result) {
   int const methodIndex = 0, requestTargetIndex = 1, httpVersionIndex = 2;
 
-  if (Config::MAX_URI_SIZE < result[requestTargetIndex].size()) {
+  setMethod(result[methodIndex]);
+  storeRequestTarget(result[requestTargetIndex]);
+  setHttpVersion(result[httpVersionIndex]);
+}
+
+void Request::storeRequestTarget(std::string const& requestTarget) {
+  if (Config::MAX_URI_SIZE < requestTarget.size()) {
     throw StatusException(
         HTTP_REQUEST_URI_TOO_LARGE,
-        "[2103] Request: storeRequestLine - path is too long");
+        "[2103] Request: storeRequestTarget - path is too long");
+  }
+
+  if (isValidRequestTarget(requestTarget) == false) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2104] Request: storeRequestTarget - request Target is invalid");
   }
 
   std::string path, query;
-  splitRequestTarget(path, query, result[requestTargetIndex]);
+  splitRequestTarget(path, query, requestTarget);
 
-  setMethod(result[methodIndex]);
-  setPath(path);
-  setQuery(query);
-  setHttpVersion(result[httpVersionIndex]);
+  setPath(pctDecode(path));
+  setQuery(pctDecode(query));
 }
 
 // Header field 저장
 // - result 배열에는 fieldName과 fieldValue가 순서대로 저장되어 있다고 가정
+// - Request 객체에 이미 존재하는 field-name일 경우 예외 발생
 void Request::storeHeaderField(std::vector<std::string> const& result) {
   int const fieldNameIndex = 0, fieldValueIndex = 1;
 
   std::string const& fieldName = result[fieldNameIndex];
   std::string const& fieldValue = result[fieldValueIndex];
-  _header.insert(std::pair<std::string, std::string>(fieldName, fieldValue));
 
-  if (fieldName == "connection" and fieldValue == "close")
-    _isConnectionClose = true;
+  if (isHeaderFieldNameExists(fieldName)) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2202] Request: storeHeaderField - duplicate field-name");
+  }
+
+  _header.insert(std::pair<std::string, std::string>(fieldName, fieldValue));
 }
 
 // body 저장
@@ -169,11 +206,20 @@ void Request::storeFullPath(void) {
 }
 
 // 해당 헤더 field-name의 존재를 확인하는 함수
+// - field-name은 소문자로 저장되어 있음
 bool Request::isHeaderFieldNameExists(std::string const& fieldName) const {
   return (_header.find(fieldName) != _header.end());
 }
 
-bool Request::isConnectionClose(void) const { return _isConnectionClose; }
+bool Request::isConnectionClose(void) const {
+  if (_httpVersion == "HTTP/1.0") return true;
+
+  if (isHeaderFieldNameExists("connection") and
+      getHeaderFieldValues("connection") == "close")
+    return true;
+
+  return false;
+}
 
 // 멤버 변수를 비어있는 상태로 초기화
 void Request::clear() {
@@ -185,7 +231,6 @@ void Request::clear() {
   _body.clear();
   _locationFlag = false;
   _fullPath.clear();
-  _isConnectionClose = false;
 }
 
 // Private Method - setter
@@ -199,8 +244,20 @@ void Request::setPath(std::string const& path) { _path = path; }
 void Request::setQuery(std::string const& query) { _query = query; }
 
 void Request::setHttpVersion(std::string const& httpVersion) {
+  if (isValidHTTPVersionFormat(httpVersion) == false) {
+    throw StatusException(
+        HTTP_BAD_REQUEST,
+        "[2006] Request: setHttpVersion - invalid format: " + httpVersion);
+  }
+
+  if (httpVersion != "HTTP/1.0" and httpVersion != "HTTP/1.1") {
+    throw StatusException(
+        HTTP_VERSION_NOT_SUPPORTED,
+        "[2007] Request: setHttpVersion - version not supported: " +
+            httpVersion);
+  }
+
   _httpVersion = httpVersion;
-  if (_httpVersion == "HTTP/1.0") _isConnectionClose = true;
 }
 
 void Request::setFullPath(std::string const& fullPath) { _fullPath = fullPath; }
@@ -213,7 +270,7 @@ EHttpMethod Request::matchEHttpMethod(std::string method) {
   if (method == "GET") return HTTP_GET;
   if (method == "POST") return HTTP_POST;
   if (method == "DELETE") return HTTP_DELETE;
-  throw StatusException(HTTP_NOT_ALLOWED,
+  throw StatusException(HTTP_NOT_IMPLEMENTED,
                         "[2101] Request: matchEHttpMethod - invalid method");
 }
 
@@ -231,4 +288,64 @@ void Request::splitRequestTarget(std::string& path, std::string& query,
 
   path = requestTarget;
   query = "";
+}
+
+bool Request::isHex(char ch) {
+  return ('0' <= ch and ch <= '9') or ('a' <= ch and ch <= 'f') or
+         ('A' <= ch and ch <= 'F');
+}
+
+bool Request::isValidRequestTarget(std::string const& requestTarget) {
+  size_t size = requestTarget.size();
+  if (requestTarget.size() < 1 or requestTarget.front() != '/') return false;
+
+  std::string const& others = "-._~!$&'()*+,;=:@/";
+  for (size_t i = 0; i < size; i++) {
+    char ch = requestTarget[i];
+
+    if (isalpha(ch) or isdigit(ch) or others.find(ch) != std::string::npos)
+      continue;
+
+    if (ch == '%' and i + 2 < size) {
+      if (isHex(requestTarget[i + 1]) and isHex(requestTarget[i + 2])) continue;
+    }
+
+    return false;
+  }
+  return true;
+}
+
+bool Request::isValidHTTPVersionFormat(std::string const& httpVersion) {
+  if (httpVersion.size() != 8) return false;
+  if (httpVersion.substr(0, 5) != "HTTP/") return false;
+  if (isdigit(httpVersion[5]) == false or httpVersion[6] != '.' or
+      isdigit(httpVersion[7]) == false)
+    return false;
+
+  return true;
+}
+
+// 인자로 받은 16진수를 문자(char)로 변경하여 반환
+char Request::hexToChar(std::string const& hexStr) {
+  int n;
+
+  std::stringstream ss;
+  ss << std::hex << hexStr;
+  ss >> n;
+  return static_cast<char>(n);
+}
+
+// percent-encoding을 디코딩하여 반환
+std::string Request::pctDecode(std::string const& str) {
+  std::stringstream ss;
+
+  for (size_t i = 0; i < str.size(); i++) {
+    if (str[i] == '%' and i + 2 < str.size()) {
+      ss << hexToChar(str.substr(i + 1, 2));
+      i += 2;
+    } else {
+      ss << str[i];
+    }
+  }
+  return ss.str();
 }

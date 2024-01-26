@@ -1,6 +1,7 @@
 #ifndef __REQUEST_HPP__
 #define __REQUEST_HPP__
 
+#include <cctype>
 #include <map>
 #include <string>
 #include <vector>
@@ -24,8 +25,6 @@ class Request {
   Location _location;
   std::string _fullPath;
 
-  bool _isConnectionClose;
-
  public:
   Request(void);
   Request(Request const& request);
@@ -42,8 +41,8 @@ class Request {
   Location const& getLocation(void) const;
   bool getLocationFlag(void) const;
   std::string const& getFullPath(void) const;
-
   std::string const& getHeaderFieldValues(std::string const& fieldName) const;
+  std::string const getHost(void) const;
 
   void setLocation(Location const& location);
 
@@ -52,6 +51,7 @@ class Request {
   void print(void) const;  // debug
 
   void storeRequestLine(std::vector<std::string> const& result);
+  void storeRequestTarget(std::string const& requestTarget);
   void storeHeaderField(std::vector<std::string> const& result);
   void storeBody(std::string const& result);
   void storeFullPath(void);
@@ -71,6 +71,12 @@ class Request {
   EHttpMethod matchEHttpMethod(std::string method);
   void splitRequestTarget(std::string& path, std::string& query,
                           const std::string& requestTarget);
+
+  bool isHex(char ch);
+  bool isValidRequestTarget(std::string const& requestTarget);
+  bool isValidHTTPVersionFormat(std::string const& httpVersion);
+  char hexToChar(std::string const& hexStr);
+  std::string pctDecode(std::string const& str);
 };
 
 #endif
