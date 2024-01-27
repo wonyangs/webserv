@@ -37,13 +37,14 @@ void Request::print() const {
   std::cout << "Query: " << _query << std::endl;
   std::cout << "HTTP Version: " << _httpVersion << std::endl;
 
-  std::cout << "[Header]" << std::endl;
-  for (std::map<std::string, std::string>::const_iterator it = _header.begin();
-       it != _header.end(); ++it) {
-    std::cout << "[" << it->first << "]: " << it->second << std::endl;
-  }
+  // std::cout << "[Header]" << std::endl;
+  // for (std::map<std::string, std::string>::const_iterator it =
+  // _header.begin();
+  //      it != _header.end(); ++it) {
+  //   std::cout << "[" << it->first << "]: " << it->second << std::endl;
+  // }
 
-  std::cout << "Body: " << _body << std::endl;
+  // std::cout << "Body: " << _body << std::endl;
   std::cout << "Location uri: " << _location.getUri() << std::endl;
   std::cout << "fullPath: " << _fullPath << std::endl;
 }
