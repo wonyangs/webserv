@@ -5,6 +5,7 @@
 #include <unistd.h>
 
 #include <cctype>
+#include <cstring>
 #include <iostream>
 #include <map>
 #include <stdexcept>

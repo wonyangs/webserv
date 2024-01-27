@@ -1,9 +1,11 @@
 #ifndef __CONFIG_HPP__
 #define __CONFIG_HPP__
 
+#include <cstring>
 #include <map>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 #include "Util.hpp"
 

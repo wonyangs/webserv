@@ -5,6 +5,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <stdexcept>
+
 #include "../core/Kqueue.hpp"
 #include "../core/Socket.hpp"
 #include "../utils/Config.hpp"

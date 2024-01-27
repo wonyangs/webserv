@@ -2,7 +2,9 @@
 #define __REQUEST_HPP__
 
 #include <cctype>
+#include <cstring>
 #include <map>
+#include <stdexcept>
 #include <string>
 #include <vector>
 

@@ -1,9 +1,10 @@
 #ifndef __RESPONSE_HPP__
 #define __RESPONSE_HPP__
 
-#include <exception>
+#include <cstring>
 #include <map>
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 #include "../utils/Config.hpp"
@@ -50,6 +51,7 @@ class Response {
   void clear(void);
 
   bool isHeaderFieldNameExists(std::string const& fieldName) const;
+
  private:
 };
 

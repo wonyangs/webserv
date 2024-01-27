@@ -1,15 +1,16 @@
 #ifndef __CONNECTION_HPP__
 #define __CONNECTION_HPP__
 
-#include <sys/stat.h>
 #include <unistd.h>
 
 #include <ctime>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "../http/AResponseBuilder.hpp"
 #include "../http/AutoindexBuilder.hpp"
+#include "../http/BuilderSelector.hpp"
 #include "../http/CgiBuilder.hpp"
 #include "../http/ErrorBuilder.hpp"
 #include "../http/RedirectBuilder.hpp"
