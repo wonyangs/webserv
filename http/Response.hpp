@@ -49,8 +49,8 @@ class Response {
 
   void clear(void);
 
- private:
   bool isHeaderFieldNameExists(std::string const& fieldName) const;
+ private:
 };
 
 #endif

@@ -57,7 +57,7 @@ void ServerManager::init(void) {
     Socket::setsockopt(_serverFd);
     Socket::setNonBlocking(_serverFd);
     Socket::bind(_serverFd, _hostIp, _port);
-    Socket::listen(_serverFd, 3);
+    Socket::listen(_serverFd, 1000);
 
   } catch (const std::exception& e) {
     if (_serverFd != -1) {
@@ -206,6 +206,7 @@ void ServerManager::manageTimeoutConnections(void) {
   // timeout 커넥션 제거
   std::vector<int>::iterator vit = removeFdVec.begin();
   while (vit != removeFdVec.end()) {
+    std::cout << "Connection time out!" << std::endl;
     removeConnection(*vit);
     ++vit;
   }

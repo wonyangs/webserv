@@ -21,6 +21,7 @@ SRCS		= config/Server.cpp \
 			  http/StaticFileBuilder.cpp \
 			  http/AutoindexBuilder.cpp \
 			  http/RedirectBuilder.cpp \
+			  http/CgiBuilder.cpp \
 			  main.cpp
 				
 

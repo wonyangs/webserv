@@ -126,6 +126,8 @@ bool Connection::isReadStorageRequired() {
 // HTTP 요청 + Location 블록을 보고 분기
 // - 적절한 ResponseBuilder 선택
 void Connection::selectResponseBuilder(void) {
+  updateLastCallTime();
+
   Request const& request = _requestParser.getRequest();
   Location const& location = request.getLocation();
   std::string fullPath = request.getFullPath();
@@ -153,6 +155,12 @@ void Connection::selectResponseBuilder(void) {
     }
   }
 
+  if (location.hasCgiInfo() and
+      Config::findFileExtension(fullPath) == location.getCgiExtention()) {
+    _responseBuilder = new CgiBuilder(request);
+    return;
+  }
+
   if (access(fullPath.c_str(), F_OK) == -1) {
     throw StatusException(
         HTTP_NOT_FOUND,
@@ -175,11 +183,11 @@ void Connection::selectResponseBuilder(void) {
   }
 
   // uri에 location에 포함된 cgi 확장자가 붙어있는 경우 cgi build
-  if (location.hasCgiInfo() and
-      Config::findFileExtension(fullPath) == location.getCgiExtention()) {
-    // cgi builder
-    return;
-  }
+  // if (location.hasCgiInfo() and
+  //     Config::findFileExtension(fullPath) == location.getCgiExtention()) {
+  //   _responseBuilder = new CgiBuilder(request);
+  //   return;
+  // }
 
   _responseBuilder = new StaticFileBuilder(request);
 }
@@ -187,6 +195,7 @@ void Connection::selectResponseBuilder(void) {
 // HTTP 응답 만들기
 void Connection::buildResponse(Event::EventType eventType) {
   std::vector<int> const& builderFds = _responseBuilder->build(eventType);
+  updateLastCallTime();
 
   if (builderFds.size() != 0) {
     for (std::vector<int>::const_iterator it = builderFds.begin();
@@ -227,13 +236,14 @@ void Connection::sendResponse(void) {
         "[4002] Connection: sendErrorPage - fail to write socket");
   }
 
-  response.setStartIndex(startIndex + BUFFER_SIZE);
+  response.setStartIndex(startIndex + bytesSent);
   updateLastCallTime();
 
-  if (isDone or bytesSent == 0) {
+  if (isDone) {
     std::cout << "[ Server: response sent ]\n"
-              << "-------------\n"
-              << responseContent << "\n-------------" << std::endl;
+              << "-------------\n";
+    // << responseContent << "\n-------------" << std::endl;
+    response.print();
 
     _responseBuilder->isConnectionClose() ? setStatus(CLOSE)
                                           : setStatus(ON_WAIT);
@@ -241,6 +251,8 @@ void Connection::sendResponse(void) {
 }
 
 void Connection::resetResponseBuilder(int code) {
+  updateLastCallTime();
+
   Kqueue::removeAllEvents(_fd);
 
   removeAllBuilderFd();
@@ -260,6 +272,8 @@ void Connection::resetResponseBuilder(int code) {
 }
 
 void Connection::resetResponseBuilder(void) {
+  updateLastCallTime();
+
   Kqueue::removeAllEvents(_fd);
 
   removeAllBuilderFd();

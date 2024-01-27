@@ -33,7 +33,7 @@ Response& Response::operator=(Response const& response) {
 
 // 디버깅용 Response 정보 출력 함수
 void Response::print() const {
-  std::cout << "Response Content: " << _responseContent << std::endl;
+  // std::cout << "Response Content: " << _responseContent << std::endl;
   std::cout << "Start Index: " << _startIndex << std::endl;
   std::cout << "HTTP Version: " << _httpVersion << std::endl;
   std::cout << "StatusCode: " << _statusCode << std::endl;
@@ -45,7 +45,7 @@ void Response::print() const {
     std::cout << "[" << it->second << "]" << std::endl;
   }
 
-  std::cout << "Body: " << _body << std::endl;
+  // std::cout << "Body: " << _body << std::endl;
 }
 
 // Public Method - getter
@@ -121,8 +121,6 @@ void Response::clear(void) {
   _header.clear();
   _body.clear();
 }
-
-// Private Method
 
 // 해당 헤더 field-name의 존재를 확인하는 함수
 bool Response::isHeaderFieldNameExists(std::string const& fieldName) const {

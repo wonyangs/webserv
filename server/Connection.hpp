@@ -10,6 +10,7 @@
 
 #include "../http/AResponseBuilder.hpp"
 #include "../http/AutoindexBuilder.hpp"
+#include "../http/CgiBuilder.hpp"
 #include "../http/ErrorBuilder.hpp"
 #include "../http/RedirectBuilder.hpp"
 #include "../http/Request.hpp"
@@ -63,7 +64,7 @@ class Connection {
   bool isSameState(EStatus status);
 
  private:
-  static int const BUFFER_SIZE = 1024;
+  static int const BUFFER_SIZE = 4096;
   ServerManager& _manager;
 
   void parseRequest(octet_t const* buffer, ssize_t bytesRead);
