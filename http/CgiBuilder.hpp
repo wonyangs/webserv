@@ -13,6 +13,7 @@
 #include "../config/Location.hpp"
 #include "../core/Kqueue.hpp"
 #include "../core/Socket.hpp"
+#include "../utils/Config.hpp"
 #include "AResponseBuilder.hpp"
 
 class CgiBuilder : public AResponseBuilder {
@@ -22,7 +23,7 @@ class CgiBuilder : public AResponseBuilder {
   int _writePipeFd;
 
   off_t _writeIndex;
-  std::vector<u_int8_t> _storageBuffer;
+  std::vector<octet_t> _storageBuffer;
 
  public:
   CgiBuilder(Request const& request);
