@@ -182,7 +182,8 @@ void ErrorBuilder::buildResponseContent(std::string const& body) {
   isConnectionClose() ? _response.addHeader("Connection", "close")
                       : _response.addHeader("Connection", "keep-alive");
 
-  if (_statusCode == 405) _response.addHeader("Allow", makeAllowHeaderValue());
+  if (_statusCode == 405 and getRequest().getLocationFlag() == true)
+    _response.addHeader("Allow", makeAllowHeaderValue());
 
   _response.appendBody(body);
 
