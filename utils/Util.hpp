@@ -7,6 +7,7 @@
 class Util {
  public:
   static std::string const itos(int n);
+  static int stoi(std::string const& str);
 
  private:
   Util(void);

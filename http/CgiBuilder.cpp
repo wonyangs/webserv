@@ -198,16 +198,23 @@ void CgiBuilder::handleReadEvent(void) {
 void CgiBuilder::handleWriteEvent(void) {
   std::string const& body = getRequest().getBody();
 
+  off_t sendSize;
+  if (BUFFER_SIZE < body.size() - _writeIndex) {
+    sendSize = BUFFER_SIZE;
+  } else {
+    sendSize = body.size() - _writeIndex;
+  }
+
   // cgi 표준 입력에 body 전송
-  ssize_t bytesWrite = write(_writePipeFd, body.c_str() + _writeIndex,
-                             body.size() - _writeIndex);
+  ssize_t bytesWrite =
+      write(_writePipeFd, body.c_str() + _writeIndex, sendSize);
   _writeIndex += bytesWrite;
 
   if (bytesWrite < 0) {
     throw std::runtime_error("[] CgiBuilder: handleWriteEvent - write failed");
   }
 
-  if (bytesWrite == 0) {  // 모든 내용 전송 완료
+  if (_writeIndex >= body.size()) {  // 모든 내용 전송 완료
     Kqueue::removeWriteEvent(_writePipeFd);
     ::close(_writePipeFd);
     _writePipeFd = -1;
@@ -285,15 +292,18 @@ void CgiBuilder::buildResponseContent(std::string const& cgiResponse) {
     }
   }
 
-  // 본문 설정
-  _response.appendBody(bodyPart);
-
   _response.setHttpVersion("HTTP/1.1");
   if (statusCodeFlag == false) {
     _response.setStatusCode(200);
   }
+
   if (_response.isHeaderFieldNameExists("Content-Length") == false) {
     _response.addHeader("Content-Length", Util::itos(bodyPart.size()));
+    _response.appendBody(bodyPart);
+  } else {
+    int length =
+        Util::stoi(_response.getHeader().find("Content-Length")->second);
+    _response.appendBody(bodyPart.substr(0, length));
   }
 
   // 응답 내용 구성
