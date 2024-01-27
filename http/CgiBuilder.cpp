@@ -377,7 +377,12 @@ char** CgiBuilder::makeEnv(void) {
     env["HTTP_USER_AGENT"] = request.getHeaderFieldValues("user-agent");
   }
 
-  env["PATH_INFO"] = request.getFullPath();  // Todo: PATH_INFO?
+  if (request.getMethod() == HTTP_GET and request.getFullPath().back() == '/') {
+    env["PATH_INFO"] = request.generateIndexPath();
+  } else {
+    env["PATH_INFO"] = request.getFullPath();
+  }
+
   env["QUERY_STRING"] = request.getQuery();
   // env["REMOTE_ADDR"] = Todo: 클라이언트 IP 주소
   // env["REMOTE_HOST"] = Todo: 클라이언트 IP 주소
