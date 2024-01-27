@@ -63,7 +63,7 @@ class Location {
   std::string const& getUploadDirPath(void) const;
 
  private:
-  static int const DEFAULT_MAX_BODY_SIZE = 6000;
+  static int const DEFAULT_MAX_BODY_SIZE = 100000000;
 
   bool _hasAllowMethodField;
   bool _hasRedirectField;

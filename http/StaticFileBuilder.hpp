@@ -31,7 +31,7 @@ class StaticFileBuilder : public AResponseBuilder {
   virtual void close(void);
 
  private:
-  static int const BUFFER_SIZE = 1024;
+  static int const BUFFER_SIZE = 10000;
 
   void openStaticFile(void);
   void readStaticFile(void);
