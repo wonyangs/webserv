@@ -2,6 +2,7 @@
 #define __UTIL_HPP__
 
 #include <sstream>
+#include <stdexcept>
 #include <string>
 
 class Util {

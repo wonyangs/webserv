@@ -304,7 +304,8 @@ bool Request::isValidRequestTarget(std::string const& requestTarget) {
   for (size_t i = 0; i < size; i++) {
     char ch = requestTarget[i];
 
-    if (isalpha(ch) or isdigit(ch) or others.find(ch) != std::string::npos)
+    if (std::isalpha(ch) or std::isdigit(ch) or
+        others.find(ch) != std::string::npos)
       continue;
 
     if (ch == '%' and i + 2 < size) {

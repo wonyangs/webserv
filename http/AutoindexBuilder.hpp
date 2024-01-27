@@ -7,6 +7,7 @@
 
 #include <ctime>
 #include <sstream>
+#include <stdexcept>
 
 #include "../utils/StatusException.hpp"
 #include "../utils/Util.hpp"

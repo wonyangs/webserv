@@ -5,6 +5,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include <stdexcept>
 #include <string>
 
 #include "../core/Kqueue.hpp"
