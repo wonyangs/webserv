@@ -368,7 +368,7 @@ char** CgiBuilder::makeEnv(void) {
   }
 
   env["PATH_INFO"] = request.getFullPath();  // Todo: PATH_INFO?
-  env["QUERY_STRING"] = urlDecode(request.getQuery());
+  env["QUERY_STRING"] = request.getQuery();
   // env["REMOTE_ADDR"] = Todo: 클라이언트 IP 주소
   // env["REMOTE_HOST"] = Todo: 클라이언트 IP 주소
   // env["REMOTE_USER"] = "null"
@@ -456,24 +456,4 @@ void CgiBuilder::freeEnvArray(char** envp) {
   }
 
   delete[] envp;
-}
-
-std::string const CgiBuilder::urlDecode(std::string const& encoded) {
-  std::string decoded;
-  std::istringstream iss(encoded);
-  char ch;
-
-  while (iss.get(ch)) {
-    if (ch == '%') {
-      int value;
-      iss >> std::hex >> value;  // 16진수로 변환
-      decoded += static_cast<char>(value);
-      iss.ignore();  // '%' 뒤의 두 문자를 건너뜁니다.
-    } else if (ch == '+') {
-      decoded += ' ';
-    } else {
-      decoded += ch;
-    }
-  }
-  return decoded;
 }

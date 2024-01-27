@@ -51,7 +51,6 @@ class CgiBuilder : public AResponseBuilder {
   char** makeEnv(void);
   char** createEnvArray(std::map<std::string, std::string> const& env);
   void freeEnvArray(char** envp);
-  std::string const urlDecode(std::string const& encoded);
 
   CgiBuilder(void);
 };
