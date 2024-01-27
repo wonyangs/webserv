@@ -105,10 +105,6 @@ std::vector<int> const CgiBuilder::forkCgi(void) {
   Socket::setNonBlocking(c_to_p[0]);
   Socket::setNonBlocking(c_to_p[1]);
 
-  Request const& request = getRequest();
-  std::cout << "CGI content-length" << Util::itos(request.getBody().size())
-            << std::endl;
-
   if (_pid == 0) {
     childProcess(p_to_c, c_to_p);
   } else {
@@ -189,6 +185,7 @@ void CgiBuilder::handleReadEvent(void) {
 
   if (bytesRead == 0) {  // eof에 도달
     Kqueue::removeReadEvent(_readPipeFd);
+    ::close(_readPipeFd);
     _readPipeFd = -1;
 
     std::string cgiResponse(_storageBuffer.begin(), _storageBuffer.end());
@@ -212,6 +209,7 @@ void CgiBuilder::handleWriteEvent(void) {
 
   if (bytesWrite == 0) {  // 모든 내용 전송 완료
     Kqueue::removeWriteEvent(_writePipeFd);
+    ::close(_writePipeFd);
     _writePipeFd = -1;
   }
 }
@@ -403,10 +401,23 @@ char** CgiBuilder::makeEnv(void) {
   std::map<std::string, std::string> headers = getRequest().getHeader();
   std::map<std::string, std::string>::const_iterator it = headers.begin();
   for (; it != headers.end(); ++it) {
-    std::string const& key = it->first;
+    std::string key = it->first;
 
-    if (key.length() >= 2 and key.substr(0, 2) == "x-") {
-      env[key] = request.getHeaderFieldValues(it->second);
+    // "x-"로 시작하는지 확인
+    if (key.length() >= 2 && key.substr(0, 2) == "x-") {
+      // "HTTP_" 접두사 추가
+      key = "HTTP_" + key;
+
+      // 모든 하이픈('-')을 언더스코어('_')로 변경
+      std::replace(key.begin(), key.end(), '-', '_');
+
+      // 대문자 변환
+      for (std::string::size_type i = 0; i < key.length(); ++i) {
+        key[i] = std::toupper(static_cast<unsigned char>(key[i]));
+      }
+
+      // 환경 변수 설정
+      env[key] = it->second;
     }
   }
 

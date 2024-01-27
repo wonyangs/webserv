@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <cctype>
 #include <iostream>
 #include <map>
 #include <stdexcept>
@@ -34,7 +35,7 @@ class CgiBuilder : public AResponseBuilder {
   virtual void close(void);
 
  private:
-  static int const BUFFER_SIZE = 1024;
+  static int const BUFFER_SIZE = 50000;
 
   std::vector<int> const forkCgi(void);
   void parentProcess(int* const p_to_c, int* const c_to_p);
