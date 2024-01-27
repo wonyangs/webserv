@@ -198,7 +198,7 @@ void CgiBuilder::handleReadEvent(void) {
 void CgiBuilder::handleWriteEvent(void) {
   std::string const& body = getRequest().getBody();
 
-  off_t sendSize;
+  size_t sendSize;
   if (BUFFER_SIZE < body.size() - _writeIndex) {
     sendSize = BUFFER_SIZE;
   } else {

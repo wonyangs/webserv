@@ -22,7 +22,7 @@ class CgiBuilder : public AResponseBuilder {
   int _readPipeFd;
   int _writePipeFd;
 
-  off_t _writeIndex;
+  size_t _writeIndex;
   std::vector<octet_t> _storageBuffer;
 
  public:
