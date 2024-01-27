@@ -130,7 +130,6 @@ void Connection::selectResponseBuilder(void) {
 
   Request const& request = _requestParser.getRequest();
   Location const& location = request.getLocation();
-  std::string fullPath = request.getFullPath();
 
   if (location.isAllowMethod(request.getMethod()) == false) {
     throw StatusException(
@@ -138,58 +137,8 @@ void Connection::selectResponseBuilder(void) {
         "[4005] Connection: selectResponseBuilder - method not allowed");
   }
 
+  _responseBuilder = BuilderSelector::getMatchingBuilder(request);
   setStatus(ON_BUILD);
-
-  if (location.isRedirectBlock()) {
-    _responseBuilder = new RedirectBuilder(request, location.getRedirectUri());
-    return;
-  }
-
-  if (fullPath.back() == '/') {
-    fullPath = request.generateIndexPath();
-
-    // index 붙인 파일 경로가 존재하지 않는 경우
-    if (access(fullPath.c_str(), F_OK) == -1) {
-      _responseBuilder = new AutoindexBuilder(request);
-      return;
-    }
-  }
-
-  if (location.hasCgiInfo() and
-      Config::findFileExtension(fullPath) == location.getCgiExtention()) {
-    _responseBuilder = new CgiBuilder(request);
-    return;
-  }
-
-  if (access(fullPath.c_str(), F_OK) == -1) {
-    throw StatusException(
-        HTTP_NOT_FOUND,
-        "[4003] Connection: selectResponseBuilder - can't find file: " +
-            fullPath);
-  }
-
-  // 파일 정보 확인
-  struct stat statbuf;
-
-  if (stat(fullPath.c_str(), &statbuf) == -1) {
-    throw std::runtime_error(
-        "[4004] Connection: selectResponseBuilder - stat failed: " + fullPath);
-  }
-
-  // 파일이 디렉토리 경로라면
-  if (S_ISDIR(statbuf.st_mode)) {
-    _responseBuilder = new RedirectBuilder(request, request.getPath() + '/');
-    return;
-  }
-
-  // uri에 location에 포함된 cgi 확장자가 붙어있는 경우 cgi build
-  // if (location.hasCgiInfo() and
-  //     Config::findFileExtension(fullPath) == location.getCgiExtention()) {
-  //   _responseBuilder = new CgiBuilder(request);
-  //   return;
-  // }
-
-  _responseBuilder = new StaticFileBuilder(request);
 }
 
 // HTTP 응답 만들기

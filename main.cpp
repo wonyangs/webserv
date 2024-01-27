@@ -44,7 +44,7 @@ std::vector<Server> exampleParseConfig(void) {
   location1_2.addAllowMethod(HTTP_POST);
   location1_2.setAutoIndex(false);
   location1_2.setCgiExtention(".bla");
-  location1_2.setCgiPath("/Users/wonyang/Project/webserv/www/cgi_tester");
+  location1_2.setCgiPath("/Users/wonyang/Project/webserv/tester/cgi_tester");
   location1_2.setUploadDir("/Users/wonyang/Project/webserv/www/");
 
   Location location1_3("/post_body",

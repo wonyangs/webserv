@@ -2,6 +2,7 @@
 #define __EVENTLOOP_HPP__
 
 #include <map>
+#include <stdexcept>
 #include <vector>
 
 #include "../core/Kqueue.hpp"
