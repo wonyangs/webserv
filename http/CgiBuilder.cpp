@@ -148,7 +148,7 @@ void CgiBuilder::childProcess(int* const p_to_c, int* const c_to_p) {
   std::string const& cgiPath = getRequest().getLocation().getCgiPath();
 
   if (access(cgiPath.c_str(), F_OK) < 0 or access(cgiPath.c_str(), X_OK) < 0) {
-    std::cout << "Status: 500 Internal Server Error\r\n";
+    std::cout << "Status: 500 Access Fail\r\n";
     std::cout << "Content-Type: text/html\r\n\r\n";
     std::cout << Config::defaultErrorPageBody(500);
     exit(1);
@@ -157,7 +157,7 @@ void CgiBuilder::childProcess(int* const p_to_c, int* const c_to_p) {
   // cgi에 인자 및 환경변수 전송
   if (execve(cgiPath.c_str(), NULL, envp) < 0) {
     freeEnvArray(envp);
-    std::cout << "Status: 500 Internal Server Error\r\n";
+    std::cout << "Status: 500 Execve Fail\r\n";
     std::cout << "Content-Type: text/html\r\n\r\n";
     std::cout << Config::defaultErrorPageBody(500);
     exit(1);
@@ -277,6 +277,8 @@ void CgiBuilder::buildResponseContent(std::string const& cgiResponse) {
 
         iss >> statusCode;  // 상태 코드를 정수로 읽어들임
         std::getline(iss, statusText);  // 상태 텍스트 읽기 (예: "OK")
+
+        std::cout << "cgi status text: " << statusText << std::endl;  // debug
 
         if (statusCode > 0) {
           _response.setStatusCode(statusCode);
