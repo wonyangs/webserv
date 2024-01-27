@@ -132,32 +132,34 @@ void CgiBuilder::parentProcess(int* const p_to_c, int* const c_to_p) {
 
 // 자식 프로세스 작업
 void CgiBuilder::childProcess(int* const p_to_c, int* const c_to_p) {
-  ::close(p_to_c[1]);
-  ::close(c_to_p[0]);
+  try {
+    ::close(p_to_c[1]);
+    ::close(c_to_p[0]);
 
-  dup2(p_to_c[0], STDIN_FILENO);
-  ::close(p_to_c[0]);
+    dup2(p_to_c[0], STDIN_FILENO);
+    ::close(p_to_c[0]);
 
-  dup2(c_to_p[1], STDOUT_FILENO);
-  ::close(c_to_p[1]);
+    dup2(c_to_p[1], STDOUT_FILENO);
+    ::close(c_to_p[1]);
 
-  // 환경변수 설정
-  char** envp = makeEnv();
+    // 환경변수 설정
+    char** envp = makeEnv();
 
-  // cgi 있는지 + 실행권한 확인
-  std::string const& cgiPath = getRequest().getLocation().getCgiPath();
+    // cgi 있는지 + 실행권한 확인
+    std::string const& cgiPath = getRequest().getLocation().getCgiPath();
 
-  if (access(cgiPath.c_str(), F_OK) < 0 or access(cgiPath.c_str(), X_OK) < 0) {
-    std::cout << "Status: 500 Access Fail\r\n";
-    std::cout << "Content-Type: text/html\r\n\r\n";
-    std::cout << Config::defaultErrorPageBody(500);
-    exit(1);
-  }
+    if (access(cgiPath.c_str(), F_OK) < 0 or
+        access(cgiPath.c_str(), X_OK) < 0) {
+      throw std::runtime_error("CGI Access Fail");
+    }
 
-  // cgi에 인자 및 환경변수 전송
-  if (execve(cgiPath.c_str(), NULL, envp) < 0) {
-    freeEnvArray(envp);
-    std::cout << "Status: 500 Execve Fail\r\n";
+    // cgi에 인자 및 환경변수 전송
+    if (execve(cgiPath.c_str(), NULL, envp) < 0) {
+      freeEnvArray(envp);
+      throw std::runtime_error("CGI Execve Fail");
+    }
+  } catch (std::exception const& e) {
+    std::cout << "Status: 500 " << e.what() << "\r\n";
     std::cout << "Content-Type: text/html\r\n\r\n";
     std::cout << Config::defaultErrorPageBody(500);
     exit(1);
