@@ -435,6 +435,7 @@ char** CgiBuilder::createEnvArray(
 
     char* envEntryCStr = new char[envEntry.size() + 1];
     std::strcpy(envEntryCStr, envEntry.c_str());
+    envEntryCStr[envEntry.size()] = '\0';
 
     envArray.push_back(envEntryCStr);
   }
