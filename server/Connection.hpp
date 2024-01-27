@@ -64,7 +64,7 @@ class Connection {
   bool isSameState(EStatus status);
 
  private:
-  static int const BUFFER_SIZE = 50000;
+  static int const BUFFER_SIZE = 4096;
   ServerManager& _manager;
 
   void parseRequest(octet_t const* buffer, ssize_t bytesRead);

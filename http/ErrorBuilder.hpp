@@ -39,7 +39,7 @@ class ErrorBuilder : public AResponseBuilder {
   virtual void close(void);
 
  private:
-  static int const BUFFER_SIZE = 1024;
+  static int const BUFFER_SIZE = 4096;
 
   int readStatusCodeFile(Location const& location);
   void openStatusCodeFile(Location const& location);

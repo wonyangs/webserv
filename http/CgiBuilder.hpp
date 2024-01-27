@@ -36,7 +36,7 @@ class CgiBuilder : public AResponseBuilder {
   virtual void close(void);
 
  private:
-  static int const BUFFER_SIZE = 50000;
+  static int const BUFFER_SIZE = 4096;
 
   std::vector<int> const forkCgi(void);
   void parentProcess(int* const p_to_c, int* const c_to_p);
