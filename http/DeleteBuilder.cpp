@@ -35,7 +35,7 @@ std::vector<int> const DeleteBuilder::build(Event::EventType type) {
 
   if (getRequest().getMethod() != HTTP_DELETE) {
     throw StatusException(HTTP_INTERNAL_SERVER_ERROR,
-                          "[] DeleteBuilder: invalid method");
+                          "[5500] DeleteBuilder: invalid method");
   }
 
   char const* fullPath = getRequest().getFullPath().c_str();
@@ -50,7 +50,7 @@ std::vector<int> const DeleteBuilder::build(Event::EventType type) {
   // 파일 삭제 권한이 없는 경우 -> 403
   if (access(fullPath, W_OK) == -1) {
     throw StatusException(HTTP_FORBIDDEN,
-                          "[] DeleteBuilder: file permission error");
+                          "[5501] DeleteBuilder: file permission error");
   }
 
   // 파일 삭제 성공 -> 204
@@ -59,7 +59,7 @@ std::vector<int> const DeleteBuilder::build(Event::EventType type) {
     buildResponseContent("");
   } else {
     throw StatusException(HTTP_INTERNAL_SERVER_ERROR,
-                          "[] DeleteBuilder: file delete fail");
+                          "[5502] DeleteBuilder: file delete fail");
   }
 
   _isDone = true;

@@ -63,7 +63,7 @@ std::vector<int> const CgiBuilder::build(Event::EventType type) {
       handleWriteEvent();
       break;
     default:
-      throw std::runtime_error("[] CgiBuilder: build - unknown event");
+      throw std::runtime_error("[5400] CgiBuilder: build - unknown event");
       break;
   }
   return std::vector<int>();
@@ -91,7 +91,6 @@ void CgiBuilder::close(void) {
  */
 
 // CGI Builder에게 전달되는 path 정보가 올바른지 검사
-// - path에 파일이 없는 경우 404 예외 발생
 // - CGI extention으로 끝나지 않는 경로인 경우 403 예외 발생
 void CgiBuilder::checkPathInfo(void) {
   Request const& request = getRequest();
@@ -106,8 +105,8 @@ void CgiBuilder::checkPathInfo(void) {
   // CGI extention 정보 확인
   std::string const& extention = request.getLocation().getCgiExtention();
   if (endsWith(_cgiPathInfo, extention) == false) {
-    throw StatusException(HTTP_FORBIDDEN,
-                          "[] CgiBuilder: checkPathInfo - invalid extention");
+    throw StatusException(
+        HTTP_FORBIDDEN, "[5401] CgiBuilder: checkPathInfo - invalid extention");
   }
 }
 
@@ -118,10 +117,10 @@ std::vector<int> const CgiBuilder::forkCgi(void) {
   int c_to_p[2];
 
   if (pipe(p_to_c) < 0 or pipe(c_to_p) < 0) {
-    throw std::runtime_error("[] CgiBuilder: forkCgi - pipe fail");
+    throw std::runtime_error("[5402] CgiBuilder: forkCgi - pipe fail");
   }
   if ((_pid = fork()) < 0) {
-    throw std::runtime_error("[] CgiBuilder: forkCgi - fork fail");
+    throw std::runtime_error("[5403] CgiBuilder: forkCgi - fork fail");
   }
 
   Socket::setNonBlocking(p_to_c[0]);
@@ -202,7 +201,8 @@ void CgiBuilder::handleReadEvent(void) {
   ssize_t bytesRead = read(_readPipeFd, buffer, sizeof(buffer));
 
   if (bytesRead < 0) {
-    throw std::runtime_error("[] CgiBuilder: handleReadEvent - read failed");
+    throw std::runtime_error(
+        "[5404] CgiBuilder: handleReadEvent - read failed");
   }
 
   for (ssize_t i = 0; i < bytesRead; i++) {
@@ -237,7 +237,8 @@ void CgiBuilder::handleWriteEvent(void) {
   _writeIndex += bytesWrite;
 
   if (bytesWrite < 0) {
-    throw std::runtime_error("[] CgiBuilder: handleWriteEvent - write failed");
+    throw std::runtime_error(
+        "[5405] CgiBuilder: handleWriteEvent - write failed");
   }
 
   if (_writeIndex >= body.size()) {  // 모든 내용 전송 완료
