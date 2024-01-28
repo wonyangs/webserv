@@ -190,19 +190,21 @@ void Request::storeBody(std::string const& result) { _body = result; }
 // fullPath 저장
 void Request::storeFullPath(void) {
   Location const& location = getLocation();
+  std::string projectPath = location.getProjectRootPath();
   std::string root = location.getRootPath();
   std::string locationUri = location.getUri();
 
   // path의 맨 처음이 무조건 /로 시작해 /를 제거
+  if (projectPath.back() == '/') projectPath.pop_back();
   if (root.back() == '/') root.pop_back();
   if (locationUri.back() == '/') locationUri.pop_back();
 
   size_t pos = _path.find(locationUri);
 
   if (pos != std::string::npos and pos == 0) {
-    setFullPath(root + _path.substr(locationUri.length()));
+    setFullPath(projectPath + root + _path.substr(locationUri.length()));
   } else {
-    setFullPath(root + _path);
+    setFullPath(projectPath + root + _path);
   }
 }
 
