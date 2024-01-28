@@ -17,6 +17,7 @@ CgiBuilder::CgiBuilder(CgiBuilder const& builder) : AResponseBuilder(builder) {
   _writePipeFd = builder._writePipeFd;
   _writeIndex = builder._writeIndex;
   _storageBuffer = builder._storageBuffer;
+  _cgiPathInfo = builder._cgiPathInfo;
 }
 
 CgiBuilder::~CgiBuilder(void) { close(); }
@@ -37,6 +38,7 @@ CgiBuilder& CgiBuilder::operator=(CgiBuilder const& builder) {
     _writePipeFd = builder._writePipeFd;
     _writeIndex = builder._writeIndex;
     _storageBuffer = builder._storageBuffer;
+    _cgiPathInfo = builder._cgiPathInfo;
   }
   return *this;
 }
@@ -48,6 +50,7 @@ CgiBuilder& CgiBuilder::operator=(CgiBuilder const& builder) {
 // 첫 번째 호출 시 CGI 생성
 // - 이후 호출부터 이벤트에 따라 읽기 또는 쓰기 진행
 std::vector<int> const CgiBuilder::build(Event::EventType type) {
+  checkPathInfo();
   if (_pid == -1) {
     return forkCgi();
   }
@@ -60,7 +63,7 @@ std::vector<int> const CgiBuilder::build(Event::EventType type) {
       handleWriteEvent();
       break;
     default:
-      throw std::runtime_error("[] CgiBuilder: build - unknown event");
+      throw std::runtime_error("[5400] CgiBuilder: build - unknown event");
       break;
   }
   return std::vector<int>();
@@ -87,6 +90,26 @@ void CgiBuilder::close(void) {
  * Private method - CGI init
  */
 
+// CGI Builder에게 전달되는 path 정보가 올바른지 검사
+// - CGI extention으로 끝나지 않는 경로인 경우 403 예외 발생
+void CgiBuilder::checkPathInfo(void) {
+  Request const& request = getRequest();
+
+  // 디렉토리로 끝나는 경우 index 정보를 붙여 확인
+  if (request.getFullPath().back() == '/') {
+    _cgiPathInfo = request.generateIndexPath();
+  } else {
+    _cgiPathInfo = request.getFullPath();
+  }
+
+  // CGI extention 정보 확인
+  std::string const& extention = request.getLocation().getCgiExtention();
+  if (endsWith(_cgiPathInfo, extention) == false) {
+    throw StatusException(
+        HTTP_FORBIDDEN, "[5401] CgiBuilder: checkPathInfo - invalid extention");
+  }
+}
+
 // CGI 초기화
 // - 시스템콜 호출에 실패한 경우 예외 발생
 std::vector<int> const CgiBuilder::forkCgi(void) {
@@ -94,10 +117,10 @@ std::vector<int> const CgiBuilder::forkCgi(void) {
   int c_to_p[2];
 
   if (pipe(p_to_c) < 0 or pipe(c_to_p) < 0) {
-    throw std::runtime_error("[] CgiBuilder: forkCgi - pipe fail");
+    throw std::runtime_error("[5402] CgiBuilder: forkCgi - pipe fail");
   }
   if ((_pid = fork()) < 0) {
-    throw std::runtime_error("[] CgiBuilder: forkCgi - fork fail");
+    throw std::runtime_error("[5403] CgiBuilder: forkCgi - fork fail");
   }
 
   Socket::setNonBlocking(p_to_c[0]);
@@ -132,32 +155,34 @@ void CgiBuilder::parentProcess(int* const p_to_c, int* const c_to_p) {
 
 // 자식 프로세스 작업
 void CgiBuilder::childProcess(int* const p_to_c, int* const c_to_p) {
-  ::close(p_to_c[1]);
-  ::close(c_to_p[0]);
+  try {
+    ::close(p_to_c[1]);
+    ::close(c_to_p[0]);
 
-  dup2(p_to_c[0], STDIN_FILENO);
-  ::close(p_to_c[0]);
+    dup2(p_to_c[0], STDIN_FILENO);
+    ::close(p_to_c[0]);
 
-  dup2(c_to_p[1], STDOUT_FILENO);
-  ::close(c_to_p[1]);
+    dup2(c_to_p[1], STDOUT_FILENO);
+    ::close(c_to_p[1]);
 
-  // 환경변수 설정
-  char** envp = makeEnv();
+    // 환경변수 설정
+    char** envp = makeEnv();
 
-  // cgi 있는지 + 실행권한 확인
-  std::string const& cgiPath = getRequest().getLocation().getCgiPath();
+    // cgi 있는지 + 실행권한 확인
+    std::string const& cgiPath = getRequest().getLocation().getCgiPath();
 
-  if (access(cgiPath.c_str(), F_OK) < 0 or access(cgiPath.c_str(), X_OK) < 0) {
-    std::cout << "Status: 500 Access Fail\r\n";
-    std::cout << "Content-Type: text/html\r\n\r\n";
-    std::cout << Config::defaultErrorPageBody(500);
-    exit(1);
-  }
+    if (access(cgiPath.c_str(), F_OK) < 0 or
+        access(cgiPath.c_str(), X_OK) < 0) {
+      throw std::runtime_error("CGI Access Fail");
+    }
 
-  // cgi에 인자 및 환경변수 전송
-  if (execve(cgiPath.c_str(), NULL, envp) < 0) {
-    freeEnvArray(envp);
-    std::cout << "Status: 500 Execve Fail\r\n";
+    // cgi에 인자 및 환경변수 전송
+    if (execve(cgiPath.c_str(), NULL, envp) < 0) {
+      freeEnvArray(envp);
+      throw std::runtime_error("CGI Execve Fail");
+    }
+  } catch (std::exception const& e) {
+    std::cout << "Status: 500 " << e.what() << "\r\n";
     std::cout << "Content-Type: text/html\r\n\r\n";
     std::cout << Config::defaultErrorPageBody(500);
     exit(1);
@@ -176,7 +201,8 @@ void CgiBuilder::handleReadEvent(void) {
   ssize_t bytesRead = read(_readPipeFd, buffer, sizeof(buffer));
 
   if (bytesRead < 0) {
-    throw std::runtime_error("[] CgiBuilder: handleReadEvent - read failed");
+    throw std::runtime_error(
+        "[5404] CgiBuilder: handleReadEvent - read failed");
   }
 
   for (ssize_t i = 0; i < bytesRead; i++) {
@@ -211,7 +237,8 @@ void CgiBuilder::handleWriteEvent(void) {
   _writeIndex += bytesWrite;
 
   if (bytesWrite < 0) {
-    throw std::runtime_error("[] CgiBuilder: handleWriteEvent - write failed");
+    throw std::runtime_error(
+        "[5405] CgiBuilder: handleWriteEvent - write failed");
   }
 
   if (_writeIndex >= body.size()) {  // 모든 내용 전송 완료
@@ -325,6 +352,17 @@ void CgiBuilder::trim(std::string& str) {
   }
 }
 
+// 문자열의 마지막이 특정 문자열로 끝나는지 확인
+bool CgiBuilder::endsWith(const std::string& fullString,
+                          const std::string& ending) {
+  if (fullString.length() >= ending.length()) {
+    return (0 == fullString.compare(fullString.length() - ending.length(),
+                                    ending.length(), ending));
+  } else {
+    return false;
+  }
+}
+
 /**
  * Private method - env
  */
@@ -379,11 +417,9 @@ char** CgiBuilder::makeEnv(void) {
     env["HTTP_USER_AGENT"] = request.getHeaderFieldValues("user-agent");
   }
 
-  env["PATH_INFO"] = request.getFullPath();  // Todo: PATH_INFO?
+  env["PATH_INFO"] = _cgiPathInfo;
+
   env["QUERY_STRING"] = request.getQuery();
-  // env["REMOTE_ADDR"] = Todo: 클라이언트 IP 주소
-  // env["REMOTE_HOST"] = Todo: 클라이언트 IP 주소
-  // env["REMOTE_USER"] = "null"
   switch (request.getMethod()) {
     case HTTP_GET:
       env["REQUEST_METHOD"] = "GET";
@@ -396,13 +432,8 @@ char** CgiBuilder::makeEnv(void) {
       break;
     default:
       break;
-      // case HTTP_HEAD:
-      //   env["REQUEST_METHOD"] = "HEAD";
-      //   break;
   }
-  // env["SCRIPT_NAME"] -> ?
-  // env["SERVER_NAME"] = server.getServerName(); // Todo: 구현
-  // env["SERVER_PORT"] = server.getPort();
+
   env["SERVER_PROTOCOL"] = "HTTP/1.1";
   env["SERVER_SOFTWARE"] = "webserv/1.0";
 

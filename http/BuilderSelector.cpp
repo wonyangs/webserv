@@ -20,6 +20,8 @@ AResponseBuilder* BuilderSelector::getMatchingBuilder(Request const& request) {
   if (BuilderSelector::isDirRedirectSelected(fullPath))
     return new RedirectBuilder(request, request.getPath() + '/');
 
+  if (request.getMethod() == HTTP_DELETE) return new DeleteBuilder(request);
+
   return new StaticFileBuilder(request);
 }
 
@@ -39,12 +41,12 @@ bool BuilderSelector::isAutoindexBuilderSelected(Request const& request) {
   return false;
 }
 
-// cgi 확장자 파일 또는 POST, DELETE의 경우
+// cgi 확장자 파일 또는 POST인 경우
 bool BuilderSelector::isCgiBuilderSelected(Request const& request,
                                            std::string const& fullPath) {
   Location const& location = request.getLocation();
 
-  if (request.getMethod() != HTTP_GET) return true;
+  if (request.getMethod() == HTTP_POST) return true;
 
   if (location.hasCgiInfo() and
       Config::findFileExtension(fullPath) == location.getCgiExtention())
