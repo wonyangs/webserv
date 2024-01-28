@@ -302,7 +302,7 @@ bool Request::isValidRequestTarget(std::string const& requestTarget) {
   size_t size = requestTarget.size();
   if (requestTarget.size() < 1 or requestTarget.front() != '/') return false;
 
-  std::string const& others = "-._~!$&'()*+,;=:@/";
+  std::string const& others = "-._~!$&'()*+,;=:@/?";
   for (size_t i = 0; i < size; i++) {
     char ch = requestTarget[i];
 
