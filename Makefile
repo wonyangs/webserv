@@ -4,6 +4,7 @@ CXXFLAGS	= -Wall -Werror -Wextra -std=c++98
 
 SRCS		= config/Server.cpp \
 			  config/Location.cpp \
+			  config/ConfigParser.cpp \
 			  utils/StatusException.cpp \
 			  utils/Config.cpp \
 			  utils/Util.cpp \
