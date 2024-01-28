@@ -2,6 +2,7 @@
 #define __BUILDER_SELECTOR_HPP__
 
 #include <sys/stat.h>
+#include <unistd.h>
 
 #include <stdexcept>
 
