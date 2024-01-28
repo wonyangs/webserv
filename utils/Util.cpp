@@ -17,3 +17,9 @@ int Util::stoi(std::string const& str) {
   }
   return n;
 }
+
+// string을 모두 소문자로 변경
+void Util::toLowerCase(std::string& str) {
+  for (std::string::iterator it = str.begin(); it != str.end(); ++it)
+    *it = std::tolower(static_cast<unsigned char>(*it));
+}

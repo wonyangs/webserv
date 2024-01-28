@@ -9,6 +9,7 @@ class Util {
  public:
   static std::string const itos(int n);
   static int stoi(std::string const& str);
+  static void toLowerCase(std::string& str);
 
  private:
   Util(void);

@@ -388,10 +388,10 @@ std::vector<std::string> RequestParser::processHeaderField() {
   }
 
   result[fieldValueIndex] = trim(result[fieldValueIndex]);
-  toLowerCase(result[fieldNameIndex]);
+  Util::toLowerCase(result[fieldNameIndex]);
   if (result[fieldNameIndex] == "host" or
       result[fieldNameIndex] == "connection")
-    toLowerCase(result[fieldValueIndex]);
+    Util::toLowerCase(result[fieldValueIndex]);
 
   return result;
 }
@@ -533,12 +533,6 @@ void RequestParser::removeCRLF(std::vector<octet_t>& vec) {
   }
   vec.pop_back();
   vec.pop_back();
-}
-
-// string을 모두 소문자로 변경
-void RequestParser::toLowerCase(std::string& str) {
-  for (std::string::iterator it = str.begin(); it != str.end(); ++it)
-    *it = std::tolower(static_cast<unsigned char>(*it));
 }
 
 // string의 선행, 후행 공백 제거
