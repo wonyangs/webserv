@@ -18,6 +18,8 @@ class Server {
   std::set<std::string> _serverNames;
   std::map<std::string, Location> _locationBlocks;
 
+  bool _isIncludeRootBlock;
+
  public:
   Server(void);
   Server(std::string hostIp, int port);
@@ -38,6 +40,8 @@ class Server {
   Location const& getMatchedLocationBlock(std::string const& uri);
   bool hasDefaultLocationBlock(void);
   bool hasServerName(std::string const& host);
+
+  bool isRequiredValuesSet(void) const;
 
  private:
   typedef std::map<std::string, Location> LocationMap;

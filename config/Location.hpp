@@ -12,6 +12,10 @@
 // - location 블럭의 정보를 저장한다.
 class Location {
  private:
+  static int const DEFAULT_MAX_BODY_SIZE = 100000000;
+
+  std::string _projectRootPath;
+
   std::string _uri;
   std::string _rootPath;
   std::string _indexFile;
@@ -27,8 +31,14 @@ class Location {
   std::string _cgiPath;
   std::string _uploadPath;
 
+  bool _hasAllowMethodField;
+  bool _hasRedirectField;
+
  public:
+  void printConfiguration();  // debug
+
   Location(void);
+  Location(std::string const& projectRootPath);
   Location(std::string const& uri, std::string const& rootPath,
            std::string const& indexFile);
   Location(Location const& location);
@@ -37,6 +47,9 @@ class Location {
   Location& operator=(Location const& location);
 
   // setter
+  void setUri(std::string const& uri);
+  void setRootPath(std::string const& rootPath);
+  void setIndexFile(std::string const& indexFile);
   void setMaxBodySize(int size);
   void addErrorPage(int statusNumber, std::string const& path);
   void addAllowMethod(EHttpMethod method);
@@ -47,6 +60,7 @@ class Location {
   void setUploadDir(std::string const& dirPath);
 
   // getter
+  std::string const& getProjectRootPath(void) const;
   std::string const& getUri(void) const;
   std::string const& getRootPath(void) const;
   std::string const& getIndexFile(void) const;
@@ -62,11 +76,9 @@ class Location {
   std::string const& getCgiPath(void) const;
   std::string const& getUploadDirPath(void) const;
 
- private:
-  static int const DEFAULT_MAX_BODY_SIZE = 100000000;
+  bool isRequiredValuesSet(void) const;
 
-  bool _hasAllowMethodField;
-  bool _hasRedirectField;
+ private:
 };
 
 #endif
