@@ -2,15 +2,86 @@
 <html>
 <head>
   <meta charset="UTF-8">
+  <title>파일 업로드</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      text-align: center;
+      padding: 50px;
+    }
 
-    <title>파일 업로드</title>
+    h2 {
+      color: #333;
+    }
+
+    form {
+      margin: 20px auto;
+      width: 300px;
+    }
+
+    label, input {
+      margin-bottom: 10px;
+    }
+
+    .button {
+      display: inline-block;
+      padding: 10px 20px;
+      font-size: 15px;
+      cursor: pointer;
+      text-align: center;
+      text-decoration: none;
+      outline: none;
+      color: #fff;
+      background-color: #4CAF50;
+      border: none;
+      border-radius: 15px;
+      box-shadow: 0 9px #999;
+    }
+
+    .button:hover {background-color: #3e8e41}
+
+    .button:active {
+      background-color: #3e8e41;
+      box-shadow: 0 5px #666;
+      transform: translateY(4px);
+    }
+  </style>
 </head>
 <body>
     <h2>파일 업로드</h2>
-    <form action="/cgi-bin/upload.py" method="post" enctype="multipart/form-data">
+    <form id="uploadForm" method="post" enctype="multipart/form-data">
         <label for="fileUpload">파일 선택:</label>
         <input type="file" id="fileUpload" name="fileUpload"><br><br>
         <input type="submit" value="업로드">
     </form>
+    
+    <script>
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // 폼의 기본 제출 동작을 방지
+    
+        var formData = new FormData(this);
+    
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/cgi-bin/upload.py', true);
+        
+        xhr.onload = function() {
+            if (xhr.status === 201) {
+                alert('업로드 성공: ' + xhr.responseText);
+            } else {
+                alert('업로드 실패: ' + xhr.status + ' ' + xhr.responseText);
+            }
+        };
+    
+        xhr.send(formData);
+    });
+    </script>
+
+    <button class="button" onclick="goToGallery()">갤러리 가기</button>
+    <script>
+      function goToGallery() {
+        window.location.href = '/cgi-bin/image-view.py';
+      }
+    </script>
 </body>
 </html>
