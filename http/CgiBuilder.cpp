@@ -17,6 +17,7 @@ CgiBuilder::CgiBuilder(CgiBuilder const& builder) : AResponseBuilder(builder) {
   _writePipeFd = builder._writePipeFd;
   _writeIndex = builder._writeIndex;
   _storageBuffer = builder._storageBuffer;
+  _cgiPathInfo = builder._cgiPathInfo;
 }
 
 CgiBuilder::~CgiBuilder(void) { close(); }
@@ -37,6 +38,7 @@ CgiBuilder& CgiBuilder::operator=(CgiBuilder const& builder) {
     _writePipeFd = builder._writePipeFd;
     _writeIndex = builder._writeIndex;
     _storageBuffer = builder._storageBuffer;
+    _cgiPathInfo = builder._cgiPathInfo;
   }
   return *this;
 }
@@ -48,6 +50,7 @@ CgiBuilder& CgiBuilder::operator=(CgiBuilder const& builder) {
 // 첫 번째 호출 시 CGI 생성
 // - 이후 호출부터 이벤트에 따라 읽기 또는 쓰기 진행
 std::vector<int> const CgiBuilder::build(Event::EventType type) {
+  checkPathInfo();
   if (_pid == -1) {
     return forkCgi();
   }
@@ -86,6 +89,27 @@ void CgiBuilder::close(void) {
 /**
  * Private method - CGI init
  */
+
+// CGI Builder에게 전달되는 path 정보가 올바른지 검사
+// - path에 파일이 없는 경우 404 예외 발생
+// - CGI extention으로 끝나지 않는 경로인 경우 403 예외 발생
+void CgiBuilder::checkPathInfo(void) {
+  Request const& request = getRequest();
+
+  // 디렉토리로 끝나는 경우 index 정보를 붙여 확인
+  if (request.getFullPath().back() == '/') {
+    _cgiPathInfo = request.generateIndexPath();
+  } else {
+    _cgiPathInfo = request.getFullPath();
+  }
+
+  // CGI extention 정보 확인
+  std::string const& extention = request.getLocation().getCgiExtention();
+  if (endsWith(_cgiPathInfo, extention) == false) {
+    throw StatusException(HTTP_FORBIDDEN,
+                          "[] CgiBuilder: checkPathInfo - invalid extention");
+  }
+}
 
 // CGI 초기화
 // - 시스템콜 호출에 실패한 경우 예외 발생
@@ -327,6 +351,17 @@ void CgiBuilder::trim(std::string& str) {
   }
 }
 
+// 문자열의 마지막이 특정 문자열로 끝나는지 확인
+bool CgiBuilder::endsWith(const std::string& fullString,
+                          const std::string& ending) {
+  if (fullString.length() >= ending.length()) {
+    return (0 == fullString.compare(fullString.length() - ending.length(),
+                                    ending.length(), ending));
+  } else {
+    return false;
+  }
+}
+
 /**
  * Private method - env
  */
@@ -381,20 +416,12 @@ char** CgiBuilder::makeEnv(void) {
     env["HTTP_USER_AGENT"] = request.getHeaderFieldValues("user-agent");
   }
 
-  if (request.getMethod() == HTTP_GET and request.getFullPath().back() == '/') {
-    env["PATH_INFO"] = request.generateIndexPath();
-  } else {
-    env["PATH_INFO"] = request.getFullPath();
-  }
+  env["PATH_INFO"] = _cgiPathInfo;
 
   env["QUERY_STRING"] = request.getQuery();
-  // env["REMOTE_ADDR"] = Todo: 클라이언트 IP 주소
-  // env["REMOTE_HOST"] = Todo: 클라이언트 IP 주소
-  // env["REMOTE_USER"] = "null"
   switch (request.getMethod()) {
     case HTTP_GET:
       env["REQUEST_METHOD"] = "GET";
-      break;
     case HTTP_POST:
       env["REQUEST_METHOD"] = "POST";
       break;
@@ -403,13 +430,8 @@ char** CgiBuilder::makeEnv(void) {
       break;
     default:
       break;
-      // case HTTP_HEAD:
-      //   env["REQUEST_METHOD"] = "HEAD";
-      //   break;
   }
-  // env["SCRIPT_NAME"] -> ?
-  // env["SERVER_NAME"] = server.getServerName(); // Todo: 구현
-  // env["SERVER_PORT"] = server.getPort();
+
   env["SERVER_PROTOCOL"] = "HTTP/1.1";
   env["SERVER_SOFTWARE"] = "webserv/1.0";
 

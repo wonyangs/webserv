@@ -26,6 +26,8 @@ class CgiBuilder : public AResponseBuilder {
   size_t _writeIndex;
   std::vector<octet_t> _storageBuffer;
 
+  std::string _cgiPathInfo;
+
  public:
   CgiBuilder(Request const& request);
   CgiBuilder(CgiBuilder const& builder);
@@ -39,6 +41,7 @@ class CgiBuilder : public AResponseBuilder {
  private:
   static int const BUFFER_SIZE = 4096;
 
+  void checkPathInfo(void);
   std::vector<int> const forkCgi(void);
   void parentProcess(int* const p_to_c, int* const c_to_p);
   void childProcess(int* const p_to_c, int* const c_to_p);
@@ -48,6 +51,8 @@ class CgiBuilder : public AResponseBuilder {
 
   virtual void buildResponseContent(std::string const& cgiResponse);
   void trim(std::string& str);
+  bool endsWith(const std::string& fullString,
+                          const std::string& ending);
 
   char** makeEnv(void);
   char** createEnvArray(std::map<std::string, std::string> const& env);
