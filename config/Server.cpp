@@ -4,6 +4,8 @@
 
 // Constructor & Destructor
 
+Server::Server(void) {}
+
 Server::Server(std::string hostIp, int port)
     : _hostIp(hostIp),
       _port(port){
@@ -34,6 +36,10 @@ std::string const& Server::getHostIp(void) const { return _hostIp; }
 int Server::getPort(void) const { return _port; }
 
 // Public Method - setter
+
+void Server::setHostIp(std::string const& hostIp) { _hostIp = hostIp; }
+
+void Server::setPort(int port) { _port = port; }
 
 // - server name을 추가
 // - 이미 있는 server name이 들어올 경우 예외 발생
