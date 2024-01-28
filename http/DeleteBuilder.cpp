@@ -5,7 +5,7 @@
  */
 
 DeleteBuilder::DeleteBuilder(Request const& request)
-    : AResponseBuilder(STATIC, request) {}
+    : AResponseBuilder(DELETE, request) {}
 
 DeleteBuilder::DeleteBuilder(DeleteBuilder const& builder)
     : AResponseBuilder(builder) {}
@@ -78,7 +78,6 @@ void DeleteBuilder::buildResponseContent(std::string const& body) {
   _response.setHttpVersion("HTTP/1.1");
   _response.setStatusCode(204);
 
-  _response.addHeader("Content-Type", "text/html");
   _response.addHeader("Content-Length", Util::itos(body.size()));
 
   isConnectionClose() ? _response.addHeader("Connection", "close")

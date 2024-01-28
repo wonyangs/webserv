@@ -422,6 +422,7 @@ char** CgiBuilder::makeEnv(void) {
   switch (request.getMethod()) {
     case HTTP_GET:
       env["REQUEST_METHOD"] = "GET";
+      break;
     case HTTP_POST:
       env["REQUEST_METHOD"] = "POST";
       break;

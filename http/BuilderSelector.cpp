@@ -20,13 +20,9 @@ AResponseBuilder* BuilderSelector::getMatchingBuilder(Request const& request) {
   if (BuilderSelector::isDirRedirectSelected(fullPath))
     return new RedirectBuilder(request, request.getPath() + '/');
 
-  // GET -> StaticFileBuilder
-  // DELETE -> DeleteBuilder
-  if (request.getMethod() == HTTP_GET)
-    return new StaticFileBuilder(request);
-  else {
-    return new DeleteBuilder(request);
-  }
+  if (request.getMethod() == HTTP_DELETE) return new DeleteBuilder(request);
+
+  return new StaticFileBuilder(request);
 }
 
 // 디렉토리 경로(/로 끝나는 path)인 경우
