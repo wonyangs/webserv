@@ -8,6 +8,7 @@
 #include "../http/AResponseBuilder.hpp"
 #include "../http/AutoindexBuilder.hpp"
 #include "../http/CgiBuilder.hpp"
+#include "../http/DeleteBuilder.hpp"
 #include "../http/ErrorBuilder.hpp"
 #include "../http/RedirectBuilder.hpp"
 #include "../http/Request.hpp"
