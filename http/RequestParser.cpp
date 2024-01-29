@@ -538,12 +538,12 @@ void RequestParser::removeCRLF(std::vector<octet_t>& vec) {
 // string의 선행, 후행 공백 제거
 std::string RequestParser::trim(std::string const& str) {
   std::string::const_iterator it = str.begin();
-  while (it != str.end() && isWhitespace(*it)) {
+  while (it != str.end() and isWhitespace(*it)) {
     ++it;
   }
 
   std::string::const_reverse_iterator rit = str.rbegin();
-  while (rit.base() != it && isWhitespace(*rit)) {
+  while (rit.base() != it and isWhitespace(*rit)) {
     ++rit;
   }
 

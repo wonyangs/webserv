@@ -167,7 +167,7 @@ bool Server::isValidIpFormat(std::string const& ip) {
 
   while (std::getline(ss, token, '.')) {
     segmentCount++;
-    if (segmentCount > 4 || token.empty() || token.length() > 3) {
+    if (segmentCount > 4 or token.empty() or token.length() > 3) {
       return false;
     }
 
@@ -178,16 +178,16 @@ bool Server::isValidIpFormat(std::string const& ip) {
     }
 
     int num = Util::stoi(token);
-    if (num < 0 || num > 255) {
+    if (num < 0 or num > 255) {
       return false;
     }
   }
-  return ss.eof() && segmentCount == 4 && ip[ip.length() - 1] != '.';
+  return ss.eof() and segmentCount == 4 and ip[ip.length() - 1] != '.';
 }
 
 // 포트 번호가 올바른지 여부 반환
 bool Server::isValidPort(const std::string& port) {
-  if (port.empty() || port.length() > 5) {
+  if (port.empty() or port.length() > 5) {
     return false;
   }
 
@@ -198,7 +198,7 @@ bool Server::isValidPort(const std::string& port) {
   }
 
   int portNum = Util::stoi(port);
-  if (portNum < 0 || portNum > 65535) {
+  if (portNum < 0 or portNum > 65535) {
     return false;
   }
 

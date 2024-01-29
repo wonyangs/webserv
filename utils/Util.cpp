@@ -42,14 +42,14 @@ std::string const Util::removeDotSegments(std::string const& path) {
                               ? inputBuffer.substr(0, segmentEnd)
                               : inputBuffer;
 
-    if (segment == "/." || segment == ".") {
+    if (segment == "/." or segment == ".") {
       // pass
-    } else if (segment == "/.." || segment == "..") {
+    } else if (segment == "/.." or segment == "..") {
       std::size_t pos = outputBuffer.find_last_of('/');
       if (pos != std::string::npos) {
         outputBuffer.erase(pos);
       }
-    } else if (!segment.empty() && segment != "/") {
+    } else if (!segment.empty() and segment != "/") {
       outputBuffer += segment;
     }
 
