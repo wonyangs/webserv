@@ -56,58 +56,60 @@
       <input type="submit" value="업로드">
   </form>
 
-    <button class="button" onclick="goToGallery()">갤러리 가기</button>
-    <script>
-      document.getElementById('uploadForm').addEventListener('submit', function(e) {
-          e.preventDefault(); // 폼의 기본 제출 동작을 방지
-      
-          var formData = new FormData(this);
-      
-          var xhr = new XMLHttpRequest();
-          xhr.open('POST', '/cgi-bin/upload.py', true);
-          
-          xhr.onload = function() {
-              if (xhr.status === 201) {
-                  alert('업로드 성공: ' + xhr.responseText);
-              } else {
-                  alert('업로드 실패: ' + xhr.status + ' ' + xhr.responseText);
-              }
-          };
-      
-          xhr.send(formData);
-      });
+  <button class="button" onclick="goToGallery()">갤러리 가기</button>
 
+  <!-- 로그인/로그아웃 버튼을 위한 컨테이너 추가 -->
+  <div id="loginContainer"></div>
 
-      window.onload = function() {
-        // 서버에 세션 상태 요청
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // 폼의 기본 제출 동작을 방지
+
+        var formData = new FormData(this);
+
         var xhr = new XMLHttpRequest();
-        xhr.open('GET', '/cgi-bin/session-status.py', true);
+        xhr.open('POST', '/cgi-bin/upload.py', true);
+
         xhr.onload = function() {
-          if (xhr.status === 200) {
-            var response = JSON.parse(xhr.responseText);
-            if (response.loggedIn) {
-              // 로그인 상태일 때 로그아웃 버튼 표시
-              document.body.innerHTML += '<button class="button" onclick="logout()">로그아웃</button>';
+            if (xhr.status === 201) {
+                alert('업로드 성공: ' + xhr.responseText);
             } else {
-              // 로그아웃 상태일 때 로그인 버튼 표시
-              document.body.innerHTML += '<button class="button" onclick="goToLogin()">로그인 페이지</button>';
+                alert('업로드 실패: ' + xhr.status + ' ' + xhr.responseText);
             }
-          }
         };
-        xhr.send();
+
+        xhr.send(formData);
+    });
+
+    window.onload = function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', '/cgi-bin/session-status.py', true);
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          var response = JSON.parse(xhr.responseText);
+          var loginContainer = document.getElementById('loginContainer');
+
+          if (response.loggedIn) {
+            loginContainer.innerHTML = '<button class="button" onclick="logout()">로그아웃</button>';
+          } else {
+            loginContainer.innerHTML = '<button class="button" onclick="goToLogin()">로그인 페이지</button>';
+          }
+        }
       };
+      xhr.send();
+    };
 
-      function goToGallery() {
-        window.location.href = '/cgi-bin/image-view.py';
-      }
+    function goToGallery() {
+      window.location.href = '/cgi-bin/image-view.py';
+    }
 
-      function logout() {
-        window.location.href = '/cgi-bin/logout.py';
-      }
-      
-      function goToLogin() {
-        window.location.href = '/login.html';
-      }
-      </script>
+    function logout() {
+      window.location.href = '/cgi-bin/logout.py';
+    }
+
+    function goToLogin() {
+      window.location.href = '/login.html';
+    }
+  </script>
 </body>
 </html>
