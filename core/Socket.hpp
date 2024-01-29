@@ -1,6 +1,7 @@
 #ifndef __SOCKET_HPP__
 #define __SOCKET_HPP__
 
+#include <cstdio>
 #include <string>
 
 // 소켓 api를 제공하는 정적 클래스

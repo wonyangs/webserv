@@ -128,7 +128,7 @@ std::string const Request::generateIndexPath(void) const {
   std::string const& indexFile = location.getIndexFile();
   std::string fullPath = getFullPath();
 
-  if (indexFile.front() == '/') fullPath.pop_back();
+  if (indexFile[0] == '/') fullPath.substr(0, fullPath.size() - 1);
   fullPath += indexFile;
 
   return fullPath;
@@ -195,9 +195,11 @@ void Request::storeFullPath(void) {
   std::string locationUri = location.getUri();
 
   // path의 맨 처음이 무조건 /로 시작해 /를 제거
-  if (projectPath.back() == '/') projectPath.pop_back();
-  if (root.back() == '/') root.pop_back();
-  if (locationUri.back() == '/') locationUri.pop_back();
+  if (projectPath[projectPath.size() - 1] == '/')
+    projectPath.substr(0, projectPath.size() - 1);
+  if (root[root.size() - 1] == '/') root.substr(0, root.size() - 1);
+  if (locationUri[locationUri.size() - 1] == '/')
+    locationUri.substr(0, locationUri.size() - 1);
 
   size_t pos = _path.find(locationUri);
 

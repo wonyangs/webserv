@@ -380,7 +380,7 @@ std::vector<std::string> RequestParser::processHeaderField() {
 
   int const fieldNameIndex = 0, fieldValueIndex = 1;
   if (result[fieldNameIndex].size() < 1 or
-      isWhitespace(result[fieldNameIndex].back())) {
+      isWhitespace(result[fieldNameIndex][result[fieldNameIndex].size() - 1])) {
     throw StatusException(
         HTTP_BAD_REQUEST,
         "[2201] RequestParser: processHeaderField - No whitespace is "
