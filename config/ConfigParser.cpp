@@ -26,7 +26,9 @@ void ConfigParser::storeProjectRoot(void) {
   std::vector<std::string> result;
   split(_line, result);
   checkSize(result, 2);
-  // path 유효성 검사
+  if (Util::isValidPath(result[1]) == false)
+    throw std::runtime_error(
+        "[1210] ConfigParser: storeProjectRoot - invalid path");
   _projectRootPath = result[1];
 }
 
