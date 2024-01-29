@@ -103,14 +103,14 @@ void Location::setRootPath(std::string const& rootPath) {
     throw std::runtime_error("[] Location: setRootPath - invalid path");
   }
 
-  _rootPath = convertPath(rootPath);
+  _rootPath = Util::convertPath(rootPath);
 }
 void Location::setIndexFile(std::string const& indexFile) {
   if (Util::isValidPath(indexFile) == false) {
     throw std::runtime_error("[] Location: indexFile - invalid path");
   }
 
-  _indexFile = convertPath(indexFile);
+  _indexFile = Util::convertPath(indexFile);
 }
 
 // - Location 블럭의 max body size 설정
@@ -140,7 +140,7 @@ void Location::addErrorPage(int statusCode, std::string const& path) {
         "[1101] Location: addErrorPage - duplicate status code");
   }
 
-  std::string const convertedPath = convertPath(path);
+  std::string const convertedPath = Util::convertPath(path);
   _errorPages[statusCode] = getFullPath(convertedPath);
 }
 
@@ -180,7 +180,7 @@ void Location::setRedirectUri(std::string const& path) {
   }
 
   _hasRedirectField = true;
-  _redirectUri = convertPath(path);
+  _redirectUri = Util::convertPath(path);
 }
 
 // CGI extension 설정
@@ -201,7 +201,7 @@ void Location::setCgiPath(std::string const& cgiPath) {
     throw std::runtime_error("[] Location: setCgiPath - invalid path");
   }
 
-  std::string const convertedPath = convertPath(cgiPath);
+  std::string const convertedPath = Util::convertPath(cgiPath);
   _cgiPath = getFullPath(convertedPath);
   _cgiFlag = true;
 }
@@ -213,7 +213,7 @@ void Location::setUploadDir(std::string const& dirPath) {
     throw std::runtime_error("[] Location: setUploadDir - invalid path");
   }
 
-  std::string const convertedPath = convertPath(dirPath);
+  std::string const convertedPath = Util::convertPath(dirPath);
   _uploadPath = getFullPath(convertedPath);
   _cgiFlag = true;
 }
@@ -321,8 +321,4 @@ std::string Location::getFullPath(std::string const& path) {
   }
 
   return projectRootPath + path;
-}
-
-std::string Location::convertPath(std::string const& path) {
-  return Util::removeDotSegments(Util::pctDecode(path));
 }

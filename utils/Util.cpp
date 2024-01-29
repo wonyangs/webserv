@@ -148,3 +148,7 @@ EHttpMethod Util::matchEHttpMethod(std::string method) {
   if (method == "DELETE") return HTTP_DELETE;
   throw std::runtime_error("[] Util: matchEHttpMethod - match failed");
 }
+
+std::string Util::convertPath(std::string const& path) {
+  return Util::removeDotSegments(Util::pctDecode(path));
+}

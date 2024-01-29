@@ -80,7 +80,6 @@ class Location {
 
  private:
   std::string getFullPath(std::string const& path);
-  std::string convertPath(std::string const& path);
 };
 
 #endif

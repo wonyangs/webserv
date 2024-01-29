@@ -25,6 +25,7 @@ class Util {
   static bool isValidPath(std::string const& path);
   static bool isValidQuery(std::string const& query);
   static EHttpMethod matchEHttpMethod(std::string method);
+  static std::string convertPath(std::string const& path);
 
  private:
   Util(void);
