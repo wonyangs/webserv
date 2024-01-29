@@ -35,6 +35,8 @@ int Server::getPort(void) const { return _port; }
 
 // Public Method - setter
 
+// Host IP를 설정
+// - IP 형식이 잘못된 경우 예외 발생
 void Server::setHostIp(std::string const& hostIp) {
   if (isValidIpFormat(hostIp) == false) {
     throw std::runtime_error("[] Server: setHostIp - invalid ip format");
@@ -42,6 +44,8 @@ void Server::setHostIp(std::string const& hostIp) {
   _hostIp = hostIp;
 }
 
+// Port를 설정
+// - 포트 번호가 잘못된 경우 예외 발생
 void Server::setPort(std::string const& port) {
   if (isValidPort(port) == false) {
     throw std::runtime_error("[] Server: setPort - invalid port");
