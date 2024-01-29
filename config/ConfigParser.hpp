@@ -64,7 +64,6 @@ class ConfigParser {
 
   void split(std::string const& line, std::vector<std::string>& result);
   void checkSize(std::vector<std::string> const& result, size_t size);
-  EHttpMethod matchEHttpMethod(std::string method);
   void removeSemicolon(void);
 
   void throwFormatError(std::string const& func);

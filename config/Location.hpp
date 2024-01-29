@@ -52,8 +52,8 @@ class Location {
   void setIndexFile(std::string const& indexFile);
   void setMaxBodySize(int size);
   void addErrorPage(int statusNumber, std::string const& path);
-  void addAllowMethod(EHttpMethod method);
-  void setAutoIndex(bool setting);
+  void addAllowMethod(std::string methodString);
+  void setAutoIndex(std::string const&);
   void setRedirectUri(std::string const& path);
   void setCgiExtention(std::string const& extention);
   void setCgiPath(std::string const& cgiPath);

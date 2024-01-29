@@ -99,10 +99,18 @@ void Location::printConfiguration() {
 void Location::setUri(std::string const& uri) { _uri = uri; }
 
 void Location::setRootPath(std::string const& rootPath) {
-  _rootPath = rootPath;
+  if (Util::isValidPath(rootPath) == false) {
+    throw std::runtime_error("[] Location: setRootPath - invalid path");
+  }
+
+  _rootPath = Util::removeDotSegments(Util::pctDecode(rootPath));
 }
 void Location::setIndexFile(std::string const& indexFile) {
-  _indexFile = indexFile;
+  if (Util::isValidPath(indexFile) == false) {
+    throw std::runtime_error("[] Location: indexFile - invalid path");
+  }
+
+  _indexFile = Util::removeDotSegments(Util::pctDecode(indexFile));
 }
 
 // - Location 블럭의 max body size 설정
@@ -126,11 +134,14 @@ void Location::addErrorPage(int statusCode, std::string const& path) {
   _errorPages[statusCode] = path;
 }
 
-// - Location 블럭에 허용할 메서드 추가
+// Location 블럭에 허용할 메서드 추가
 // - 호출하지 않을 시 모든 메서드 허용
 // - 이미 있는 메서드를 다시 추가할 경우 예외 발생
-void Location::addAllowMethod(EHttpMethod method) {
-  // 한번이라도 이 메서드가 호출된 경우 차단된 메서드가 있다고 판단
+// - 한번이라도 이 메서드가 호출된 경우 차단된 메서드가 있다고 판단
+void Location::addAllowMethod(std::string methodString) {
+  Util::toUpperCase(methodString);
+  EHttpMethod method = Util::matchEHttpMethod(methodString);
+
   _hasAllowMethodField = true;
   if (_allowMethods.find(method) != _allowMethods.end()) {
     throw std::runtime_error(
@@ -141,7 +152,13 @@ void Location::addAllowMethod(EHttpMethod method) {
 
 // - Location 블럭의 autoindex 설정
 // - 호출하지 않을 시 기본값(false) 적용
-void Location::setAutoIndex(bool setting) { _autoIndex = setting; }
+void Location::setAutoIndex(std::string const& setting) {
+  if (setting != "on" and setting != "off") {
+    throw std::runtime_error("[] Location: setAutoIndex - invalid setting");
+  }
+
+  _autoIndex = setting == "on" ? true : false;
+}
 
 // - Location 블럭에 redirect할 uri 설정
 // - 호출하지 않을 시 redirect 블럭이 아님

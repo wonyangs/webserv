@@ -149,7 +149,7 @@ void ConfigParser::storeLocationMethod(Location& location) {
   }
 
   for (size_t i = 1; i < result.size(); i++) {
-    location.addAllowMethod(matchEHttpMethod(result[i]));
+    location.addAllowMethod(result[i]);
   }
 }
 
@@ -166,14 +166,7 @@ void ConfigParser::storeLocationAutoindex(Location& location) {
   split(_line, result);
   checkSize(result, 2);
 
-  if (result[1] == "on")
-    location.setAutoIndex(true);
-  else if (result[1] == "off")
-    location.setAutoIndex(false);
-  else {
-    throw std::runtime_error(
-        "[1204] ConfigParser: storeLocationAutoindex - invalid option");
-  }
+  location.setAutoIndex(result[1]);
 }
 
 void ConfigParser::storeLocationErrorPage(Location& location) {
@@ -304,16 +297,6 @@ void ConfigParser::checkSize(std::vector<std::string> const& result,
   if (result.size() != size) {
     throwFormatError("ConfigParser: checkSize");
   }
-}
-
-EHttpMethod ConfigParser::matchEHttpMethod(std::string method) {
-  Util::toLowerCase(method);
-
-  if (method == "get") return HTTP_GET;
-  if (method == "post") return HTTP_POST;
-  if (method == "delete") return HTTP_DELETE;
-  throw std::runtime_error(
-      "[1210] ConfigParser: matchEHttpMethod - match failed");
 }
 
 void ConfigParser::removeSemicolon(void) {
