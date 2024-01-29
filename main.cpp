@@ -37,9 +37,27 @@ std::vector<Server> exampleParseConfig(void) {
   server1.addLocationBlock(location1_2);
   server1.addLocationBlock(location1_3);
 
+  // ruby Config
+  Location location2_1("/", "/Users/wonyang/Project/webserv/www/",
+                       "index.html");
+  location2_1.addAllowMethod(HTTP_GET);
+  location2_1.setAutoIndex(false);
+
+  Location location2_2("/cgi-bin/", "/Users/wonyang/Project/webserv/cgi-bin/",
+                       "hello.rb");
+  location2_2.setCgiExtention(".rb");
+  location2_2.setCgiPath(
+      "/Users/wonyang/Project/webserv/cgi-bin/my-ruby-cgi.rb");
+  location2_2.setUploadDir("/Users/wonyang/Project/webserv/www/upload/");
+
+  Server server2("127.0.0.1", 8081);
+  server2.addLocationBlock(location2_1);
+  server2.addLocationBlock(location2_2);
+
   // 서버들을 vector에 추가
   std::vector<Server> servers;
   servers.push_back(server1);
+  servers.push_back(server2);
 
   return servers;
 }
