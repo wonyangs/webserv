@@ -146,7 +146,7 @@ EHttpMethod Util::matchEHttpMethod(std::string method) {
   if (method == "GET") return HTTP_GET;
   if (method == "POST") return HTTP_POST;
   if (method == "DELETE") return HTTP_DELETE;
-  throw std::runtime_error("[] Util: matchEHttpMethod - match failed");
+  throw std::runtime_error("[6103] Util: matchEHttpMethod - match failed");
 }
 
 std::string Util::convertPath(std::string const& path) {

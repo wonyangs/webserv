@@ -100,14 +100,14 @@ void Location::setUri(std::string const& uri) { _uri = uri; }
 
 void Location::setRootPath(std::string const& rootPath) {
   if (Util::isValidPath(rootPath) == false) {
-    throw std::runtime_error("[] Location: setRootPath - invalid path");
+    throw std::runtime_error("[1108] Location: setRootPath - invalid path");
   }
 
   _rootPath = Util::convertPath(rootPath);
 }
 void Location::setIndexFile(std::string const& indexFile) {
   if (Util::isValidPath(indexFile) == false) {
-    throw std::runtime_error("[] Location: indexFile - invalid path");
+    throw std::runtime_error("[1109] Location: setIndexFile - invalid path");
   }
 
   _indexFile = Util::convertPath(indexFile);
@@ -128,11 +128,12 @@ void Location::setMaxBodySize(int size) {
 // - 이미 있는 상태코드를 다시 추가할 경우 예외 발생
 void Location::addErrorPage(int statusCode, std::string const& path) {
   if (statusCode < 0 or (statusCode / 100 != 4 and statusCode / 100 != 5)) {
-    throw std::runtime_error("[] Location: addErrorPage - invalid statusCode");
+    throw std::runtime_error(
+        "[1110] Location: addErrorPage - invalid statusCode");
   }
 
   if (Util::isValidPath(path) == false) {
-    throw std::runtime_error("[] Location: addErrorPage - invalid path");
+    throw std::runtime_error("[1111] Location: addErrorPage - invalid path");
   }
 
   if (_errorPages.find(statusCode) != _errorPages.end()) {
@@ -164,7 +165,7 @@ void Location::addAllowMethod(std::string methodString) {
 // - 호출하지 않을 시 기본값(false) 적용
 void Location::setAutoIndex(std::string const& setting) {
   if (setting != "on" and setting != "off") {
-    throw std::runtime_error("[] Location: setAutoIndex - invalid setting");
+    throw std::runtime_error("[1112] Location: setAutoIndex - invalid setting");
   }
 
   _autoIndex = setting == "on" ? true : false;
@@ -176,7 +177,7 @@ void Location::setAutoIndex(std::string const& setting) {
 // - 한번이라도 이 메서드가 호출된 경우 redirect 블럭으로 판단
 void Location::setRedirectUri(std::string const& path) {
   if (Util::isValidPath(path) == false) {
-    throw std::runtime_error("[] Location: setRedirectUri - invalid path");
+    throw std::runtime_error("[1113] Location: setRedirectUri - invalid path");
   }
 
   _hasRedirectField = true;
@@ -188,7 +189,7 @@ void Location::setRedirectUri(std::string const& path) {
 void Location::setCgiExtension(std::string const& extension) {
   if (extension.size() == 0 or extension.front() != '.') {
     throw std::runtime_error(
-        "[] Location: setCgiExtension - invalid extension");
+        "[1114] Location: setCgiExtension - invalid extension");
   }
   _cgiExtension = extension;
   _cgiFlag = true;
@@ -198,7 +199,7 @@ void Location::setCgiExtension(std::string const& extension) {
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
 void Location::setCgiPath(std::string const& cgiPath) {
   if (Util::isValidPath(cgiPath) == false) {
-    throw std::runtime_error("[] Location: setCgiPath - invalid path");
+    throw std::runtime_error("[1115] Location: setCgiPath - invalid path");
   }
 
   std::string const convertedPath = Util::convertPath(cgiPath);
@@ -210,7 +211,7 @@ void Location::setCgiPath(std::string const& cgiPath) {
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
 void Location::setUploadDir(std::string const& dirPath) {
   if (Util::isValidPath(dirPath) == false) {
-    throw std::runtime_error("[] Location: setUploadDir - invalid path");
+    throw std::runtime_error("[1116] Location: setUploadDir - invalid path");
   }
 
   std::string const convertedPath = Util::convertPath(dirPath);
