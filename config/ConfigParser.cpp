@@ -20,7 +20,7 @@ void ConfigParser::storeProjectRoot(void) {
   if (isStartsWith(_line, "project_root ") == false) {
     throw std::runtime_error(
         "[1201] ConfigParser: parse - The first line of config must contain "
-        "project_root.");
+        "project_root");
   }
 
   std::vector<std::string> result;
@@ -55,8 +55,7 @@ void ConfigParser::parseServer(Server& server) {
       if (server.isRequiredValuesSet()) return;
       throw std::runtime_error(
           "[1202] ConfigParser: parseServer - host ip and port directives and "
-          "root "
-          "location block are required.");
+          "root location block are required");
     }
 
     if (_line == "") continue;
@@ -247,7 +246,7 @@ void ConfigParser::readConfigFile(void) {
 
   if (!isRegularFile(_path)) {
     throw std::runtime_error(
-        "[1205] ConfigParser: readConfigFile - not a regular file " + _path);
+        "[1205] ConfigParser: readConfigFile - not a regular file: " + _path);
   }
 
   if (!file or !file.is_open() or file.fail()) {
