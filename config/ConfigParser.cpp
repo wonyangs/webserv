@@ -292,6 +292,7 @@ void ConfigParser::split(std::string const& line,
   std::string token;
 
   while (std::getline(ss, token, ' ')) {
+    if (token == "") throwFormatError("ConfigParser: split");
     result.push_back(token);
   }
 }
