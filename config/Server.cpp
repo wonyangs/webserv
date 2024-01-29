@@ -82,10 +82,8 @@ void Server::setPort(std::string const& port) {
 // - 올바르지 않은 문자를 가진 server name이 들어온 경우 예외 발생
 // - 이미 있는 server name이 들어올 경우 예외 발생
 void Server::addServerName(std::string const& serverName) {
-  std::string const& others = "/:@";
   for (size_t i = 0; i < serverName.size(); i++) {
     char ch = serverName[i];
-    if (others.find(ch) != std::string::npos) continue;
     if (Util::isUnreserved(ch) or Util::isSubDelims(ch)) continue;
     if (Util::isPctEncoded(serverName.substr(i, 3))) continue;
 
