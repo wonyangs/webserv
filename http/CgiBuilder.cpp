@@ -447,7 +447,7 @@ char** CgiBuilder::makeEnv(void) {
     std::string key = it->first;
 
     // "x-"로 시작하는지 확인
-    if (key.length() >= 2 && key.substr(0, 2) == "x-") {
+    if (key.length() >= 2 and key.substr(0, 2) == "x-") {
       // "HTTP_" 접두사 추가
       key = "HTTP_" + key;
 
