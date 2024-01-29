@@ -46,7 +46,7 @@ Location& Location::operator=(Location const& location) {
     this->_redirectUri = location._redirectUri;
 
     this->_cgiFlag = location._cgiFlag;
-    this->_cgiExtention = location._cgiExtention;
+    this->_cgiExtension = location._cgiExtension;
     this->_cgiPath = location._cgiPath;
     this->_uploadPath = location._uploadPath;
 
@@ -88,7 +88,7 @@ void Location::printConfiguration() {
 
   std::cout << "CGI flag: " << (_cgiFlag ? "on" : "off") << std::endl;
   if (_cgiFlag) {
-    std::cout << "CGI extension: " << _cgiExtention << std::endl;
+    std::cout << "CGI extension: " << _cgiExtension << std::endl;
     std::cout << "CGI path: " << _cgiPath << std::endl;
     std::cout << "upload path: " << _uploadPath << std::endl;
   }
@@ -179,10 +179,10 @@ void Location::setRedirectUri(std::string const& path) {
   _redirectUri = convertPath(path);
 }
 
-// CGI extention 설정
+// CGI extension 설정
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
-void Location::setCgiExtention(std::string const& extention) {
-  _cgiExtention = extention;
+void Location::setCgiExtension(std::string const& extension) {
+  _cgiExtension = extension;
   _cgiFlag = true;
 }
 
@@ -272,13 +272,13 @@ std::string const& Location::getRedirectUri(void) const {
 // CGI 정보를 가지고 있는지 여부 반환
 bool Location::hasCgiInfo(void) const { return _cgiFlag; }
 
-// CGI extention 반환
+// CGI extension 반환
 // - CGI 정보가 설정되어 있지 않은데 호출된 경우 예외 발생
-std::string const& Location::getCgiExtention(void) const {
+std::string const& Location::getCgiExtension(void) const {
   if (_cgiFlag == false) {
-    throw std::runtime_error("[1105] Location: getCgiExtention - no cgi info");
+    throw std::runtime_error("[1105] Location: getCgiExtension - no cgi info");
   }
-  return _cgiExtention;
+  return _cgiExtension;
 }
 
 // CGI 경로 반환

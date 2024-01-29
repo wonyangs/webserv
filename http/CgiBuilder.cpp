@@ -91,7 +91,7 @@ void CgiBuilder::close(void) {
  */
 
 // CGI Builder에게 전달되는 path 정보가 올바른지 검사
-// - CGI extention으로 끝나지 않는 경로인 경우 403 예외 발생
+// - CGI extension으로 끝나지 않는 경로인 경우 403 예외 발생
 void CgiBuilder::checkPathInfo(void) {
   Request const& request = getRequest();
 
@@ -102,11 +102,11 @@ void CgiBuilder::checkPathInfo(void) {
     _cgiPathInfo = request.getFullPath();
   }
 
-  // CGI extention 정보 확인
-  std::string const& extention = request.getLocation().getCgiExtention();
-  if (endsWith(_cgiPathInfo, extention) == false) {
+  // CGI extension 정보 확인
+  std::string const& extension = request.getLocation().getCgiExtension();
+  if (endsWith(_cgiPathInfo, extension) == false) {
     throw StatusException(
-        HTTP_FORBIDDEN, "[5401] CgiBuilder: checkPathInfo - invalid extention");
+        HTTP_FORBIDDEN, "[5401] CgiBuilder: checkPathInfo - invalid extension");
   }
 }
 

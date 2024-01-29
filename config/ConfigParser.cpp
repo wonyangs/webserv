@@ -187,7 +187,7 @@ void ConfigParser::storeLocationCgi(Location& location) {
   split(_line, result);
   checkSize(result, 4);
 
-  location.setCgiExtention(result[1]);
+  location.setCgiExtension(result[1]);
   location.setCgiPath(result[2]);
   location.setUploadDir(result[3]);
 }

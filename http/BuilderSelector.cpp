@@ -49,7 +49,7 @@ bool BuilderSelector::isCgiBuilderSelected(Request const& request,
   if (request.getMethod() == HTTP_POST) return true;
 
   if (location.hasCgiInfo() and
-      Config::findFileExtension(fullPath) == location.getCgiExtention())
+      Config::findFileExtension(fullPath) == location.getCgiExtension())
     return true;
 
   return false;
