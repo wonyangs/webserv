@@ -42,7 +42,12 @@ void Server::setHostIp(std::string const& hostIp) {
   _hostIp = hostIp;
 }
 
-void Server::setPort(int port) { _port = port; }
+void Server::setPort(std::string const& port) {
+  if (isValidPort(port) == false) {
+    throw std::runtime_error("[] Server: setHostIp - invalid port");
+  }
+  _port = Util::stoi(port);
+}
 
 // - server name을 추가
 // - 이미 있는 server name이 들어올 경우 예외 발생
@@ -111,6 +116,8 @@ bool Server::isRequiredValuesSet(void) const {
 }
 
 // Private method
+
+// IP 형식이 올바른지 여부 반환
 bool Server::isValidIpFormat(std::string const& ip) {
   std::istringstream ss(ip);
   std::string token;
@@ -134,4 +141,29 @@ bool Server::isValidIpFormat(std::string const& ip) {
     }
   }
   return ss.eof() && segmentCount == 4 && ip[ip.length() - 1] != '.';
+}
+
+// 포트 번호가 올바른지 여부 반환
+bool Server::isValidPort(const std::string& port) {
+  if (port.empty() || port.length() > 5) {
+    return false;
+  }
+
+  for (size_t i = 0; i < port.length(); i++) {
+    if (!isdigit(port[i])) {
+      return false;
+    }
+  }
+
+  int portNum = Util::stoi(port);
+  if (portNum < 0 || portNum > 65535) {
+    return false;
+  }
+
+  // well known port
+  if (portNum <= 1023) {
+    return false;
+  }
+
+  return true;
 }

@@ -33,7 +33,7 @@ class Server {
   int getPort(void) const;
 
   void setHostIp(std::string const& hostIp);
-  void setPort(int port);
+  void setPort(std::string const& port);
 
   void addServerName(std::string const& serverName);
   void addLocationBlock(Location const& locationBlock);
@@ -48,6 +48,7 @@ class Server {
   typedef std::map<std::string, Location> LocationMap;
 
   bool isValidIpFormat(std::string const& ip);
+  bool isValidPort(const std::string& port);
 };
 
 #endif

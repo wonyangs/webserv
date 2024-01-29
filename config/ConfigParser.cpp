@@ -213,7 +213,7 @@ void ConfigParser::storeServerListenInfo(Server& server) {
   checkSize(result, 3);
 
   server.setHostIp(result[1]);
-  server.setPort(Util::stoi(result[2]));
+  server.setPort(result[2]);
 }
 
 void ConfigParser::storeServerName(Server& server) {
