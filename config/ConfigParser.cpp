@@ -314,7 +314,7 @@ void ConfigParser::removeSemicolon(void) {
     throwFormatError("ConfigParser: removeSemicolon");
   }
 
-  _line.substr(0, size - 1);
+  _line = _line.substr(0, size - 1);
 }
 
 void ConfigParser::throwFormatError(std::string const& func) {
