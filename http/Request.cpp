@@ -153,17 +153,17 @@ void Request::storeRequestTarget(std::string const& requestTarget) {
         "[2103] Request: storeRequestTarget - path is too long");
   }
 
-  if (isValidRequestTarget(requestTarget) == false) {
+  std::string path, query;
+  splitRequestTarget(path, query, requestTarget);
+
+  if (Util::isValidPath(path) == false or Util::isValidQuery(query) == false) {
     throw StatusException(
         HTTP_BAD_REQUEST,
         "[2104] Request: storeRequestTarget - request Target is invalid");
   }
 
-  std::string path, query;
-  splitRequestTarget(path, query, requestTarget);
-
-  setPath(pctDecode(path));
-  setQuery(pctDecode(query));
+  setPath(Util::pctDecode(path));
+  setQuery(Util::pctDecode(query));
 }
 
 // Header field 저장
@@ -293,32 +293,6 @@ void Request::splitRequestTarget(std::string& path, std::string& query,
   query = "";
 }
 
-bool Request::isHex(char ch) {
-  return ('0' <= ch and ch <= '9') or ('a' <= ch and ch <= 'f') or
-         ('A' <= ch and ch <= 'F');
-}
-
-bool Request::isValidRequestTarget(std::string const& requestTarget) {
-  size_t size = requestTarget.size();
-  if (requestTarget.size() < 1 or requestTarget.front() != '/') return false;
-
-  std::string const& others = "-._~!$&'()*+,;=:@/?";
-  for (size_t i = 0; i < size; i++) {
-    char ch = requestTarget[i];
-
-    if (std::isalpha(ch) or std::isdigit(ch) or
-        others.find(ch) != std::string::npos)
-      continue;
-
-    if (ch == '%' and i + 2 < size) {
-      if (isHex(requestTarget[i + 1]) and isHex(requestTarget[i + 2])) continue;
-    }
-
-    return false;
-  }
-  return true;
-}
-
 bool Request::isValidHTTPVersionFormat(std::string const& httpVersion) {
   if (httpVersion.size() != 8) return false;
   if (httpVersion.substr(0, 5) != "HTTP/") return false;
@@ -327,29 +301,4 @@ bool Request::isValidHTTPVersionFormat(std::string const& httpVersion) {
     return false;
 
   return true;
-}
-
-// 인자로 받은 16진수를 문자(char)로 변경하여 반환
-char Request::hexToChar(std::string const& hexStr) {
-  int n;
-
-  std::stringstream ss;
-  ss << std::hex << hexStr;
-  ss >> n;
-  return static_cast<char>(n);
-}
-
-// percent-encoding을 디코딩하여 반환
-std::string Request::pctDecode(std::string const& str) {
-  std::stringstream ss;
-
-  for (size_t i = 0; i < str.size(); i++) {
-    if (str[i] == '%' and i + 2 < str.size()) {
-      ss << hexToChar(str.substr(i + 1, 2));
-      i += 2;
-    } else {
-      ss << str[i];
-    }
-  }
-  return ss.str();
 }

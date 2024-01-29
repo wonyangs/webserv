@@ -1,6 +1,8 @@
 #ifndef __UTIL_HPP__
 #define __UTIL_HPP__
 
+#include <cctype>
+#include <cstring>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -11,6 +13,14 @@ class Util {
   static int stoi(std::string const& str);
   static void toLowerCase(std::string& str);
   static std::string const removeDotSegments(std::string const& path);
+  static bool isHex(char ch);
+  static char hexToChar(std::string const& hexStr);
+  static bool isPctEncoded(std::string const& str);
+  static bool isUnreserved(char ch);
+  static bool isSubDelims(char ch);
+  static std::string pctDecode(std::string const& str);
+  static bool isValidPath(std::string const& path);
+  static bool isValidQuery(std::string const& query);
 
  private:
   Util(void);
