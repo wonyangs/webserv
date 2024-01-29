@@ -7,10 +7,13 @@
 #include <stdexcept>
 #include <string>
 
+#include "Enum.hpp"
+
 class Util {
  public:
   static std::string const itos(int n);
   static int stoi(std::string const& str);
+  static void toUpperCase(std::string& str);
   static void toLowerCase(std::string& str);
   static std::string const removeDotSegments(std::string const& path);
   static bool isHex(char ch);
@@ -21,6 +24,7 @@ class Util {
   static std::string pctDecode(std::string const& str);
   static bool isValidPath(std::string const& path);
   static bool isValidQuery(std::string const& query);
+  static EHttpMethod matchEHttpMethod(std::string method);
 
  private:
   Util(void);

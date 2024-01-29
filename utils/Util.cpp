@@ -18,6 +18,12 @@ int Util::stoi(std::string const& str) {
   return n;
 }
 
+// string을 모두 대문자로 변경
+void Util::toUpperCase(std::string& str) {
+  for (std::string::iterator it = str.begin(); it != str.end(); ++it)
+    *it = std::toupper(static_cast<unsigned char>(*it));
+}
+
 // string을 모두 소문자로 변경
 void Util::toLowerCase(std::string& str) {
   for (std::string::iterator it = str.begin(); it != str.end(); ++it)
@@ -132,4 +138,13 @@ bool Util::isValidQuery(std::string const& query) {
     return false;
   }
   return true;
+}
+
+// method가 매칭되는 enum EHttpMethod를 반환
+// - 매칭되는 EHttpMethod가 없는 경우 예외 발생
+EHttpMethod Util::matchEHttpMethod(std::string method) {
+  if (method == "GET") return HTTP_GET;
+  if (method == "POST") return HTTP_POST;
+  if (method == "DELETE") return HTTP_DELETE;
+  throw std::runtime_error("[] Util: matchEHttpMethod - match failed");
 }
