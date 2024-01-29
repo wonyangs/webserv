@@ -94,7 +94,7 @@ bool Util::isHex(char ch) {
 }
 
 bool Util::isPctEncoded(std::string const& str) {
-  if (str.front() != '%' or str.size() != 3) return false;
+  if (str[0] != '%' or str.size() != 3) return false;
   if (Util::isHex(str[1]) and Util::isHex(str[2])) return true;
   return false;
 }
@@ -112,7 +112,7 @@ bool Util::isSubDelims(char ch) {
 }
 
 bool Util::isValidPath(std::string const& path) {
-  if (path.size() < 1 or path.front() != '/') return false;
+  if (path.size() < 1 or path[0] != '/') return false;
 
   std::string const& others = "/:@";
   for (size_t i = 0; i < path.size(); i++) {

@@ -187,7 +187,7 @@ void Location::setRedirectUri(std::string const& path) {
 // CGI extension 설정
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
 void Location::setCgiExtension(std::string const& extension) {
-  if (extension.size() == 0 or extension.front() != '.') {
+  if (extension.size() == 0 or extension[0] != '.') {
     throw std::runtime_error(
         "[1114] Location: setCgiExtension - invalid extension");
   }
@@ -315,10 +315,12 @@ bool Location::isRequiredValuesSet(void) const {
 
 std::string Location::getFullPath(std::string const& path) {
   std::string projectRootPath = _projectRootPath;
-  if (path.front() != '/' and projectRootPath.back() != '/')
+  size_t projectPathSize = projectRootPath.size();
+
+  if (path[0] != '/' and projectRootPath[projectPathSize - 1] != '/')
     projectRootPath.push_back('/');
-  else if (path.front() == '/' and projectRootPath.back() == '/') {
-    projectRootPath.pop_back();
+  else if (path[0] == '/' and projectRootPath[projectPathSize - 1] == '/') {
+    projectRootPath = projectRootPath.substr(0, projectPathSize - 1);
   }
 
   return projectRootPath + path;

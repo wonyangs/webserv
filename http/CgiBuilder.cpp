@@ -96,7 +96,7 @@ void CgiBuilder::checkPathInfo(void) {
   Request const& request = getRequest();
 
   // 디렉토리로 끝나는 경우 index 정보를 붙여 확인
-  if (request.getFullPath().back() == '/') {
+  if (request.getFullPath()[request.getFullPath().size() - 1] == '/') {
     _cgiPathInfo = request.generateIndexPath();
   } else {
     _cgiPathInfo = request.getFullPath();

@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <unistd.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <iostream>
@@ -51,8 +52,7 @@ class CgiBuilder : public AResponseBuilder {
 
   virtual void buildResponseContent(std::string const& cgiResponse);
   void trim(std::string& str);
-  bool endsWith(const std::string& fullString,
-                          const std::string& ending);
+  bool endsWith(const std::string& fullString, const std::string& ending);
 
   char** makeEnv(void);
   char** createEnvArray(std::map<std::string, std::string> const& env);

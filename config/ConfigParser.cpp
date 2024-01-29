@@ -308,11 +308,13 @@ void ConfigParser::checkSize(std::vector<std::string> const& result,
 }
 
 void ConfigParser::removeSemicolon(void) {
-  if (_line.back() != ';') {
+  size_t size = _line.size();
+
+  if (_line[size - 1] != ';') {
     throwFormatError("ConfigParser: removeSemicolon");
   }
 
-  _line.pop_back();
+  _line.substr(0, size - 1);
 }
 
 void ConfigParser::throwFormatError(std::string const& func) {
