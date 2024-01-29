@@ -127,7 +127,7 @@ void Location::setMaxBodySize(int size) {
 // - Location 블럭에 특정 상태코드에 대한 error page 경로 추가
 // - 이미 있는 상태코드를 다시 추가할 경우 예외 발생
 void Location::addErrorPage(int statusCode, std::string const& path) {
-  if (statusCode < 0 or statusCode / 100 != 4 or statusCode / 100 != 5) {
+  if (statusCode < 0 or (statusCode / 100 != 4 and statusCode / 100 != 5)) {
     throw std::runtime_error("[] Location: addErrorPage - invalid statusCode");
   }
 
