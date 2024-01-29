@@ -127,13 +127,17 @@ void Location::setMaxBodySize(int size) {
 // - Location 블럭에 특정 상태코드에 대한 error page 경로 추가
 // - 이미 있는 상태코드를 다시 추가할 경우 예외 발생
 void Location::addErrorPage(int statusCode, std::string const& path) {
-  if (_errorPages.find(statusCode) != _errorPages.end()) {
-    throw std::runtime_error(
-        "[1101] Location: addErrorPage - duplicate status code");
+  if (statusCode < 0 or statusCode / 100 != 4 or statusCode / 100 != 5) {
+    throw std::runtime_error("[] Location: addErrorPage - invalid statusCode");
   }
 
   if (Util::isValidPath(path) == false) {
     throw std::runtime_error("[] Location: addErrorPage - invalid path");
+  }
+
+  if (_errorPages.find(statusCode) != _errorPages.end()) {
+    throw std::runtime_error(
+        "[1101] Location: addErrorPage - duplicate status code");
   }
 
   std::string const convertedPath = convertPath(path);
@@ -182,6 +186,10 @@ void Location::setRedirectUri(std::string const& path) {
 // CGI extension 설정
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
 void Location::setCgiExtension(std::string const& extension) {
+  if (extension.size() == 0 or extension.front() != '.') {
+    throw std::runtime_error(
+        "[] Location: setCgiExtension - invalid extension");
+  }
   _cgiExtension = extension;
   _cgiFlag = true;
 }
