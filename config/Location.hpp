@@ -79,6 +79,8 @@ class Location {
   bool isRequiredValuesSet(void) const;
 
  private:
+  std::string getFullPath(std::string const& path);
+  std::string convertPath(std::string const& path);
 };
 
 #endif

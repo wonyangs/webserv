@@ -129,13 +129,10 @@ int ErrorBuilder::readStatusCodeFile(Location const& location) {
 // 상태코드에 해당하는 에러 파일 열기
 // - 파일이 없거나 open에 실패한 경우 예외 발생
 void ErrorBuilder::openStatusCodeFile(Location const& location) {
-  // 파일 경로 제작
-  std::string const& root = location.getRootPath();
   std::string const& path = location.getErrorPagePath(_statusCode);
-  std::string const& fullPath = root + path;
 
   // 파일 접근 권한 확인
-  if (access(fullPath.c_str(), F_OK | R_OK) == -1) {
+  if (access(path.c_str(), F_OK | R_OK) == -1) {
     throw StatusException(
         HTTP_INTERNAL_SERVER_ERROR,
         "[5101] ErrorBuilder: openStatusCodeFile - file permissions denied");
@@ -144,7 +141,7 @@ void ErrorBuilder::openStatusCodeFile(Location const& location) {
   // 파일 크기 측정
   struct stat statbuf;
 
-  if (stat(fullPath.c_str(), &statbuf) == -1) {
+  if (stat(path.c_str(), &statbuf) == -1) {
     throw std::runtime_error(
         "[5102] ErrorBuilder: openStatusCodeFile - stat failed");
   }
@@ -152,7 +149,7 @@ void ErrorBuilder::openStatusCodeFile(Location const& location) {
   _fileSize = statbuf.st_size;
 
   // 파일 열기
-  _fileFd = open(fullPath.c_str(), O_RDONLY);
+  _fileFd = open(path.c_str(), O_RDONLY);
   if (_fileFd < 0) {
     throw std::runtime_error(
         "[5103] ErrorBuilder: openStatusCodeFile - open failed");
