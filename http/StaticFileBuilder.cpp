@@ -75,7 +75,7 @@ void StaticFileBuilder::openStaticFile(void) {
   std::string fullPath = request.getFullPath();
 
   // 파일이 디렉토리라면 index 파일 붙이기
-  if (fullPath.back() == '/') {
+  if (fullPath[fullPath.size() - 1] == '/') {
     fullPath = request.generateIndexPath();
   }
 
@@ -146,7 +146,7 @@ void StaticFileBuilder::buildResponseContent(std::string const& body) {
   Request const& request = getRequest();
   std::string fullPath = request.getFullPath();
 
-  if (fullPath.back() == '/') {
+  if (fullPath[fullPath.size() - 1] == '/') {
     fullPath = request.generateIndexPath();
   }
 

@@ -26,7 +26,9 @@ void ConfigParser::storeProjectRoot(void) {
   std::vector<std::string> result;
   split(_line, result);
   checkSize(result, 2);
-  // path 유효성 검사
+  if (Util::isValidPath(result[1]) == false)
+    throw std::runtime_error(
+        "[1210] ConfigParser: storeProjectRoot - invalid path");
   _projectRootPath = result[1];
 }
 
@@ -51,13 +53,7 @@ std::vector<Server> ConfigParser::parse(void) {
 
 void ConfigParser::parseServer(Server& server) {
   while (std::getline(_bufferStream, _line)) {
-    if (_line == "}") {
-      if (server.isRequiredValuesSet()) return;
-      throw std::runtime_error(
-          "[1202] ConfigParser: parseServer - host ip and port directives and "
-          "root location block are required");
-    }
-
+    if (_line == "}") break;
     if (_line == "") continue;
 
     if (isStartsWith(_line, "\tlocation ")) {
@@ -73,6 +69,12 @@ void ConfigParser::parseServer(Server& server) {
     } else {
       throwFormatError("ConfigParser: parseServer");
     }
+  }
+
+  if (server.isRequiredValuesSet() == false) {
+    throw std::runtime_error(
+        "[1202] ConfigParser: parseServer - host ip and port directives and "
+        "root location block are required");
   }
 }
 
@@ -94,24 +96,22 @@ Location const ConfigParser::parseLocation(void) {
       &ConfigParser::storeLocationCgi,
       &ConfigParser::storeLocationRedirect};
 
+  int cnt[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+
   Location location(_projectRootPath);
   storeLocationUri(location);
 
   while (std::getline(_bufferStream, _line)) {
-    if (_line == "\t}") {
-      location.printConfiguration();  // debug
-
-      if (location.isRequiredValuesSet()) return location;
-      throw std::runtime_error(
-          "[1203] ConfigParser: parseLocation - root and index directives are "
-          "required");
-    }
-
+    if (_line == "\t}") break;
     if (_line == "") continue;
 
     removeSemicolon();
     for (int i = 0; i < 8; i++) {
       if (isStartsWith(_line, directives[i])) {
+        cnt[i]++;
+        if (i != 5 and 1 < cnt[i])
+          throw std::runtime_error(
+              "[1203] ConfigParser: parseLocation - duplicate directive");
         (this->*func[i])(location);
         break;
       }
@@ -120,6 +120,14 @@ Location const ConfigParser::parseLocation(void) {
         throwFormatError("ConfigParser: parseLocation");
       }
     }
+  }
+
+  // location.printConfiguration();  // debug
+
+  if (location.isRequiredValuesSet() == false) {
+    throw std::runtime_error(
+        "[1204] ConfigParser: parseLocation - root and index directives are "
+        "required");
   }
   return location;
 }
@@ -149,7 +157,7 @@ void ConfigParser::storeLocationMethod(Location& location) {
   }
 
   for (size_t i = 1; i < result.size(); i++) {
-    location.addAllowMethod(matchEHttpMethod(result[i]));
+    location.addAllowMethod(result[i]);
   }
 }
 
@@ -166,14 +174,7 @@ void ConfigParser::storeLocationAutoindex(Location& location) {
   split(_line, result);
   checkSize(result, 2);
 
-  if (result[1] == "on")
-    location.setAutoIndex(true);
-  else if (result[1] == "off")
-    location.setAutoIndex(false);
-  else {
-    throw std::runtime_error(
-        "[1204] ConfigParser: storeLocationAutoindex - invalid option");
-  }
+  location.setAutoIndex(result[1]);
 }
 
 void ConfigParser::storeLocationErrorPage(Location& location) {
@@ -194,7 +195,7 @@ void ConfigParser::storeLocationCgi(Location& location) {
   split(_line, result);
   checkSize(result, 4);
 
-  location.setCgiExtention(result[1]);
+  location.setCgiExtension(result[1]);
   location.setCgiPath(result[2]);
   location.setUploadDir(result[3]);
 }
@@ -213,7 +214,7 @@ void ConfigParser::storeServerListenInfo(Server& server) {
   checkSize(result, 3);
 
   server.setHostIp(result[1]);
-  server.setPort(Util::stoi(result[2]));
+  server.setPort(result[2]);
 }
 
 void ConfigParser::storeServerName(Server& server) {
@@ -306,22 +307,14 @@ void ConfigParser::checkSize(std::vector<std::string> const& result,
   }
 }
 
-EHttpMethod ConfigParser::matchEHttpMethod(std::string method) {
-  Util::toLowerCase(method);
-
-  if (method == "get") return HTTP_GET;
-  if (method == "post") return HTTP_POST;
-  if (method == "delete") return HTTP_DELETE;
-  throw std::runtime_error(
-      "[1210] ConfigParser: matchEHttpMethod - match failed");
-}
-
 void ConfigParser::removeSemicolon(void) {
-  if (_line.back() != ';') {
+  size_t size = _line.size();
+
+  if (_line[size - 1] != ';') {
     throwFormatError("ConfigParser: removeSemicolon");
   }
 
-  _line.pop_back();
+  _line = _line.substr(0, size - 1);
 }
 
 void ConfigParser::throwFormatError(std::string const& func) {

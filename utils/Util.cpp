@@ -18,6 +18,12 @@ int Util::stoi(std::string const& str) {
   return n;
 }
 
+// string을 모두 대문자로 변경
+void Util::toUpperCase(std::string& str) {
+  for (std::string::iterator it = str.begin(); it != str.end(); ++it)
+    *it = std::toupper(static_cast<unsigned char>(*it));
+}
+
 // string을 모두 소문자로 변경
 void Util::toLowerCase(std::string& str) {
   for (std::string::iterator it = str.begin(); it != str.end(); ++it)
@@ -36,14 +42,14 @@ std::string const Util::removeDotSegments(std::string const& path) {
                               ? inputBuffer.substr(0, segmentEnd)
                               : inputBuffer;
 
-    if (segment == "/." || segment == ".") {
+    if (segment == "/." or segment == ".") {
       // pass
-    } else if (segment == "/.." || segment == "..") {
+    } else if (segment == "/.." or segment == "..") {
       std::size_t pos = outputBuffer.find_last_of('/');
       if (pos != std::string::npos) {
         outputBuffer.erase(pos);
       }
-    } else if (!segment.empty() && segment != "/") {
+    } else if (!segment.empty()) {
       outputBuffer += segment;
     }
 
@@ -88,7 +94,7 @@ bool Util::isHex(char ch) {
 }
 
 bool Util::isPctEncoded(std::string const& str) {
-  if (str.front() != '%' or str.size() != 3) return false;
+  if (str[0] != '%' or str.size() != 3) return false;
   if (Util::isHex(str[1]) and Util::isHex(str[2])) return true;
   return false;
 }
@@ -106,7 +112,7 @@ bool Util::isSubDelims(char ch) {
 }
 
 bool Util::isValidPath(std::string const& path) {
-  if (path.size() < 1 or path.front() != '/') return false;
+  if (path.size() < 1 or path[0] != '/') return false;
 
   std::string const& others = "/:@";
   for (size_t i = 0; i < path.size(); i++) {
@@ -132,4 +138,17 @@ bool Util::isValidQuery(std::string const& query) {
     return false;
   }
   return true;
+}
+
+// method가 매칭되는 enum EHttpMethod를 반환
+// - 매칭되는 EHttpMethod가 없는 경우 예외 발생
+EHttpMethod Util::matchEHttpMethod(std::string method) {
+  if (method == "GET") return HTTP_GET;
+  if (method == "POST") return HTTP_POST;
+  if (method == "DELETE") return HTTP_DELETE;
+  throw std::runtime_error("[6103] Util: matchEHttpMethod - match failed");
+}
+
+std::string Util::convertPath(std::string const& path) {
+  return Util::removeDotSegments(Util::pctDecode(path));
 }

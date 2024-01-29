@@ -27,7 +27,7 @@ class Location {
   std::string _redirectUri;
 
   bool _cgiFlag;
-  std::string _cgiExtention;
+  std::string _cgiExtension;
   std::string _cgiPath;
   std::string _uploadPath;
 
@@ -52,10 +52,10 @@ class Location {
   void setIndexFile(std::string const& indexFile);
   void setMaxBodySize(int size);
   void addErrorPage(int statusNumber, std::string const& path);
-  void addAllowMethod(EHttpMethod method);
-  void setAutoIndex(bool setting);
+  void addAllowMethod(std::string methodString);
+  void setAutoIndex(std::string const&);
   void setRedirectUri(std::string const& path);
-  void setCgiExtention(std::string const& extention);
+  void setCgiExtension(std::string const& extension);
   void setCgiPath(std::string const& cgiPath);
   void setUploadDir(std::string const& dirPath);
 
@@ -72,13 +72,14 @@ class Location {
   bool isRedirectBlock(void) const;
   std::string const& getRedirectUri(void) const;
   bool hasCgiInfo(void) const;
-  std::string const& getCgiExtention(void) const;
+  std::string const& getCgiExtension(void) const;
   std::string const& getCgiPath(void) const;
   std::string const& getUploadDirPath(void) const;
 
   bool isRequiredValuesSet(void) const;
 
  private:
+  std::string getFullPath(std::string const& path);
 };
 
 #endif

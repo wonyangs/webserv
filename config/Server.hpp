@@ -4,6 +4,7 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 
 #include "Location.hpp"
@@ -18,6 +19,8 @@ class Server {
   std::set<std::string> _serverNames;
   std::map<std::string, Location> _locationBlocks;
 
+  bool _isHostIpSet;
+  bool _isPortSet;
   bool _isIncludeRootBlock;
 
  public:
@@ -32,7 +35,7 @@ class Server {
   int getPort(void) const;
 
   void setHostIp(std::string const& hostIp);
-  void setPort(int port);
+  void setPort(std::string const& port);
 
   void addServerName(std::string const& serverName);
   void addLocationBlock(Location const& locationBlock);
@@ -45,6 +48,9 @@ class Server {
 
  private:
   typedef std::map<std::string, Location> LocationMap;
+
+  bool isValidIpFormat(std::string const& ip);
+  bool isValidPort(const std::string& port);
 };
 
 #endif

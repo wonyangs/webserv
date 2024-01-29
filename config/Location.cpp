@@ -46,7 +46,7 @@ Location& Location::operator=(Location const& location) {
     this->_redirectUri = location._redirectUri;
 
     this->_cgiFlag = location._cgiFlag;
-    this->_cgiExtention = location._cgiExtention;
+    this->_cgiExtension = location._cgiExtension;
     this->_cgiPath = location._cgiPath;
     this->_uploadPath = location._uploadPath;
 
@@ -88,7 +88,7 @@ void Location::printConfiguration() {
 
   std::cout << "CGI flag: " << (_cgiFlag ? "on" : "off") << std::endl;
   if (_cgiFlag) {
-    std::cout << "CGI extension: " << _cgiExtention << std::endl;
+    std::cout << "CGI extension: " << _cgiExtension << std::endl;
     std::cout << "CGI path: " << _cgiPath << std::endl;
     std::cout << "upload path: " << _uploadPath << std::endl;
   }
@@ -99,10 +99,18 @@ void Location::printConfiguration() {
 void Location::setUri(std::string const& uri) { _uri = uri; }
 
 void Location::setRootPath(std::string const& rootPath) {
-  _rootPath = rootPath;
+  if (Util::isValidPath(rootPath) == false) {
+    throw std::runtime_error("[1108] Location: setRootPath - invalid path");
+  }
+
+  _rootPath = Util::convertPath(rootPath);
 }
 void Location::setIndexFile(std::string const& indexFile) {
-  _indexFile = indexFile;
+  if (Util::isValidPath(indexFile) == false) {
+    throw std::runtime_error("[1109] Location: setIndexFile - invalid path");
+  }
+
+  _indexFile = Util::convertPath(indexFile);
 }
 
 // - Location 블럭의 max body size 설정
@@ -119,18 +127,32 @@ void Location::setMaxBodySize(int size) {
 // - Location 블럭에 특정 상태코드에 대한 error page 경로 추가
 // - 이미 있는 상태코드를 다시 추가할 경우 예외 발생
 void Location::addErrorPage(int statusCode, std::string const& path) {
+  if (statusCode < 0 or (statusCode / 100 != 4 and statusCode / 100 != 5)) {
+    throw std::runtime_error(
+        "[1110] Location: addErrorPage - invalid statusCode");
+  }
+
+  if (Util::isValidPath(path) == false) {
+    throw std::runtime_error("[1111] Location: addErrorPage - invalid path");
+  }
+
   if (_errorPages.find(statusCode) != _errorPages.end()) {
     throw std::runtime_error(
         "[1101] Location: addErrorPage - duplicate status code");
   }
-  _errorPages[statusCode] = path;
+
+  std::string const convertedPath = Util::convertPath(path);
+  _errorPages[statusCode] = getFullPath(convertedPath);
 }
 
-// - Location 블럭에 허용할 메서드 추가
+// Location 블럭에 허용할 메서드 추가
 // - 호출하지 않을 시 모든 메서드 허용
 // - 이미 있는 메서드를 다시 추가할 경우 예외 발생
-void Location::addAllowMethod(EHttpMethod method) {
-  // 한번이라도 이 메서드가 호출된 경우 차단된 메서드가 있다고 판단
+// - 한번이라도 이 메서드가 호출된 경우 차단된 메서드가 있다고 판단
+void Location::addAllowMethod(std::string methodString) {
+  Util::toUpperCase(methodString);
+  EHttpMethod method = Util::matchEHttpMethod(methodString);
+
   _hasAllowMethodField = true;
   if (_allowMethods.find(method) != _allowMethods.end()) {
     throw std::runtime_error(
@@ -141,49 +163,59 @@ void Location::addAllowMethod(EHttpMethod method) {
 
 // - Location 블럭의 autoindex 설정
 // - 호출하지 않을 시 기본값(false) 적용
-void Location::setAutoIndex(bool setting) { _autoIndex = setting; }
+void Location::setAutoIndex(std::string const& setting) {
+  if (setting != "on" and setting != "off") {
+    throw std::runtime_error("[1112] Location: setAutoIndex - invalid setting");
+  }
 
-// - Location 블럭에 redirect할 uri 설정
-// - 호출하지 않을 시 redirect 블럭이 아님
-// - redirect uri 설정 시 해당 location 블럭은 무조건 redirect 됨
-void Location::setRedirectUri(std::string const& path) {
-  // 한번이라도 이 메서드가 호출된 경우 redirect 블럭으로 판단
-  _hasRedirectField = true;
-  _redirectUri = path;
+  _autoIndex = setting == "on" ? true : false;
 }
 
-// CGI extention 설정
+// Location 블럭에 redirect할 uri 설정
+// - 호출하지 않을 시 redirect 블럭이 아님
+// - redirect uri 설정 시 해당 location 블럭은 무조건 redirect 됨
+// - 한번이라도 이 메서드가 호출된 경우 redirect 블럭으로 판단
+void Location::setRedirectUri(std::string const& path) {
+  if (Util::isValidPath(path) == false) {
+    throw std::runtime_error("[1113] Location: setRedirectUri - invalid path");
+  }
+
+  _hasRedirectField = true;
+  _redirectUri = Util::convertPath(path);
+}
+
+// CGI extension 설정
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
-void Location::setCgiExtention(std::string const& extention) {
-  _cgiExtention = extention;
+void Location::setCgiExtension(std::string const& extension) {
+  if (extension.size() == 0 or extension[0] != '.') {
+    throw std::runtime_error(
+        "[1114] Location: setCgiExtension - invalid extension");
+  }
+  _cgiExtension = extension;
   _cgiFlag = true;
 }
 
 // CGI path 설정
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
 void Location::setCgiPath(std::string const& cgiPath) {
-  std::string projectRootPath = _projectRootPath;
-  if (cgiPath.front() != '/' and projectRootPath.back() != '/')
-    projectRootPath.push_back('/');
-  else if (cgiPath.front() == '/' and projectRootPath.back() == '/') {
-    projectRootPath.pop_back();
+  if (Util::isValidPath(cgiPath) == false) {
+    throw std::runtime_error("[1115] Location: setCgiPath - invalid path");
   }
 
-  _cgiPath = projectRootPath + cgiPath;
+  std::string const convertedPath = Util::convertPath(cgiPath);
+  _cgiPath = getFullPath(convertedPath);
   _cgiFlag = true;
 }
 
 // 파일 upload 디렉토리 설정
 // - 한 번이라도 메서드가 호출된 경우 cgi를 가지고 있다고 판단
 void Location::setUploadDir(std::string const& dirPath) {
-  std::string projectRootPath = _projectRootPath;
-  if (dirPath.front() != '/' and projectRootPath.back() != '/')
-    projectRootPath.push_back('/');
-  else if (dirPath.front() == '/' and projectRootPath.back() == '/') {
-    projectRootPath.pop_back();
+  if (Util::isValidPath(dirPath) == false) {
+    throw std::runtime_error("[1116] Location: setUploadDir - invalid path");
   }
 
-  _uploadPath = projectRootPath + dirPath;
+  std::string const convertedPath = Util::convertPath(dirPath);
+  _uploadPath = getFullPath(convertedPath);
   _cgiFlag = true;
 }
 
@@ -249,13 +281,13 @@ std::string const& Location::getRedirectUri(void) const {
 // CGI 정보를 가지고 있는지 여부 반환
 bool Location::hasCgiInfo(void) const { return _cgiFlag; }
 
-// CGI extention 반환
+// CGI extension 반환
 // - CGI 정보가 설정되어 있지 않은데 호출된 경우 예외 발생
-std::string const& Location::getCgiExtention(void) const {
+std::string const& Location::getCgiExtension(void) const {
   if (_cgiFlag == false) {
-    throw std::runtime_error("[1105] Location: getCgiExtention - no cgi info");
+    throw std::runtime_error("[1105] Location: getCgiExtension - no cgi info");
   }
-  return _cgiExtention;
+  return _cgiExtension;
 }
 
 // CGI 경로 반환
@@ -279,4 +311,17 @@ std::string const& Location::getUploadDirPath(void) const {
 
 bool Location::isRequiredValuesSet(void) const {
   return (_rootPath.size() != 0 and _indexFile.size() != 0);
+}
+
+std::string Location::getFullPath(std::string const& path) {
+  std::string projectRootPath = _projectRootPath;
+  size_t projectPathSize = projectRootPath.size();
+
+  if (path[0] != '/' and projectRootPath[projectPathSize - 1] != '/')
+    projectRootPath.push_back('/');
+  else if (path[0] == '/' and projectRootPath[projectPathSize - 1] == '/') {
+    projectRootPath = projectRootPath.substr(0, projectPathSize - 1);
+  }
+
+  return projectRootPath + path;
 }

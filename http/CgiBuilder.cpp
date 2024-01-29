@@ -91,22 +91,22 @@ void CgiBuilder::close(void) {
  */
 
 // CGI Builder에게 전달되는 path 정보가 올바른지 검사
-// - CGI extention으로 끝나지 않는 경로인 경우 403 예외 발생
+// - CGI extension으로 끝나지 않는 경로인 경우 403 예외 발생
 void CgiBuilder::checkPathInfo(void) {
   Request const& request = getRequest();
 
   // 디렉토리로 끝나는 경우 index 정보를 붙여 확인
-  if (request.getFullPath().back() == '/') {
+  if (request.getFullPath()[request.getFullPath().size() - 1] == '/') {
     _cgiPathInfo = request.generateIndexPath();
   } else {
     _cgiPathInfo = request.getFullPath();
   }
 
-  // CGI extention 정보 확인
-  std::string const& extention = request.getLocation().getCgiExtention();
-  if (endsWith(_cgiPathInfo, extention) == false) {
+  // CGI extension 정보 확인
+  std::string const& extension = request.getLocation().getCgiExtension();
+  if (endsWith(_cgiPathInfo, extension) == false) {
     throw StatusException(
-        HTTP_FORBIDDEN, "[5401] CgiBuilder: checkPathInfo - invalid extention");
+        HTTP_FORBIDDEN, "[5401] CgiBuilder: checkPathInfo - invalid extension");
   }
 }
 
@@ -176,11 +176,17 @@ void CgiBuilder::childProcess(int* const p_to_c, int* const c_to_p) {
       throw std::runtime_error("CGI Access Fail");
     }
 
+    // execve에 사용할 argv 배열 생성
+    char* argv[2];
+    argv[0] = const_cast<char*>(cgiPath.c_str());
+    argv[1] = NULL;
+
     // cgi에 인자 및 환경변수 전송
-    if (execve(cgiPath.c_str(), NULL, envp) < 0) {
+    if (execve(cgiPath.c_str(), argv, envp) < 0) {
       freeEnvArray(envp);
       throw std::runtime_error("CGI Execve Fail");
     }
+
   } catch (std::exception const& e) {
     std::cout << "Status: 500 " << e.what() << "\r\n";
     std::cout << "Content-Type: text/html\r\n\r\n";
@@ -447,7 +453,7 @@ char** CgiBuilder::makeEnv(void) {
     std::string key = it->first;
 
     // "x-"로 시작하는지 확인
-    if (key.length() >= 2 && key.substr(0, 2) == "x-") {
+    if (key.length() >= 2 and key.substr(0, 2) == "x-") {
       // "HTTP_" 접두사 추가
       key = "HTTP_" + key;
 

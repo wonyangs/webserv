@@ -12,7 +12,8 @@ AResponseBuilder* BuilderSelector::getMatchingBuilder(Request const& request) {
   if (BuilderSelector::isAutoindexBuilderSelected(request))
     return new AutoindexBuilder(request);
 
-  if (fullPath.back() == '/') fullPath = request.generateIndexPath();
+  if (fullPath[fullPath.size() - 1] == '/')
+    fullPath = request.generateIndexPath();
 
   if (BuilderSelector::isCgiBuilderSelected(request, fullPath))
     return new CgiBuilder(request);
@@ -31,7 +32,7 @@ AResponseBuilder* BuilderSelector::getMatchingBuilder(Request const& request) {
 bool BuilderSelector::isAutoindexBuilderSelected(Request const& request) {
   std::string fullPath = request.getFullPath();
 
-  if (fullPath.back() != '/') return false;
+  if (fullPath[fullPath.size() - 1] != '/') return false;
 
   if (request.getMethod() != HTTP_GET) return true;
 
@@ -49,7 +50,7 @@ bool BuilderSelector::isCgiBuilderSelected(Request const& request,
   if (request.getMethod() == HTTP_POST) return true;
 
   if (location.hasCgiInfo() and
-      Config::findFileExtension(fullPath) == location.getCgiExtention())
+      Config::findFileExtension(fullPath) == location.getCgiExtension())
     return true;
 
   return false;

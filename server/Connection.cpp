@@ -107,6 +107,10 @@ void Connection::parseRequest(octet_t const* buffer, ssize_t bytesRead) {
   if (_requestParser.getParsingStatus() == DONE) {
     setStatus(TO_SEND);
 
+    std::cout << "------------------------------------\n"
+              << "[ Server: request received ]\n"
+              << "------------------------------------\n";
+
     // debug
     Request const& request = _requestParser.getRequest();
     request.print();
@@ -189,9 +193,10 @@ void Connection::sendResponse(void) {
   updateLastCallTime();
 
   if (isDone) {
-    std::cout << "[ Server: response sent ]\n"
-              << "-------------\n";
-    // << responseContent << "\n-------------" << std::endl;
+    std::cout << "------------------------------------\n"
+              << "[ Server: response sent ]\n"
+              << "------------------------------------\n";
+
     response.print();
 
     _responseBuilder->isConnectionClose() ? setStatus(CLOSE)
