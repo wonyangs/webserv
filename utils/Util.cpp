@@ -49,7 +49,7 @@ std::string const Util::removeDotSegments(std::string const& path) {
       if (pos != std::string::npos) {
         outputBuffer.erase(pos);
       }
-    } else if (!segment.empty() and segment != "/") {
+    } else if (!segment.empty()) {
       outputBuffer += segment;
     }
 
