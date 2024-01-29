@@ -51,11 +51,11 @@ int Server::getPort(void) const { return _port; }
 // - IP 형식이 잘못된 경우 예외 발생
 void Server::setHostIp(std::string const& hostIp) {
   if (_isHostIpSet) {
-    throw std::runtime_error("[] Server: setHostIp - host ip already set");
+    throw std::runtime_error("[1002] Server: setHostIp - host ip already set");
   }
 
   if (isValidIpFormat(hostIp) == false) {
-    throw std::runtime_error("[] Server: setHostIp - invalid ip format");
+    throw std::runtime_error("[1003] Server: setHostIp - invalid ip format");
   }
 
   _hostIp = hostIp;
@@ -67,11 +67,11 @@ void Server::setHostIp(std::string const& hostIp) {
 // - 포트 번호가 잘못된 경우 예외 발생
 void Server::setPort(std::string const& port) {
   if (_isPortSet) {
-    throw std::runtime_error("[] Server: setPort - port already set");
+    throw std::runtime_error("[1004] Server: setPort - port already set");
   }
 
   if (isValidPort(port) == false) {
-    throw std::runtime_error("[] Server: setPort - invalid port");
+    throw std::runtime_error("[1005] Server: setPort - invalid port");
   }
 
   _port = Util::stoi(port);
@@ -89,7 +89,8 @@ void Server::addServerName(std::string const& serverName) {
     if (Util::isUnreserved(ch) or Util::isSubDelims(ch)) continue;
     if (Util::isPctEncoded(serverName.substr(i, 3))) continue;
 
-    throw std::runtime_error("[] Server: addServerName - invalid server_name");
+    throw std::runtime_error(
+        "[1006] Server: addServerName - invalid server_name");
   }
 
   if (_serverNames.find(serverName) != _serverNames.end()) {
