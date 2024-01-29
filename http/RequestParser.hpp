@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "../utils/Util.hpp"
 #include "../utils/Config.hpp"
 #include "../utils/StatusException.hpp"
 #include "Request.hpp"
@@ -97,7 +98,6 @@ class RequestParser {
   bool isInvalidFormatSize(std::vector<std::string> const& result, size_t size);
   bool isEndWithCRLF(std::vector<octet_t> const& vec);
   void removeCRLF(std::vector<octet_t>& vec);
-  void toLowerCase(std::string& str);
   std::string trim(std::string const& str);
   bool isWhitespace(int c);
 };

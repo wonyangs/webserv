@@ -1,7 +1,6 @@
 #ifndef __REQUEST_HPP__
 #define __REQUEST_HPP__
 
-#include <cctype>
 #include <cstring>
 #include <map>
 #include <stdexcept>
@@ -73,12 +72,7 @@ class Request {
   EHttpMethod matchEHttpMethod(std::string method);
   void splitRequestTarget(std::string& path, std::string& query,
                           const std::string& requestTarget);
-
-  bool isHex(char ch);
-  bool isValidRequestTarget(std::string const& requestTarget);
   bool isValidHTTPVersionFormat(std::string const& httpVersion);
-  char hexToChar(std::string const& hexStr);
-  std::string pctDecode(std::string const& str);
 };
 
 #endif

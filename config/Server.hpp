@@ -18,7 +18,10 @@ class Server {
   std::set<std::string> _serverNames;
   std::map<std::string, Location> _locationBlocks;
 
+  bool _isIncludeRootBlock;
+
  public:
+  Server(void);
   Server(std::string hostIp, int port);
   Server(Server const& server);
   ~Server(void);
@@ -28,6 +31,9 @@ class Server {
   std::string const& getHostIp(void) const;
   int getPort(void) const;
 
+  void setHostIp(std::string const& hostIp);
+  void setPort(int port);
+
   void addServerName(std::string const& serverName);
   void addLocationBlock(Location const& locationBlock);
 
@@ -35,10 +41,10 @@ class Server {
   bool hasDefaultLocationBlock(void);
   bool hasServerName(std::string const& host);
 
+  bool isRequiredValuesSet(void) const;
+
  private:
   typedef std::map<std::string, Location> LocationMap;
-
-  Server(void);
 };
 
 #endif

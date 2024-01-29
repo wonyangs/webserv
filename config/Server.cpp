@@ -4,9 +4,12 @@
 
 // Constructor & Destructor
 
+Server::Server(void) : _port(-1), _isIncludeRootBlock(false) {}
+
 Server::Server(std::string hostIp, int port)
     : _hostIp(hostIp),
-      _port(port){
+      _port(port),
+      _isIncludeRootBlock(false){
           // TODO: invalid한 포트 번호 검증 추가
       };
 
@@ -23,6 +26,7 @@ Server& Server::operator=(Server const& server) {
 
     this->_serverNames = server._serverNames;
     this->_locationBlocks = server._locationBlocks;
+    this->_isIncludeRootBlock = server._isIncludeRootBlock;
   }
   return *this;
 }
@@ -34,6 +38,10 @@ std::string const& Server::getHostIp(void) const { return _hostIp; }
 int Server::getPort(void) const { return _port; }
 
 // Public Method - setter
+
+void Server::setHostIp(std::string const& hostIp) { _hostIp = hostIp; }
+
+void Server::setPort(int port) { _port = port; }
 
 // - server name을 추가
 // - 이미 있는 server name이 들어올 경우 예외 발생
@@ -55,6 +63,8 @@ void Server::addLocationBlock(Location const& locationBlock) {
   }
 
   _locationBlocks.insert(std::make_pair(uri, locationBlock));
+
+  if (uri == "/") _isIncludeRootBlock = true;
 }
 
 // Public Method - method
@@ -93,4 +103,8 @@ bool Server::hasDefaultLocationBlock(void) {
 // host명이 Server 블록의 ServerName에 존재하는지 여부 반환
 bool Server::hasServerName(std::string const& host) {
   return (_serverNames.find(host) != _serverNames.end());
+}
+
+bool Server::isRequiredValuesSet(void) const {
+  return (_hostIp.size() != 0 and _port != -1 and _isIncludeRootBlock);
 }
