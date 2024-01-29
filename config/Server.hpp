@@ -19,6 +19,8 @@ class Server {
   std::set<std::string> _serverNames;
   std::map<std::string, Location> _locationBlocks;
 
+  bool _isHostIpSet;
+  bool _isPortSet;
   bool _isIncludeRootBlock;
 
  public:

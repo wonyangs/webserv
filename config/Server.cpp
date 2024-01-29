@@ -4,10 +4,18 @@
 
 // Constructor & Destructor
 
-Server::Server(void) : _port(-1), _isIncludeRootBlock(false) {}
+Server::Server(void)
+    : _port(-1),
+      _isHostIpSet(false),
+      _isPortSet(false),
+      _isIncludeRootBlock(false) {}
 
 Server::Server(std::string hostIp, int port)
-    : _hostIp(hostIp), _port(port), _isIncludeRootBlock(false) {}
+    : _hostIp(hostIp),
+      _port(port),
+      _isHostIpSet(false),
+      _isPortSet(false),
+      _isIncludeRootBlock(false) {}
 
 Server::Server(Server const& server) { *this = server; }
 
@@ -22,6 +30,9 @@ Server& Server::operator=(Server const& server) {
 
     this->_serverNames = server._serverNames;
     this->_locationBlocks = server._locationBlocks;
+
+    this->_isHostIpSet = server._isHostIpSet;
+    this->_isPortSet = server._isPortSet;
     this->_isIncludeRootBlock = server._isIncludeRootBlock;
   }
   return *this;
@@ -36,21 +47,35 @@ int Server::getPort(void) const { return _port; }
 // Public Method - setter
 
 // Host IP를 설정
+// - IP가 설정되어 있는데 다시 호출한 경우 예외 발생
 // - IP 형식이 잘못된 경우 예외 발생
 void Server::setHostIp(std::string const& hostIp) {
+  if (_isHostIpSet) {
+    throw std::runtime_error("[] Server: setHostIp - host ip already set");
+  }
+
   if (isValidIpFormat(hostIp) == false) {
     throw std::runtime_error("[] Server: setHostIp - invalid ip format");
   }
+
   _hostIp = hostIp;
+  _isHostIpSet = true;
 }
 
 // Port를 설정
+// - 이미 포트 번호가 설정되어 있는데 다시 호출한 경우 예외 발생
 // - 포트 번호가 잘못된 경우 예외 발생
 void Server::setPort(std::string const& port) {
+  if (_isPortSet) {
+    throw std::runtime_error("[] Server: setPort - port already set");
+  }
+
   if (isValidPort(port) == false) {
     throw std::runtime_error("[] Server: setPort - invalid port");
   }
+
   _port = Util::stoi(port);
+  _isPortSet = true;
 }
 
 // server name을 추가
