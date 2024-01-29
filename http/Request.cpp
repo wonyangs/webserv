@@ -162,7 +162,7 @@ void Request::storeRequestTarget(std::string const& requestTarget) {
         "[2104] Request: storeRequestTarget - request Target is invalid");
   }
 
-  setPath(Util::pctDecode(path));
+  setPath(Util::convertPath(path));
   setQuery(Util::pctDecode(query));
 }
 
