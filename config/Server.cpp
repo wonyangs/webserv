@@ -44,18 +44,30 @@ void Server::setHostIp(std::string const& hostIp) {
 
 void Server::setPort(std::string const& port) {
   if (isValidPort(port) == false) {
-    throw std::runtime_error("[] Server: setHostIp - invalid port");
+    throw std::runtime_error("[] Server: setPort - invalid port");
   }
   _port = Util::stoi(port);
 }
 
-// - server name을 추가
+// server name을 추가
+// - 올바르지 않은 문자를 가진 server name이 들어온 경우 예외 발생
 // - 이미 있는 server name이 들어올 경우 예외 발생
 void Server::addServerName(std::string const& serverName) {
+  std::string const& others = "/:@";
+  for (size_t i = 0; i < serverName.size(); i++) {
+    char ch = serverName[i];
+    if (others.find(ch) != std::string::npos) continue;
+    if (Util::isUnreserved(ch) or Util::isSubDelims(ch)) continue;
+    if (Util::isPctEncoded(serverName.substr(i, 3))) continue;
+
+    throw std::runtime_error("[] Server: addServerName - invalid server_name");
+  }
+
   if (_serverNames.find(serverName) != _serverNames.end()) {
     throw std::runtime_error(
         "[1000] Server: addServerName - duplicate server_name");
   }
+
   _serverNames.insert(serverName);
 }
 
