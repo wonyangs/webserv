@@ -79,9 +79,36 @@
 
     <button class="button" onclick="goToGallery()">갤러리 가기</button>
     <script>
+      window.onload = function() {
+        // 서버에 세션 상태 요청
+        var xhr = new XMLHttpRequest();
+        xhr.open('GET', '/cgi-bin/session-status.py', true);
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            var response = JSON.parse(xhr.responseText);
+            if (response.loggedIn) {
+              // 로그인 상태일 때 로그아웃 버튼 표시
+              document.body.innerHTML += '<button class="button" onclick="logout()">로그아웃</button>';
+            } else {
+              // 로그아웃 상태일 때 로그인 버튼 표시
+              document.body.innerHTML += '<button class="button" onclick="goToLogin()">로그인 페이지</button>';
+            }
+          }
+        };
+        xhr.send();
+      };
+
       function goToGallery() {
         window.location.href = '/cgi-bin/image-view.py';
       }
-    </script>
+
+      function logout() {
+        window.location.href = '/cgi-bin/logout.py';
+      }
+      
+      function goToLogin() {
+        window.location.href = '/login.html';
+      }
+      </script>
 </body>
 </html>

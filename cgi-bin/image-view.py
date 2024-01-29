@@ -1,8 +1,30 @@
 import cgi
 import os
+import json
+from http import cookies
 
 # CGI 환경 설정
 print("Content-type: text/html; charset=UTF-8\r\n\r\n")
+
+# 세션 데이터 파일 경로
+SESSION_FILE = 'cgi-bin/sessions.json'
+
+# 세션 데이터를 불러오는 함수
+def load_sessions():
+    if os.path.exists(SESSION_FILE):
+        with open(SESSION_FILE, 'r') as file:
+            return json.load(file)
+    return {}
+
+# 세션에서 사용자 이름 찾기
+def get_username_from_session():
+    cookie = cookies.SimpleCookie(os.environ.get('HTTP_COOKIE'))
+    session_id = cookie['session_id'].value if 'session_id' in cookie else None
+    sessions = load_sessions()
+    return sessions.get(session_id, '게스트')
+
+# 사용자 이름 가져오기
+username = get_username_from_session()
 
 # 페이지 번호 및 이미지 디렉토리 설정
 form = cgi.FieldStorage()
@@ -63,6 +85,8 @@ print("    }")
 print("}")
 print("</script>")
 print("</head><body>")
+
+print(f"<h2>안녕하세요, {username}님</h2>")
 
 print("<div class='gallery'>")
 for image in current_images:
