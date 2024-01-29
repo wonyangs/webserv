@@ -241,7 +241,7 @@ void ConfigParser::storeLocationUri(Location& location) {
 // - 읽기에 실패한 경우 예외 발생
 void ConfigParser::readConfigFile(void) {
   std::stringstream ss;
-  std::ifstream file(_path);
+  std::ifstream file(_path.c_str());
   char buffer[BUFFER_SIZE];
 
   if (!isRegularFile(_path)) {
