@@ -176,11 +176,17 @@ void CgiBuilder::childProcess(int* const p_to_c, int* const c_to_p) {
       throw std::runtime_error("CGI Access Fail");
     }
 
+    // execve에 사용할 argv 배열 생성
+    char* argv[2];
+    argv[0] = const_cast<char*>(cgiPath.c_str());
+    argv[1] = NULL;
+
     // cgi에 인자 및 환경변수 전송
-    if (execve(cgiPath.c_str(), NULL, envp) < 0) {
+    if (execve(cgiPath.c_str(), argv, envp) < 0) {
       freeEnvArray(envp);
       throw std::runtime_error("CGI Execve Fail");
     }
+
   } catch (std::exception const& e) {
     std::cout << "Status: 500 " << e.what() << "\r\n";
     std::cout << "Content-Type: text/html\r\n\r\n";
