@@ -122,7 +122,7 @@ Location const ConfigParser::parseLocation(void) {
     }
   }
 
-  location.printConfiguration();  // debug
+  // location.printConfiguration();  // debug
 
   if (location.isRequiredValuesSet() == false) {
     throw std::runtime_error(
