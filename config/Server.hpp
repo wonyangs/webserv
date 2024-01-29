@@ -4,6 +4,7 @@
 #include <cstring>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 
 #include "Location.hpp"
@@ -45,6 +46,8 @@ class Server {
 
  private:
   typedef std::map<std::string, Location> LocationMap;
+
+  bool isValidIpFormat(std::string const& ip);
 };
 
 #endif

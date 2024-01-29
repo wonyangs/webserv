@@ -7,11 +7,7 @@
 Server::Server(void) : _port(-1), _isIncludeRootBlock(false) {}
 
 Server::Server(std::string hostIp, int port)
-    : _hostIp(hostIp),
-      _port(port),
-      _isIncludeRootBlock(false){
-          // TODO: invalid한 포트 번호 검증 추가
-      };
+    : _hostIp(hostIp), _port(port), _isIncludeRootBlock(false) {}
 
 Server::Server(Server const& server) { *this = server; }
 
@@ -39,7 +35,12 @@ int Server::getPort(void) const { return _port; }
 
 // Public Method - setter
 
-void Server::setHostIp(std::string const& hostIp) { _hostIp = hostIp; }
+void Server::setHostIp(std::string const& hostIp) {
+  if (isValidIpFormat(hostIp) == false) {
+    throw std::runtime_error("[] Server: setHostIp - invalid ip format");
+  }
+  _hostIp = hostIp;
+}
 
 void Server::setPort(int port) { _port = port; }
 
@@ -107,4 +108,30 @@ bool Server::hasServerName(std::string const& host) {
 
 bool Server::isRequiredValuesSet(void) const {
   return (_hostIp.size() != 0 and _port != -1 and _isIncludeRootBlock);
+}
+
+// Private method
+bool Server::isValidIpFormat(std::string const& ip) {
+  std::istringstream ss(ip);
+  std::string token;
+  int segmentCount = 0;
+
+  while (std::getline(ss, token, '.')) {
+    segmentCount++;
+    if (segmentCount > 4 || token.empty() || token.length() > 3) {
+      return false;
+    }
+
+    for (size_t j = 0; j < token.length(); j++) {
+      if (!isdigit(token[j])) {
+        return false;
+      }
+    }
+
+    int num = Util::stoi(token);
+    if (num < 0 || num > 255) {
+      return false;
+    }
+  }
+  return ss.eof() && segmentCount == 4 && ip[ip.length() - 1] != '.';
 }
