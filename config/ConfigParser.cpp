@@ -19,7 +19,7 @@ void ConfigParser::storeProjectRoot(void) {
 
   if (isStartsWith(_line, "project_root ") == false) {
     throw std::runtime_error(
-        "[] ConfigParser: parse - The first line of config must contain "
+        "[1201] ConfigParser: parse - The first line of config must contain "
         "project_root.");
   }
 
@@ -54,7 +54,8 @@ void ConfigParser::parseServer(Server& server) {
     if (_line == "}") {
       if (server.isRequiredValuesSet()) return;
       throw std::runtime_error(
-          "[] ConfigParser: parseServer - host ip and port directives and root "
+          "[1202] ConfigParser: parseServer - host ip and port directives and "
+          "root "
           "location block are required.");
     }
 
@@ -103,7 +104,7 @@ Location const ConfigParser::parseLocation(void) {
 
       if (location.isRequiredValuesSet()) return location;
       throw std::runtime_error(
-          "[] ConfigParser: parseLocation - root and index directives are "
+          "[1203] ConfigParser: parseLocation - root and index directives are "
           "required");
     }
 
@@ -172,7 +173,7 @@ void ConfigParser::storeLocationAutoindex(Location& location) {
     location.setAutoIndex(false);
   else {
     throw std::runtime_error(
-        "[] ConfigParser: storeLocationAutoindex - invalid option");
+        "[1204] ConfigParser: storeLocationAutoindex - invalid option");
   }
 }
 
@@ -246,12 +247,12 @@ void ConfigParser::readConfigFile(void) {
 
   if (!isRegularFile(_path)) {
     throw std::runtime_error(
-        "[] ConfigParser: readConfigFile - not a regular file " + _path);
+        "[1205] ConfigParser: readConfigFile - not a regular file " + _path);
   }
 
   if (!file or !file.is_open() or file.fail()) {
     throw std::runtime_error(
-        "[] ConfigParser: readConfigFile - unable to open config file: " +
+        "[1206] ConfigParser: readConfigFile - unable to open config file: " +
         _path);
   }
 
@@ -264,7 +265,8 @@ void ConfigParser::readConfigFile(void) {
 
     if (!file.eof() and file.fail())
       throw std::runtime_error(
-          "[] ConfigParser: readConfigFile - problem reading a file: " + _path);
+          "[1207] ConfigParser: readConfigFile - problem reading a file: " +
+          _path);
   }
 }
 
@@ -272,11 +274,12 @@ void ConfigParser::readConfigFile(void) {
 bool ConfigParser::isRegularFile(std::string const& path) {
   if (access(path.c_str(), F_OK) == -1)
     throw std::runtime_error(
-        "[] ConfigParser: isRegularFile - file not exist: " + path);
+        "[1208] ConfigParser: isRegularFile - file not exist: " + path);
 
   struct stat statbuf;
   if (stat(path.c_str(), &statbuf) == -1) {
-    throw std::runtime_error("[] ConfigParser: isRegularFile - stat failed");
+    throw std::runtime_error(
+        "[1209] ConfigParser: isRegularFile - stat failed");
   }
   return S_ISREG(statbuf.st_mode);
 }
@@ -310,7 +313,8 @@ EHttpMethod ConfigParser::matchEHttpMethod(std::string method) {
   if (method == "get") return HTTP_GET;
   if (method == "post") return HTTP_POST;
   if (method == "delete") return HTTP_DELETE;
-  throw std::runtime_error("[] ConfigParser: matchEHttpMethod - match failed");
+  throw std::runtime_error(
+      "[1210] ConfigParser: matchEHttpMethod - match failed");
 }
 
 void ConfigParser::removeSemicolon(void) {
@@ -322,6 +326,6 @@ void ConfigParser::removeSemicolon(void) {
 }
 
 void ConfigParser::throwFormatError(std::string const& func) {
-  throw std::runtime_error("[] " + func +
+  throw std::runtime_error("[1200] " + func +
                            " - config file format is incorrect: " + _line);
 }

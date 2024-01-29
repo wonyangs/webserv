@@ -12,7 +12,7 @@
 
 int main(int argc, char** argv) {
   if (2 < argc) {
-    std::cout << "[] main - insufficient number of arguments :" << argc - 1
+    std::cout << "[0000] main - insufficient number of arguments :" << argc - 1
               << std::endl;
     return 0;
   }
