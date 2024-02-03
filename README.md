@@ -3,7 +3,7 @@
    <h3> Our own NGINX </h3>
 
 <p>
-  <a href="https://github.com/boostcampwm2023/web08-ByeolSoop/wiki">위키</a>
+  <a href="https://github.com/wonyangs/webserv/wiki">위키</a>
 </p>
 
   <p>
